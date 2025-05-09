@@ -1,0 +1,798 @@
+[
+  {
+    "name": "Tiếng Trung Quốc",
+    "grade": 5
+  },
+  {
+    "name": "Tiếng Nga",
+    "grade": 9
+  },
+  {
+    "name": "Công nghệ",
+    "grade": 12
+  },
+  {
+    "name": "Lịch sử và địa lý",
+    "grade": 9
+  },
+  {
+    "name": "Tiếng Hàn",
+    "grade": 4
+  },
+  {
+    "name": "Tiếng Hàn",
+    "grade": 12
+  },
+  {
+    "name": "Tiếng Đức",
+    "grade": 11
+  },
+  {
+    "name": "Lịch sử và Địa lý",
+    "grade": 4
+  },
+  {
+    "name": "Vật lý",
+    "grade": 11
+  },
+  {
+    "name": "Tiếng Nhật",
+    "grade": 10
+  },
+  {
+    "name": "Tiếng Đức",
+    "grade": 4
+  },
+  {
+    "name": "Tiếng dân tộc thiểu số",
+    "grade": 1
+  },
+  {
+    "name": "Giáo dục thể chất",
+    "grade": 10
+  },
+  {
+    "name": "Giáo dục công dân",
+    "grade": 9
+  },
+  {
+    "name": "Tiếng Nhật",
+    "grade": 12
+  },
+  {
+    "name": "Toán",
+    "grade": 6
+  },
+  {
+    "name": "Nghệ thuật",
+    "grade": 1
+  },
+  {
+    "name": "Tiếng Pháp",
+    "grade": 6
+  },
+  {
+    "name": "Công nghệ",
+    "grade": 11
+  },
+  {
+    "name": "Hoá học",
+    "grade": 11
+  },
+  {
+    "name": "Tiếng Nga",
+    "grade": 8
+  },
+  {
+    "name": "Đạo đức",
+    "grade": 2
+  },
+  {
+    "name": "Tiếng dân tộc thiểu số",
+    "grade": 3
+  },
+  {
+    "name": "Ngữ văn",
+    "grade": 12
+  },
+  {
+    "name": "Tin học",
+    "grade": 11
+  },
+  {
+    "name": "Giáo dục thể chất",
+    "grade": 6
+  },
+  {
+    "name": "Tiếng Việt",
+    "grade": 5
+  },
+  {
+    "name": "Tiếng Đức",
+    "grade": 8
+  },
+  {
+    "name": "Tiếng Pháp",
+    "grade": 5
+  },
+  {
+    "name": "Nghệ thuật",
+    "grade": 5
+  },
+  {
+    "name": "Toán",
+    "grade": 2
+  },
+  {
+    "name": "Công nghệ",
+    "grade": 8
+  },
+  {
+    "name": "Giáo dục thể chất",
+    "grade": 8
+  },
+  {
+    "name": "Tiếng Pháp",
+    "grade": 12
+  },
+  {
+    "name": "Tiếng Nhật",
+    "grade": 6
+  },
+  {
+    "name": "Giáo dục công dân",
+    "grade": 6
+  },
+  {
+    "name": "Tiếng Nga",
+    "grade": 3
+  },
+  {
+    "name": "Giáo dục kinh tế và pháp luật",
+    "grade": 12
+  },
+  {
+    "name": "Tiếng Trung Quốc",
+    "grade": 7
+  },
+  {
+    "name": "Khoa học tự nhiên",
+    "grade": 9
+  },
+  {
+    "name": "Tin học",
+    "grade": 12
+  },
+  {
+    "name": "Ngữ văn",
+    "grade": 10
+  },
+  {
+    "name": "Toán",
+    "grade": 7
+  },
+  {
+    "name": "Tiếng Nhật",
+    "grade": 5
+  },
+  {
+    "name": "Tiếng Trung Quốc",
+    "grade": 6
+  },
+  {
+    "name": "Giáo dục thể chất",
+    "grade": 1
+  },
+  {
+    "name": "Tiếng dân tộc thiểu số",
+    "grade": 7
+  },
+  {
+    "name": "Tiếng Nhật",
+    "grade": 9
+  },
+  {
+    "name": "Toán",
+    "grade": 5
+  },
+  {
+    "name": "Tiếng Việt",
+    "grade": 1
+  },
+  {
+    "name": "Giáo dục thể chất",
+    "grade": 11
+  },
+  {
+    "name": "Tiếng dân tộc thiểu số",
+    "grade": 9
+  },
+  {
+    "name": "Tiếng Nhật",
+    "grade": 11
+  },
+  {
+    "name": "Tiếng Nga",
+    "grade": 12
+  },
+  {
+    "name": "Tiếng Hàn",
+    "grade": 3
+  },
+  {
+    "name": "Toán",
+    "grade": 10
+  },
+  {
+    "name": "Tiếng dân tộc thiểu số",
+    "grade": 5
+  },
+  {
+    "name": "Tiếng dân tộc thiểu số",
+    "grade": 8
+  },
+  {
+    "name": "Giáo dục địa phương",
+    "grade": 8
+  },
+  {
+    "name": "Giáo dục địa phương",
+    "grade": 10
+  },
+  {
+    "name": "Tiếng Anh",
+    "grade": 3
+  },
+  {
+    "name": "Tiếng Nga",
+    "grade": 7
+  },
+  {
+    "name": "Tiếng Đức",
+    "grade": 6
+  },
+  {
+    "name": "Tiếng Việt",
+    "grade": 4
+  },
+  {
+    "name": "Giáo dục thể chất",
+    "grade": 4
+  },
+  {
+    "name": "Giáo dục địa phương",
+    "grade": 7
+  },
+  {
+    "name": "Tiếng Hàn",
+    "grade": 8
+  },
+  {
+    "name": "Công nghệ",
+    "grade": 10
+  },
+  {
+    "name": "Lịch sử",
+    "grade": 12
+  },
+  {
+    "name": "Tiếng Hàn",
+    "grade": 11
+  },
+  {
+    "name": "Địa lý",
+    "grade": 12
+  },
+  {
+    "name": "Hoá học",
+    "grade": 12
+  },
+  {
+    "name": "Tiếng Đức",
+    "grade": 10
+  },
+  {
+    "name": "Tin học",
+    "grade": 7
+  },
+  {
+    "name": "Tiếng Đức",
+    "grade": 12
+  },
+  {
+    "name": "Vật lý",
+    "grade": 10
+  },
+  {
+    "name": "Tự nhiên và Xã hội",
+    "grade": 3
+  },
+  {
+    "name": "Tiếng Nhật",
+    "grade": 7
+  },
+  {
+    "name": "Tiếng Nhật",
+    "grade": 3
+  },
+  {
+    "name": "Tin học và Công nghệ",
+    "grade": 5
+  },
+  {
+    "name": "Giáo dục thể chất",
+    "grade": 5
+  },
+  {
+    "name": "Tiếng Anh",
+    "grade": 11
+  },
+  {
+    "name": "Công nghệ",
+    "grade": 6
+  },
+  {
+    "name": "Lịch sử và Địa lý",
+    "grade": 5
+  },
+  {
+    "name": "Tiếng dân tộc thiểu số",
+    "grade": 6
+  },
+  {
+    "name": "Lịch sử và địa lý",
+    "grade": 6
+  },
+  {
+    "name": "Tiếng Pháp",
+    "grade": 11
+  },
+  {
+    "name": "Tiếng Đức",
+    "grade": 7
+  },
+  {
+    "name": "Âm nhạc",
+    "grade": 10
+  },
+  {
+    "name": "Tiếng Trung Quốc",
+    "grade": 10
+  },
+  {
+    "name": "Tiếng Hàn",
+    "grade": 9
+  },
+  {
+    "name": "Tiếng Anh",
+    "grade": 5
+  },
+  {
+    "name": "Tiếng Pháp",
+    "grade": 3
+  },
+  {
+    "name": "Khoa học tự nhiên",
+    "grade": 7
+  },
+  {
+    "name": "Công nghệ",
+    "grade": 7
+  },
+  {
+    "name": "Tiếng Nhật",
+    "grade": 8
+  },
+  {
+    "name": "Tiếng Pháp",
+    "grade": 9
+  },
+  {
+    "name": "Tiếng Trung Quốc",
+    "grade": 8
+  },
+  {
+    "name": "Giáo dục địa phương",
+    "grade": 11
+  },
+  {
+    "name": "Toán",
+    "grade": 4
+  },
+  {
+    "name": "Đạo đức",
+    "grade": 3
+  },
+  {
+    "name": "Tiếng Hàn",
+    "grade": 7
+  },
+  {
+    "name": "Nghệ thuật",
+    "grade": 9
+  },
+  {
+    "name": "Lịch sử",
+    "grade": 10
+  },
+  {
+    "name": "Tiếng Hàn",
+    "grade": 6
+  },
+  {
+    "name": "Toán",
+    "grade": 11
+  },
+  {
+    "name": "Tiếng Trung Quốc",
+    "grade": 9
+  },
+  {
+    "name": "Mỹ thuật",
+    "grade": 11
+  },
+  {
+    "name": "Giáo dục kinh tế và pháp luật",
+    "grade": 11
+  },
+  {
+    "name": "Tiếng Trung Quốc",
+    "grade": 12
+  },
+  {
+    "name": "Lịch sử và địa lý",
+    "grade": 8
+  },
+  {
+    "name": "Toán",
+    "grade": 9
+  },
+  {
+    "name": "Tiếng Nga",
+    "grade": 5
+  },
+  {
+    "name": "Tiếng Nga",
+    "grade": 4
+  },
+  {
+    "name": "Tin học",
+    "grade": 9
+  },
+  {
+    "name": "Tiếng Pháp",
+    "grade": 4
+  },
+  {
+    "name": "Nghệ thuật",
+    "grade": 8
+  },
+  {
+    "name": "Âm nhạc",
+    "grade": 11
+  },
+  {
+    "name": "Tiếng Anh",
+    "grade": 12
+  },
+  {
+    "name": "Tiếng Anh",
+    "grade": 9
+  },
+  {
+    "name": "Tin học",
+    "grade": 6
+  },
+  {
+    "name": "Tin học và Công nghệ",
+    "grade": 3
+  },
+  {
+    "name": "Tiếng Anh",
+    "grade": 10
+  },
+  {
+    "name": "Giáo dục địa phương",
+    "grade": 6
+  },
+  {
+    "name": "Giáo dục thể chất",
+    "grade": 12
+  },
+  {
+    "name": "Đạo đức",
+    "grade": 1
+  },
+  {
+    "name": "Tin học",
+    "grade": 8
+  },
+  {
+    "name": "Ngữ văn",
+    "grade": 8
+  },
+  {
+    "name": "Ngữ văn",
+    "grade": 11
+  },
+  {
+    "name": "Mỹ thuật",
+    "grade": 10
+  },
+  {
+    "name": "Địa lý",
+    "grade": 10
+  },
+  {
+    "name": "Tiếng Anh",
+    "grade": 8
+  },
+  {
+    "name": "Tiếng Pháp",
+    "grade": 8
+  },
+  {
+    "name": "Tiếng Trung Quốc",
+    "grade": 11
+  },
+  {
+    "name": "Tiếng Đức",
+    "grade": 5
+  },
+  {
+    "name": "Tiếng Anh",
+    "grade": 7
+  },
+  {
+    "name": "Địa lý",
+    "grade": 11
+  },
+  {
+    "name": "Nghệ thuật",
+    "grade": 4
+  },
+  {
+    "name": "Tự nhiên và Xã hội",
+    "grade": 2
+  },
+  {
+    "name": "Tiếng Việt",
+    "grade": 3
+  },
+  {
+    "name": "Khoa học",
+    "grade": 4
+  },
+  {
+    "name": "Đạo đức",
+    "grade": 5
+  },
+  {
+    "name": "Tiếng Đức",
+    "grade": 3
+  },
+  {
+    "name": "Sinh học",
+    "grade": 10
+  },
+  {
+    "name": "Hoá học",
+    "grade": 10
+  },
+  {
+    "name": "Lịch sử",
+    "grade": 11
+  },
+  {
+    "name": "Giáo dục quốc phòng và an ninh",
+    "grade": 12
+  },
+  {
+    "name": "Tiếng Việt",
+    "grade": 2
+  },
+  {
+    "name": "Nghệ thuật",
+    "grade": 7
+  },
+  {
+    "name": "Toán",
+    "grade": 8
+  },
+  {
+    "name": "Tiếng Trung Quốc",
+    "grade": 3
+  },
+  {
+    "name": "Tin học và Công nghệ",
+    "grade": 4
+  },
+  {
+    "name": "Nghệ thuật",
+    "grade": 3
+  },
+  {
+    "name": "Nghệ thuật",
+    "grade": 6
+  },
+  {
+    "name": "Tin học",
+    "grade": 10
+  },
+  {
+    "name": "Lịch sử và địa lý",
+    "grade": 7
+  },
+  {
+    "name": "Khoa học",
+    "grade": 5
+  },
+  {
+    "name": "Ngữ văn",
+    "grade": 7
+  },
+  {
+    "name": "Giáo dục công dân",
+    "grade": 7
+  },
+  {
+    "name": "Đạo đức",
+    "grade": 4
+  },
+  {
+    "name": "Giáo dục công dân",
+    "grade": 8
+  },
+  {
+    "name": "Khoa học tự nhiên",
+    "grade": 8
+  },
+  {
+    "name": "Mỹ thuật",
+    "grade": 12
+  },
+  {
+    "name": "Giáo dục địa phương",
+    "grade": 9
+  },
+  {
+    "name": "Âm nhạc",
+    "grade": 12
+  },
+  {
+    "name": "Giáo dục thể chất",
+    "grade": 7
+  },
+  {
+    "name": "Giáo dục quốc phòng và an ninh",
+    "grade": 11
+  },
+  {
+    "name": "Nghệ thuật",
+    "grade": 2
+  },
+  {
+    "name": "Vật lý",
+    "grade": 12
+  },
+  {
+    "name": "Tiếng Hàn",
+    "grade": 10
+  },
+  {
+    "name": "Giáo dục địa phương",
+    "grade": 12
+  },
+  {
+    "name": "Tự nhiên và Xã hội",
+    "grade": 1
+  },
+  {
+    "name": "Ngữ văn",
+    "grade": 9
+  },
+  {
+    "name": "Tiếng Anh",
+    "grade": 4
+  },
+  {
+    "name": "Toán",
+    "grade": 12
+  },
+  {
+    "name": "Tiếng Đức",
+    "grade": 9
+  },
+  {
+    "name": "Khoa học tự nhiên",
+    "grade": 6
+  },
+  {
+    "name": "Giáo dục quốc phòng và an ninh",
+    "grade": 10
+  },
+  {
+    "name": "Giáo dục thể chất",
+    "grade": 3
+  },
+  {
+    "name": "Công nghệ",
+    "grade": 9
+  },
+  {
+    "name": "Giáo dục thể chất",
+    "grade": 9
+  },
+  {
+    "name": "Tiếng Nga",
+    "grade": 6
+  },
+  {
+    "name": "Tiếng dân tộc thiểu số",
+    "grade": 2
+  },
+  {
+    "name": "Tiếng Hàn",
+    "grade": 5
+  },
+  {
+    "name": "Tiếng Nga",
+    "grade": 10
+  },
+  {
+    "name": "Ngữ văn",
+    "grade": 6
+  },
+  {
+    "name": "Giáo dục thể chất",
+    "grade": 2
+  },
+  {
+    "name": "Tiếng Pháp",
+    "grade": 10
+  },
+  {
+    "name": "Tiếng Pháp",
+    "grade": 7
+  },
+  {
+    "name": "Tiếng dân tộc thiểu số",
+    "grade": 4
+  },
+  {
+    "name": "Tiếng Nhật",
+    "grade": 4
+  },
+  {
+    "name": "Tiếng Trung Quốc",
+    "grade": 4
+  },
+  {
+    "name": "Giáo dục kinh tế và pháp luật",
+    "grade": 10
+  },
+  {
+    "name": "Tiếng Nga",
+    "grade": 11
+  },
+  {
+    "name": "Toán",
+    "grade": 1
+  },
+  {
+    "name": "Tiếng Anh",
+    "grade": 6
+  },
+  {
+    "name": "Sinh học",
+    "grade": 12
+  },
+  {
+    "name": "Toán",
+    "grade": 3
+  },
+  {
+    "name": "Sinh học",
+    "grade": 11
+  }
+]
