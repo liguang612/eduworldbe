@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.ArrayList;
 
 @Service
 public class CourseService {
@@ -74,5 +75,24 @@ public class CourseService {
 
   public List<Course> getBySubjectId(String subjectId) {
     return courseRepository.findBySubjectId(subjectId);
+  }
+
+  public void addLectureToCourseLectureIds(String courseId, String lectureId) {
+    Course course = getById(courseId).orElse(null);
+    if (course != null) {
+      if (course.getLectureIds() == null) {
+        course.setLectureIds(new ArrayList<>());
+      }
+      course.getLectureIds().add(lectureId);
+      update(courseId, course);
+    }
+  }
+
+  public void removeLectureFromCourseLectureIds(String courseId, String lectureId) {
+    Course course = getById(courseId).orElse(null);
+    if (course != null && course.getLectureIds() != null) {
+      course.getLectureIds().remove(lectureId);
+      update(courseId, course);
+    }
   }
 }

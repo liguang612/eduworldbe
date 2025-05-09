@@ -10,6 +10,7 @@ import com.example.eduworldbe.util.AuthUtil;
 import com.example.eduworldbe.model.User;
 
 import java.util.List;
+import java.util.ArrayList;
 
 @RestController
 @RequestMapping("/api/courses")
@@ -80,6 +81,35 @@ public class CourseController {
     courseService.update(id, course);
     return courseService.toCourseResponse(course);
   }
+
+  @PutMapping("/{courseId}/add-lecture")
+  public CourseResponse addLectureToCourse(@PathVariable String courseId, @RequestBody AddLectureRequest req) {
+    Course course = courseService.getById(courseId).orElseThrow(() -> new RuntimeException("Course not found"));
+
+    // Thêm lectureId vào danh sách
+    if (course.getLectureIds() == null) {
+      course.setLectureIds(new ArrayList<>());
+    }
+
+    if (!course.getLectureIds().contains(req.getLectureId())) {
+      course.getLectureIds().add(req.getLectureId());
+      courseService.update(courseId, course);
+    }
+
+    return courseService.toCourseResponse(course);
+  }
+
+  @PutMapping("/{courseId}/remove-lecture")
+  public CourseResponse removeLectureFromCourse(@PathVariable String courseId, @RequestBody AddLectureRequest req) {
+    Course course = courseService.getById(courseId).orElseThrow(() -> new RuntimeException("Course not found"));
+
+    if (course.getLectureIds() != null) {
+      course.getLectureIds().remove(req.getLectureId());
+      courseService.update(courseId, course);
+    }
+
+    return courseService.toCourseResponse(course);
+  }
 }
 
 // DTO cho add/remove member
@@ -101,5 +131,18 @@ class AddMemberRequest {
 
   public void setRole(Integer role) {
     this.role = role;
+  }
+}
+
+// DTO cho add/remove lecture
+class AddLectureRequest {
+  private String lectureId;
+
+  public String getLectureId() {
+    return lectureId;
+  }
+
+  public void setLectureId(String lectureId) {
+    this.lectureId = lectureId;
   }
 }
