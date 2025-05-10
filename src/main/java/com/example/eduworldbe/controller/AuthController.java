@@ -3,6 +3,7 @@ package com.example.eduworldbe.controller;
 import com.example.eduworldbe.dto.AuthRequest;
 import com.example.eduworldbe.dto.AuthResponse;
 import com.example.eduworldbe.dto.RegisterRequest;
+import com.example.eduworldbe.dto.UserResponse;
 import com.example.eduworldbe.model.User;
 import com.example.eduworldbe.service.UserService;
 import com.example.eduworldbe.util.JwtUtil;
@@ -57,6 +58,24 @@ public class AuthController {
     }
     String token = jwtUtil.generateToken(user.getEmail());
     System.out.println("Login successful for user: " + user.getEmail() + " with token: " + token);
-    return new AuthResponse(token);
+    return new AuthResponse(token, user.getId(), user.getName(), user.getAvatar());
+  }
+
+  @GetMapping("/users/{id}")
+  public UserResponse getUserById(@PathVariable String id) {
+    User user = userService.findById(id);
+    if (user == null) {
+      throw new RuntimeException("User not found");
+    }
+    return new UserResponse(
+        user.getId(),
+        user.getEmail(),
+        user.getName(),
+        user.getAvatar(),
+        user.getSchool(),
+        user.getGrade(),
+        user.getAddress(),
+        user.getRole(),
+        user.getBirthday() != null ? user.getBirthday().toString() : null);
   }
 }
