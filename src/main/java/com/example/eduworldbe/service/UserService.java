@@ -26,4 +26,33 @@ public class UserService {
   public User findById(String id) {
     return userRepository.findById(id).orElse(null);
   }
+
+  public User update(String id, User updatedUser) {
+    User existingUser = findById(id);
+    if (existingUser == null) {
+      throw new RuntimeException("User not found");
+    }
+
+    // Cập nhật các trường thông tin
+    if (updatedUser.getName() != null) {
+      existingUser.setName(updatedUser.getName());
+    }
+    if (updatedUser.getAvatar() != null) {
+      existingUser.setAvatar(updatedUser.getAvatar());
+    }
+    if (updatedUser.getSchool() != null) {
+      existingUser.setSchool(updatedUser.getSchool());
+    }
+    if (updatedUser.getGrade() != null) {
+      existingUser.setGrade(updatedUser.getGrade());
+    }
+    if (updatedUser.getAddress() != null) {
+      existingUser.setAddress(updatedUser.getAddress());
+    }
+    if (updatedUser.getBirthday() != null) {
+      existingUser.setBirthday(updatedUser.getBirthday());
+    }
+
+    return userRepository.save(existingUser);
+  }
 }
