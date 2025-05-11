@@ -16,4 +16,5 @@ public class CourseResponse {
   private List<User> students;
   private List<String> lectureIds;
   private List<String> reviewIds;
+  private double averageRating;
 }

@@ -4,6 +4,7 @@ import com.example.eduworldbe.model.Course;
 import com.example.eduworldbe.repository.CourseRepository;
 import com.example.eduworldbe.repository.UserRepository;
 import com.example.eduworldbe.dto.CourseResponse;
+import com.example.eduworldbe.service.ReviewService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -18,6 +19,9 @@ public class CourseService {
 
   @Autowired
   private UserRepository userRepository;
+
+  @Autowired
+  private ReviewService reviewService;
 
   public Course create(Course course) {
     return courseRepository.save(course);
@@ -70,11 +74,23 @@ public class CourseService {
               .toList());
     }
 
+    // Thêm averageRating và reviewCount
+    double avg = reviewService.getAverageScore(1, course.getId());
+    dto.setAverageRating(avg);
+
     return dto;
   }
 
   public List<Course> getBySubjectId(String subjectId) {
     return courseRepository.findBySubjectId(subjectId);
+  }
+
+  public List<Course> getByTeacherId(String teacherId) {
+    return courseRepository.findByTeacherId(teacherId);
+  }
+
+  public List<Course> getByTeacherIdAndSubjectId(String teacherId, String subjectId) {
+    return courseRepository.findByTeacherIdAndSubjectId(teacherId, subjectId);
   }
 
   public void addLectureToCourseLectureIds(String courseId, String lectureId) {

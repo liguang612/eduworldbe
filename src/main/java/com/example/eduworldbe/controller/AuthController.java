@@ -2,6 +2,7 @@ package com.example.eduworldbe.controller;
 
 import com.example.eduworldbe.dto.AuthRequest;
 import com.example.eduworldbe.dto.AuthResponse;
+import com.example.eduworldbe.dto.ChangePasswordRequest;
 import com.example.eduworldbe.dto.RegisterRequest;
 import com.example.eduworldbe.dto.UpdateUserRequest;
 import com.example.eduworldbe.dto.UserResponse;
@@ -10,6 +11,7 @@ import com.example.eduworldbe.service.UserService;
 import com.example.eduworldbe.util.AuthUtil;
 import com.example.eduworldbe.util.JwtUtil;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -117,5 +119,16 @@ public class AuthController {
         savedUser.getAddress(),
         savedUser.getRole(),
         savedUser.getBirthday() != null ? savedUser.getBirthday().toString() : null);
+  }
+
+  @PutMapping("/users/password")
+  public ResponseEntity<?> changePassword(@RequestBody ChangePasswordRequest request, HttpServletRequest httpRequest) {
+    User currentUser = authUtil.getCurrentUser(httpRequest);
+    if (currentUser == null) {
+      throw new RuntimeException("Unauthorized");
+    }
+
+    userService.changePassword(currentUser.getId(), request.getCurrentPassword(), request.getNewPassword());
+    return ResponseEntity.ok().body("Password changed successfully");
   }
 }

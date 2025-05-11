@@ -32,10 +32,28 @@ public class CourseController {
   }
 
   @GetMapping
-  public List<CourseResponse> getAll(@RequestParam(required = false) String subjectId) {
-    List<Course> courses = (subjectId == null || subjectId.isEmpty())
-        ? courseService.getAll()
-        : courseService.getBySubjectId(subjectId);
+  public List<CourseResponse> getAll(@RequestParam(required = false) String subjectId, HttpServletRequest request) {
+    User currentUser = authUtil.getCurrentUser(request);
+    if (currentUser == null) {
+      throw new RuntimeException("Unauthorized");
+    }
+
+    System.out.println("Searching with subjectId: " + subjectId);
+    List<Course> courses;
+    if (currentUser.getRole() == 1) { // Teacher role
+      courses = (subjectId == null || subjectId.isEmpty())
+          ? courseService.getByTeacherId(currentUser.getId())
+          : courseService.getByTeacherIdAndSubjectId(currentUser.getId(), subjectId);
+    } else { // Student role
+      courses = (subjectId == null || subjectId.isEmpty())
+          ? courseService.getAll()
+          : courseService.getBySubjectId(subjectId);
+    }
+    System.out.println("Found " + courses.size() + " courses");
+    if (!courses.isEmpty()) {
+      System.out.println("First course subjectId: " + courses.get(0).getSubjectId());
+    }
+
     return courses.stream()
         .map(courseService::toCourseResponse)
         .toList();

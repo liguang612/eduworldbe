@@ -55,4 +55,20 @@ public class UserService {
 
     return userRepository.save(existingUser);
   }
+
+  public void changePassword(String id, String currentPassword, String newPassword) {
+    User user = findById(id);
+    if (user == null) {
+      throw new RuntimeException("User not found");
+    }
+
+    // Kiểm tra mật khẩu hiện tại
+    if (!passwordEncoder.matches(currentPassword, user.getPasswordHash())) {
+      throw new RuntimeException("Current password is incorrect");
+    }
+
+    // Cập nhật mật khẩu mới
+    user.setPasswordHash(passwordEncoder.encode(newPassword));
+    userRepository.save(user);
+  }
 }
