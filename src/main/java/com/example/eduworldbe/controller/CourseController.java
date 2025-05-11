@@ -163,6 +163,21 @@ public class CourseController {
 
     return courseService.toCourseResponse(course);
   }
+
+  @GetMapping("/enrolled")
+  public ResponseEntity<List<CourseResponse>> getEnrolledCourses(HttpServletRequest request) {
+    User currentUser = authUtil.getCurrentUser(request);
+    if (currentUser == null) {
+      throw new RuntimeException("Unauthorized");
+    }
+
+    List<Course> enrolledCourses = courseService.getEnrolledCourses(currentUser.getId());
+    List<CourseResponse> response = enrolledCourses.stream()
+        .map(courseService::toCourseResponse)
+        .toList();
+
+    return ResponseEntity.ok(response);
+  }
 }
 
 // DTO cho add/remove member

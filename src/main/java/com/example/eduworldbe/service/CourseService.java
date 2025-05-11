@@ -106,6 +106,12 @@ public class CourseService {
     return courseRepository.findByTeacherIdAndSubjectId(teacherId, subjectId);
   }
 
+  public List<Course> getEnrolledCourses(String studentId) {
+    return courseRepository.findAll().stream()
+        .filter(course -> course.getStudentIds() != null && course.getStudentIds().contains(studentId))
+        .toList();
+  }
+
   public void addLectureToCourseLectureIds(String courseId, String lectureId) {
     Course course = getById(courseId).orElse(null);
     if (course != null) {
