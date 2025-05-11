@@ -4,13 +4,13 @@ import com.example.eduworldbe.model.Course;
 import com.example.eduworldbe.repository.CourseRepository;
 import com.example.eduworldbe.repository.UserRepository;
 import com.example.eduworldbe.dto.CourseResponse;
-import com.example.eduworldbe.service.ReviewService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Optional;
 import java.util.ArrayList;
+import java.util.stream.Collectors;
 
 @Service
 public class CourseService {
@@ -27,8 +27,19 @@ public class CourseService {
     return courseRepository.save(course);
   }
 
-  public List<Course> getAll() {
-    return courseRepository.findAll();
+  public List<Course> getAll(String userId, Integer userRole) {
+    List<Course> allCourses = courseRepository.findAll();
+
+    // If user is a teacher or TA, return all courses
+    if (userRole == 1 || userRole == 2) {
+      return allCourses;
+    }
+
+    // For students, filter out hidden courses they're not enrolled in
+    return allCourses.stream()
+        .filter(course -> !course.isHidden() ||
+            (course.getStudentIds() != null && course.getStudentIds().contains(userId)))
+        .collect(Collectors.toList());
   }
 
   public Optional<Course> getById(String id) {
@@ -53,6 +64,7 @@ public class CourseService {
     dto.setAllCategories(course.getAllCategories());
     dto.setLectureIds(course.getLectureIds());
     dto.setReviewIds(course.getReviewIds());
+    dto.setHidden(course.isHidden());
 
     // Lấy teacher
     dto.setTeacher(course.getTeacherId() != null ? userRepository.findById(course.getTeacherId()).orElse(null) : null);

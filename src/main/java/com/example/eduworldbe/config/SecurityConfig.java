@@ -48,11 +48,16 @@ public class SecurityConfig {
         "/api/subjects/**"
     };
 
+    final String[] STATIC_RESOURCES = {
+        "/uploads/**"
+    };
+
     http
         .cors(cors -> cors.configurationSource(corsConfigurationSource()))
         .csrf(csrf -> csrf.disable())
         .authorizeHttpRequests(auth -> auth
             .requestMatchers(PUBLIC_ROUTES).permitAll()
+            .requestMatchers(STATIC_RESOURCES).permitAll()
             .anyRequest().authenticated())
         .httpBasic(Customizer.withDefaults());
     http.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);

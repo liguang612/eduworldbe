@@ -53,8 +53,11 @@ public class CourseController {
           : courseService.getByTeacherIdAndSubjectId(currentUser.getId(), subjectId);
     } else { // Student role
       courses = (subjectId == null || subjectId.isEmpty())
-          ? courseService.getAll()
-          : courseService.getBySubjectId(subjectId);
+          ? courseService.getAll(currentUser.getId(), currentUser.getRole())
+          : courseService.getBySubjectId(subjectId).stream()
+              .filter(course -> !course.isHidden() ||
+                  (course.getStudentIds() != null && course.getStudentIds().contains(currentUser.getId())))
+              .toList();
     }
     System.out.println("Found " + courses.size() + " courses");
     if (!courses.isEmpty()) {

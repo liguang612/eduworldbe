@@ -18,4 +18,5 @@ public class CourseResponse {
   private List<String> lectureIds;
   private List<String> reviewIds;
   private double averageRating;
+  private boolean hidden;
 }

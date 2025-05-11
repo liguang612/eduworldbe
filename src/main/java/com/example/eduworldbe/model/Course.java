@@ -25,6 +25,8 @@ public class Course {
 
   private String teacherId; // id của giáo viên tạo lớp học
 
+  private boolean hidden = false; // Mặc định là false, tức là hiển thị
+
   @ElementCollection
   private List<String> allCategories;
 
