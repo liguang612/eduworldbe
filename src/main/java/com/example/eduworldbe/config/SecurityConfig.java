@@ -41,11 +41,18 @@ public class SecurityConfig {
 
   @Bean
   public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+    final String[] PUBLIC_ROUTES = {
+        "/api/auth/register",
+        "/api/auth/login",
+        "/api/auth/users/search",
+        "/api/subjects/**"
+    };
+
     http
         .cors(cors -> cors.configurationSource(corsConfigurationSource()))
         .csrf(csrf -> csrf.disable())
         .authorizeHttpRequests(auth -> auth
-            .requestMatchers("/api/auth/register", "/api/auth/login", "/api/subjects/**").permitAll()
+            .requestMatchers(PUBLIC_ROUTES).permitAll()
             .anyRequest().authenticated())
         .httpBasic(Customizer.withDefaults());
     http.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);

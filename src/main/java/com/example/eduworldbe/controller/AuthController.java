@@ -6,6 +6,7 @@ import com.example.eduworldbe.dto.ChangePasswordRequest;
 import com.example.eduworldbe.dto.RegisterRequest;
 import com.example.eduworldbe.dto.UpdateUserRequest;
 import com.example.eduworldbe.dto.UserResponse;
+import com.example.eduworldbe.dto.UserSearchResponse;
 import com.example.eduworldbe.model.User;
 import com.example.eduworldbe.service.UserService;
 import com.example.eduworldbe.util.AuthUtil;
@@ -17,8 +18,8 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import jakarta.servlet.http.HttpServletRequest;
+import java.util.List;
 
-@CrossOrigin(origins = "http://localhost:5173")
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {
@@ -130,5 +131,12 @@ public class AuthController {
 
     userService.changePassword(currentUser.getId(), request.getCurrentPassword(), request.getNewPassword());
     return ResponseEntity.ok().body("Password changed successfully");
+  }
+
+  @GetMapping("/users/search")
+  public List<UserSearchResponse> searchUsers(
+      @RequestParam String email,
+      @RequestParam Integer role) {
+    return userService.searchUsers(email, role);
   }
 }

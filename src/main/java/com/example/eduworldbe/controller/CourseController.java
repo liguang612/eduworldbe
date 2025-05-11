@@ -2,21 +2,28 @@ package com.example.eduworldbe.controller;
 
 import com.example.eduworldbe.model.Course;
 import com.example.eduworldbe.service.CourseService;
+import com.example.eduworldbe.service.FileService;
 import com.example.eduworldbe.dto.CourseResponse;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import jakarta.servlet.http.HttpServletRequest;
 import com.example.eduworldbe.util.AuthUtil;
 import com.example.eduworldbe.model.User;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.ArrayList;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/courses")
 public class CourseController {
   @Autowired
   private CourseService courseService;
+
+  @Autowired
+  private FileService fileService;
 
   @Autowired
   private AuthUtil authUtil;
@@ -60,20 +67,45 @@ public class CourseController {
   }
 
   @GetMapping("/{id}")
-  public CourseResponse getById(@PathVariable String id) {
-    return courseService.getById(id)
-        .map(courseService::toCourseResponse)
-        .orElse(null);
+  public ResponseEntity<CourseResponse> getById(@PathVariable String id) {
+    Optional<Course> course = courseService.getById(id);
+    if (course.isPresent()) {
+      return ResponseEntity.ok(courseService.toCourseResponse(course.get()));
+    }
+    return ResponseEntity.notFound().build();
   }
 
   @PutMapping("/{id}")
-  public Course update(@PathVariable String id, @RequestBody Course course) {
-    return courseService.update(id, course);
+  public ResponseEntity<Course> update(@PathVariable String id, @RequestBody Course course) {
+    Optional<Course> existingCourse = courseService.getById(id);
+    if (existingCourse.isPresent()) {
+      course.setId(id);
+      return ResponseEntity.ok(courseService.update(id, course));
+    }
+    return ResponseEntity.notFound().build();
   }
 
-  @DeleteMapping("/{id}")
-  public void delete(@PathVariable String id) {
-    courseService.delete(id);
+  public ResponseEntity<Void> delete(@PathVariable String id) {
+    Optional<Course> course = courseService.getById(id);
+    if (course.isPresent()) {
+      courseService.delete(id);
+      return ResponseEntity.ok().build();
+    }
+    return ResponseEntity.notFound().build();
+  }
+
+  @PostMapping("/{id}/avatar")
+  public ResponseEntity<Course> uploadAvatar(
+      @PathVariable String id,
+      @RequestParam("file") MultipartFile file) {
+    Optional<Course> course = courseService.getById(id);
+    if (course.isPresent()) {
+      String avatarUrl = fileService.uploadFile(file, "courses");
+      Course updatedCourse = course.get();
+      updatedCourse.setAvatar(avatarUrl);
+      return ResponseEntity.ok(courseService.update(id, updatedCourse));
+    }
+    return ResponseEntity.notFound().build();
   }
 
   @PutMapping("/{id}/add-member")

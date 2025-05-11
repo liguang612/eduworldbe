@@ -9,6 +9,7 @@ import java.util.List;
 public class CourseResponse {
   private String id;
   private String name;
+  private String avatar;
   private String subjectId;
   private List<String> allCategories;
   private User teacher;

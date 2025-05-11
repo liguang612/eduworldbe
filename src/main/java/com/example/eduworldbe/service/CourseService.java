@@ -48,6 +48,7 @@ public class CourseService {
     CourseResponse dto = new CourseResponse();
     dto.setId(course.getId());
     dto.setName(course.getName());
+    dto.setAvatar(course.getAvatar());
     dto.setSubjectId(course.getSubjectId());
     dto.setAllCategories(course.getAllCategories());
     dto.setLectureIds(course.getLectureIds());

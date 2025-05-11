@@ -18,13 +18,13 @@ public class Course {
   private String id;
 
   private String name;
+  private String avatar; // URL đến ảnh đại diện của khóa học
 
   // Tham chiếu đến id của subject
   private String subjectId;
 
   private String teacherId; // id của giáo viên tạo lớp học
 
-  // Danh sách hashtag (lưu dạng JSON hoặc TEXT, hoặc tạo bảng phụ nếu muốn)
   @ElementCollection
   private List<String> allCategories;
 
