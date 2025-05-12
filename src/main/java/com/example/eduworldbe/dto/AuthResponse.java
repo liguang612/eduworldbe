@@ -12,4 +12,5 @@ public class AuthResponse {
   private String id;
   private String name;
   private String avatar;
+  private Integer role;
 }

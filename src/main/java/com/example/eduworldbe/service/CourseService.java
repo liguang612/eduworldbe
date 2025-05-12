@@ -10,7 +10,7 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.Optional;
 import java.util.ArrayList;
-import java.util.stream.Collectors;
+import java.util.Arrays;
 
 @Service
 public class CourseService {
@@ -27,19 +27,8 @@ public class CourseService {
     return courseRepository.save(course);
   }
 
-  public List<Course> getAll(String userId, Integer userRole) {
-    List<Course> allCourses = courseRepository.findAll();
-
-    // If user is a teacher or TA, return all courses
-    if (userRole == 1 || userRole == 2) {
-      return allCourses;
-    }
-
-    // For students, filter out hidden courses they're not enrolled in
-    return allCourses.stream()
-        .filter(course -> !course.isHidden() ||
-            (course.getStudentIds() != null && course.getStudentIds().contains(userId)))
-        .collect(Collectors.toList());
+  public List<Course> getAll() {
+    return courseRepository.findAll();
   }
 
   public Optional<Course> getById(String id) {
@@ -129,5 +118,67 @@ public class CourseService {
       course.getLectureIds().remove(lectureId);
       update(courseId, course);
     }
+  }
+
+  private int calculateLevenshteinDistance(String s1, String s2) {
+    int[][] dp = new int[s1.length() + 1][s2.length() + 1];
+
+    for (int i = 0; i <= s1.length(); i++) {
+      dp[i][0] = i;
+    }
+    for (int j = 0; j <= s2.length(); j++) {
+      dp[0][j] = j;
+    }
+
+    for (int i = 1; i <= s1.length(); i++) {
+      for (int j = 1; j <= s2.length(); j++) {
+        if (s1.charAt(i - 1) == s2.charAt(j - 1)) {
+          dp[i][j] = dp[i - 1][j - 1];
+        } else {
+          dp[i][j] = 1 + Math.min(dp[i - 1][j - 1], Math.min(dp[i - 1][j], dp[i][j - 1]));
+        }
+      }
+    }
+
+    return dp[s1.length()][s2.length()];
+  }
+
+  public List<Course> searchCoursesByName(List<Course> courses, String keyword) {
+    if (keyword == null || keyword.trim().isEmpty()) {
+      return courses;
+    }
+
+    String[] searchTerms = keyword.toLowerCase().split("\\s+");
+
+    return courses.stream()
+        .filter(course -> {
+          String courseName = course.getName().toLowerCase();
+          List<String> categories = course.getAllCategories() != null
+              ? course.getAllCategories().stream()
+                  .map(String::toLowerCase)
+                  .toList()
+              : List.of();
+
+          // Check if any search term matches the course name or categories
+          return Arrays.stream(searchTerms)
+              .anyMatch(term -> {
+                // Check if term is a substring of course name
+                if (courseName.contains(term)) {
+                  return true;
+                }
+
+                // Check if term matches any category
+                if (categories.stream().anyMatch(cat -> cat.contains(term))) {
+                  return true;
+                }
+
+                // Check Levenshtein distance for fuzzy matching
+                return calculateLevenshteinDistance(courseName, term) <= 5 ||
+                    courseName.split("\\s+").length > 0 &&
+                        Arrays.stream(courseName.split("\\s+"))
+                            .anyMatch(word -> calculateLevenshteinDistance(word, term) <= 2);
+              });
+        })
+        .toList();
   }
 }

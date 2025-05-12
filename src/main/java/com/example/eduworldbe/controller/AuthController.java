@@ -67,7 +67,7 @@ public class AuthController {
     }
     String token = jwtUtil.generateToken(user.getEmail());
     System.out.println("Login successful for user: " + user.getEmail() + " with token: " + token);
-    return new AuthResponse(token, user.getId(), user.getName(), user.getAvatar());
+    return new AuthResponse(token, user.getId(), user.getName(), user.getAvatar(), user.getRole());
   }
 
   @GetMapping("/users/{id}")

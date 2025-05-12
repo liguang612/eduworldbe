@@ -39,29 +39,39 @@ public class CourseController {
   }
 
   @GetMapping
-  public List<CourseResponse> getAll(@RequestParam(required = false) String subjectId, HttpServletRequest request) {
+  public List<CourseResponse> getAll(
+      @RequestParam(required = false) String subjectId,
+      @RequestParam(required = false) Boolean enrolled,
+      @RequestParam(required = false) String keyword,
+      HttpServletRequest request) {
     User currentUser = authUtil.getCurrentUser(request);
     if (currentUser == null) {
       throw new RuntimeException("Unauthorized");
     }
 
-    System.out.println("Searching with subjectId: " + subjectId);
     List<Course> courses;
     if (currentUser.getRole() == 1) { // Teacher role
       courses = (subjectId == null || subjectId.isEmpty())
           ? courseService.getByTeacherId(currentUser.getId())
           : courseService.getByTeacherIdAndSubjectId(currentUser.getId(), subjectId);
     } else { // Student role
-      courses = (subjectId == null || subjectId.isEmpty())
-          ? courseService.getAll(currentUser.getId(), currentUser.getRole())
-          : courseService.getBySubjectId(subjectId).stream()
-              .filter(course -> !course.isHidden() ||
-                  (course.getStudentIds() != null && course.getStudentIds().contains(currentUser.getId())))
+      if (Boolean.TRUE.equals(enrolled)) {
+        courses = courseService.getEnrolledCourses(currentUser.getId());
+        if (subjectId != null && !subjectId.isEmpty()) {
+          courses = courses.stream()
+              .filter(course -> subjectId.equals(course.getSubjectId()))
               .toList();
+        }
+      } else {
+        courses = (subjectId == null || subjectId.isEmpty())
+            ? courseService.getAll()
+            : courseService.getBySubjectId(subjectId);
+      }
     }
-    System.out.println("Found " + courses.size() + " courses");
-    if (!courses.isEmpty()) {
-      System.out.println("First course subjectId: " + courses.get(0).getSubjectId());
+
+    // Apply keyword search if provided
+    if (keyword != null && !keyword.trim().isEmpty()) {
+      courses = courseService.searchCoursesByName(courses, keyword);
     }
 
     return courses.stream()
@@ -162,21 +172,6 @@ public class CourseController {
     }
 
     return courseService.toCourseResponse(course);
-  }
-
-  @GetMapping("/enrolled")
-  public ResponseEntity<List<CourseResponse>> getEnrolledCourses(HttpServletRequest request) {
-    User currentUser = authUtil.getCurrentUser(request);
-    if (currentUser == null) {
-      throw new RuntimeException("Unauthorized");
-    }
-
-    List<Course> enrolledCourses = courseService.getEnrolledCourses(currentUser.getId());
-    List<CourseResponse> response = enrolledCourses.stream()
-        .map(courseService::toCourseResponse)
-        .toList();
-
-    return ResponseEntity.ok(response);
   }
 }
 
