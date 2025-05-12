@@ -42,8 +42,6 @@ public class LectureService {
   public void delete(String id) {
     Lecture lecture = lectureRepository.findById(id).orElse(null);
     if (lecture != null) {
-      // Xóa ID của bài giảng khỏi danh sách lectureIds của khóa học
-      courseService.removeLectureFromCourseLectureIds(lecture.getCourseId(), id);
       lectureRepository.deleteById(id);
     }
   }
@@ -61,21 +59,6 @@ public class LectureService {
     Lecture lecture = lectureRepository.findById(lectureId).orElseThrow();
     lecture.getEndQuestions().remove(questionId);
     return lectureRepository.save(lecture);
-  }
-
-  // Thêm phương thức mới để add lecture vào course
-  public void addLectureToCourse(String lectureId, String courseId) {
-    // Kiểm tra lecture và course có tồn tại không
-    lectureRepository.findById(lectureId)
-        .orElseThrow(() -> new RuntimeException("Lecture not found"));
-
-    // Thêm lecture vào course
-    courseService.addLectureToCourseLectureIds(courseId, lectureId);
-  }
-
-  // Thêm phương thức xóa lecture khỏi course
-  public void removeLectureFromCourse(String lectureId, String courseId) {
-    courseService.removeLectureFromCourseLectureIds(courseId, lectureId);
   }
 
   public List<Lecture> getAll() {

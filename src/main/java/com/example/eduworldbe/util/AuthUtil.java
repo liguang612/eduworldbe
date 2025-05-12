@@ -2,6 +2,7 @@ package com.example.eduworldbe.util;
 
 import com.example.eduworldbe.model.User;
 import com.example.eduworldbe.repository.UserRepository;
+import com.example.eduworldbe.service.CourseService;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -14,6 +15,9 @@ public class AuthUtil {
   @Autowired
   private UserRepository userRepository;
 
+  @Autowired
+  private CourseService courseService;
+
   public User getCurrentUser(HttpServletRequest request) {
     String authHeader = request.getHeader("Authorization");
     if (authHeader != null && authHeader.startsWith("Bearer ")) {
@@ -22,5 +26,26 @@ public class AuthUtil {
       return userRepository.findByEmail(email).orElse(null);
     }
     return null;
+  }
+
+  public boolean hasAccessToCourse(HttpServletRequest request, String courseId) {
+    User currentUser = getCurrentUser(request);
+    if (currentUser == null) {
+      return false;
+    }
+
+    // Teacher has access to their own courses
+    if (currentUser.getRole() == 1) {
+      return courseService.getByTeacherId(currentUser.getId()).stream()
+          .anyMatch(course -> course.getId().equals(courseId));
+    }
+
+    // Student has access to enrolled courses
+    if (currentUser.getRole() == 0) {
+      return courseService.getEnrolledCourses(currentUser.getId()).stream()
+          .anyMatch(course -> course.getId().equals(courseId));
+    }
+
+    return false;
   }
 }

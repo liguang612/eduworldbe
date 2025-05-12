@@ -19,6 +19,7 @@ public class Course {
 
   private String name;
   private String avatar; // URL đến ảnh đại diện của khóa học
+  private String description; // Mô tả chi tiết về khóa học
 
   // Tham chiếu đến id của subject
   private String subjectId;
@@ -32,15 +33,15 @@ public class Course {
 
   // Danh sách id trợ giảng
   @ElementCollection
-  private List<String> tAIds;
+  private List<String> teacherAssistantIds;
 
   // Danh sách id học sinh
   @ElementCollection
   private List<String> studentIds;
 
-  // Danh sách id bài giảng
+  // Danh sách id của các chapter
   @ElementCollection
-  private List<String> lectureIds;
+  private List<String> chapterIds;
 
   // Danh sách id review
   @ElementCollection

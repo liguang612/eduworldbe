@@ -16,27 +16,39 @@ public class FileService {
   @Value("${file.upload-dir}")
   private String uploadDir;
 
-  public String uploadFile(MultipartFile file, String subDirectory) {
+  public String uploadFile(MultipartFile file, String directory) {
     try {
-      // Create directory if it doesn't exist
-      Path uploadPath = Paths.get(uploadDir, subDirectory);
+      String fileName = UUID.randomUUID().toString() + "_" + file.getOriginalFilename();
+      Path uploadPath = Paths.get(uploadDir, directory);
+
       if (!Files.exists(uploadPath)) {
         Files.createDirectories(uploadPath);
       }
 
-      // Generate unique filename
-      String originalFilename = file.getOriginalFilename();
-      String extension = originalFilename.substring(originalFilename.lastIndexOf("."));
-      String filename = UUID.randomUUID().toString() + extension;
-
-      // Save file
-      Path filePath = uploadPath.resolve(filename);
+      Path filePath = uploadPath.resolve(fileName);
       Files.copy(file.getInputStream(), filePath);
 
-      // Return the relative URL path
-      return "/uploads/" + subDirectory + "/" + filename;
+      return "/uploads/" + directory + "/" + fileName;
     } catch (IOException e) {
-      throw new RuntimeException("Failed to store file", e);
+      throw new RuntimeException("Could not store the file. Error: " + e.getMessage());
+    }
+  }
+
+  public void deleteFile(String fileUrl) {
+    if (fileUrl == null || fileUrl.isEmpty()) {
+      return;
+    }
+
+    try {
+      // Remove leading slash and "uploads/" from the URL
+      String relativePath = fileUrl.replaceFirst("^/uploads/", "");
+      Path filePath = Paths.get(uploadDir, relativePath);
+
+      if (Files.exists(filePath)) {
+        Files.delete(filePath);
+      }
+    } catch (IOException e) {
+      throw new RuntimeException("Could not delete the file. Error: " + e.getMessage());
     }
   }
 }

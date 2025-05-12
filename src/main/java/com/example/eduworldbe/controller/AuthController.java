@@ -19,6 +19,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import jakarta.servlet.http.HttpServletRequest;
 import java.util.List;
+import org.springframework.web.multipart.MultipartFile;
+import com.example.eduworldbe.service.FileService;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -35,24 +37,45 @@ public class AuthController {
   @Autowired
   private AuthUtil authUtil;
 
+  @Autowired
+  private FileService fileService;
+
   @PostMapping("/register")
-  public User register(@RequestBody RegisterRequest request) {
+  public User register(
+      @RequestParam(value = "email") String email,
+      @RequestParam(value = "password") String password,
+      @RequestParam(value = "name") String name,
+      @RequestParam(value = "school", required = false) String school,
+      @RequestParam(value = "grade", required = false) Integer grade,
+      @RequestParam(value = "address", required = false) String address,
+      @RequestParam(value = "role", required = false) Integer role,
+      @RequestParam(value = "birthday", required = false) String birthday,
+      @RequestParam(value = "avatar", required = false) MultipartFile avatar) {
+
     User user = new User();
-    user.setEmail(request.getEmail());
-    user.setName(request.getName());
-    user.setAvatar(request.getAvatar());
-    user.setSchool(request.getSchool());
-    user.setGrade(request.getGrade());
-    user.setAddress(request.getAddress());
-    user.setRole(request.getRole() != null ? request.getRole() : 0); // mặc định là student
-    if (request.getBirthday() != null) {
+    user.setEmail(email);
+    user.setName(name);
+    user.setSchool(school);
+    user.setGrade(grade);
+    user.setAddress(address);
+    user.setRole(role != null ? role : 0); // mặc định là student
+
+    if (birthday != null) {
       try {
-        user.setBirthday(java.sql.Date.valueOf(request.getBirthday()));
+        user.setBirthday(java.sql.Date.valueOf(birthday));
       } catch (Exception e) {
         user.setBirthday(null);
       }
     }
-    user.setPasswordHash(request.getPassword());
+
+    user.setPasswordHash(password);
+
+    // Upload avatar if provided
+    if (avatar != null && !avatar.isEmpty()) {
+      String avatarUrl = fileService.uploadFile(avatar, "users");
+      user.setAvatar(avatarUrl);
+    }
+
     return userService.register(user);
   }
 
@@ -138,5 +161,36 @@ public class AuthController {
       @RequestParam String email,
       @RequestParam Integer role) {
     return userService.searchUsers(email, role);
+  }
+
+  @PostMapping("/users/avatar")
+  public ResponseEntity<UserResponse> uploadAvatar(
+      @RequestParam("file") MultipartFile file,
+      HttpServletRequest request) {
+    User currentUser = authUtil.getCurrentUser(request);
+    if (currentUser == null) {
+      throw new RuntimeException("Unauthorized");
+    }
+
+    // Delete old avatar if exists
+    if (currentUser.getAvatar() != null && !currentUser.getAvatar().isEmpty()) {
+      fileService.deleteFile(currentUser.getAvatar());
+    }
+
+    String avatarUrl = fileService.uploadFile(file, "users");
+    User updatedUser = new User();
+    updatedUser.setAvatar(avatarUrl);
+    User savedUser = userService.update(currentUser.getId(), updatedUser);
+
+    return ResponseEntity.ok(new UserResponse(
+        savedUser.getId(),
+        savedUser.getEmail(),
+        savedUser.getName(),
+        savedUser.getAvatar(),
+        savedUser.getSchool(),
+        savedUser.getGrade(),
+        savedUser.getAddress(),
+        savedUser.getRole(),
+        savedUser.getBirthday() != null ? savedUser.getBirthday().toString() : null));
   }
 }

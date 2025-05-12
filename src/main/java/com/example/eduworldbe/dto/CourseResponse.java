@@ -1,6 +1,7 @@
 package com.example.eduworldbe.dto;
 
 import com.example.eduworldbe.model.User;
+import com.example.eduworldbe.model.Chapter;
 import lombok.Data;
 
 import java.util.List;
@@ -10,12 +11,13 @@ public class CourseResponse {
   private String id;
   private String name;
   private String avatar;
+  private String description;
   private String subjectId;
   private List<String> allCategories;
   private User teacher;
   private List<User> teacherAssistants;
   private List<User> students;
-  private List<String> lectureIds;
+  private List<Chapter> chapters;
   private List<String> reviewIds;
   private double averageRating;
   private boolean hidden;
