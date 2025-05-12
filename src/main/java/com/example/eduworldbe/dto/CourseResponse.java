@@ -17,6 +17,7 @@ public class CourseResponse {
   private User teacher;
   private List<User> teacherAssistants;
   private List<User> students;
+  private List<User> pendingStudents;
   private List<Chapter> chapters;
   private List<String> reviewIds;
   private double averageRating;

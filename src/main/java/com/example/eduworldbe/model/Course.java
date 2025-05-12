@@ -46,4 +46,8 @@ public class Course {
   // Danh sách id review
   @ElementCollection
   private List<String> reviewIds;
+
+  // Danh sách id học sinh đang chờ phê duyệt
+  @ElementCollection
+  private List<String> pendingStudentIds;
 }

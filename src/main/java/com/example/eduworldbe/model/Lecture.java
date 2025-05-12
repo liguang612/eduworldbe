@@ -32,9 +32,6 @@ public class Lecture {
   @ElementCollection
   private List<String> categories;
 
-  // Thêm đường dẫn đến bản PDF nếu có
-  private String pdfUrl;
-
   // ID của khóa học chứa bài giảng
   private String courseId; // optional, không bắt buộc
 

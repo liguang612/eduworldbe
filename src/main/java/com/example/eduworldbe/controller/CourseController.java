@@ -163,6 +163,62 @@ public class CourseController {
     courseService.update(id, course);
     return courseService.toCourseResponse(course);
   }
+
+  @PostMapping("/{id}/request-join")
+  public ResponseEntity<CourseResponse> requestJoinCourse(
+      @PathVariable String id,
+      HttpServletRequest request) {
+    User currentUser = authUtil.getCurrentUser(request);
+    if (currentUser == null) {
+      throw new RuntimeException("Unauthorized");
+    }
+
+    Course updatedCourse = courseService.requestJoinCourse(id, currentUser.getId());
+    return ResponseEntity.ok(courseService.toCourseResponse(updatedCourse));
+  }
+
+  @PostMapping("/{id}/approve-join/{studentId}")
+  public ResponseEntity<CourseResponse> approveJoinRequest(
+      @PathVariable String id,
+      @PathVariable String studentId,
+      HttpServletRequest request) {
+    User currentUser = authUtil.getCurrentUser(request);
+    if (currentUser == null) {
+      throw new RuntimeException("Unauthorized");
+    }
+
+    Course course = courseService.getById(id).orElseThrow();
+    if (!currentUser.getId().equals(course.getTeacherId()) &&
+        (course.getTeacherAssistantIds() == null ||
+            !course.getTeacherAssistantIds().contains(currentUser.getId()))) {
+      throw new RuntimeException("Unauthorized to approve join requests");
+    }
+
+    Course updatedCourse = courseService.approveJoinRequest(id, studentId);
+    return ResponseEntity.ok(courseService.toCourseResponse(updatedCourse));
+  }
+
+  @PostMapping("/{id}/reject-join/{studentId}")
+  public ResponseEntity<CourseResponse> rejectJoinRequest(
+      @PathVariable String id,
+      @PathVariable String studentId,
+      HttpServletRequest request) {
+    User currentUser = authUtil.getCurrentUser(request);
+    if (currentUser == null) {
+      throw new RuntimeException("Unauthorized");
+    }
+
+    // Kiểm tra quyền (chỉ giáo viên hoặc trợ giảng mới được từ chối)
+    Course course = courseService.getById(id).orElseThrow();
+    if (!currentUser.getId().equals(course.getTeacherId()) &&
+        (course.getTeacherAssistantIds() == null ||
+            !course.getTeacherAssistantIds().contains(currentUser.getId()))) {
+      throw new RuntimeException("Unauthorized to reject join requests");
+    }
+
+    Course updatedCourse = courseService.rejectJoinRequest(id, studentId);
+    return ResponseEntity.ok(courseService.toCourseResponse(updatedCourse));
+  }
 }
 
 // DTO cho add/remove member

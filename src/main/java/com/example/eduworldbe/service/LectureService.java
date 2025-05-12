@@ -73,7 +73,6 @@ public class LectureService {
     dto.setContents(lecture.getContents());
     dto.setEndQuestions(lecture.getEndQuestions());
     dto.setCategories(lecture.getCategories());
-    dto.setPdfUrl(lecture.getPdfUrl());
     dto.setCourseId(lecture.getCourseId());
     dto.setTeacher(
         lecture.getTeacherId() != null ? userRepository.findById(lecture.getTeacherId()).orElse(null) : null);

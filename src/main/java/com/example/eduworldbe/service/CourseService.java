@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.Optional;
 import java.util.AbstractMap;
+import java.util.ArrayList;
 
 @Service
 public class CourseService {
@@ -70,14 +71,25 @@ public class CourseService {
     if (updated.getReviewIds() != null) {
       existingCourse.setReviewIds(updated.getReviewIds());
     }
-    // Cập nhật trạng thái hidden
     existingCourse.setHidden(updated.isHidden());
 
     return courseRepository.save(existingCourse);
   }
 
   public void delete(String id) {
-    courseRepository.deleteById(id);
+    Optional<Course> courseOptional = courseRepository.findById(id);
+
+    if (courseOptional.isPresent()) {
+      Course courseToDelete = courseOptional.get();
+
+      if (courseToDelete.getChapterIds() != null) {
+        for (String chapterId : courseToDelete.getChapterIds()) {
+          chapterRepository.deleteById(chapterId);
+        }
+      }
+
+      courseRepository.deleteById(id);
+    }
   }
 
   public CourseResponse toCourseResponse(Course course) {
@@ -95,10 +107,8 @@ public class CourseService {
     dto.setReviewIds(course.getReviewIds());
     dto.setHidden(course.isHidden());
 
-    // Lấy teacher
     dto.setTeacher(course.getTeacherId() != null ? userRepository.findById(course.getTeacherId()).orElse(null) : null);
 
-    // Lấy trợ giảng
     if (course.getTeacherAssistantIds() != null) {
       dto.setTeacherAssistants(
           course.getTeacherAssistantIds().stream()
@@ -107,7 +117,6 @@ public class CourseService {
               .toList());
     }
 
-    // Lấy học sinh
     if (course.getStudentIds() != null) {
       dto.setStudents(
           course.getStudentIds().stream()
@@ -116,9 +125,16 @@ public class CourseService {
               .toList());
     }
 
-    // Thêm averageRating và reviewCount
     double avg = reviewService.getAverageScore(1, course.getId());
     dto.setAverageRating(avg);
+
+    if (course.getPendingStudentIds() != null) {
+      dto.setPendingStudents(
+          course.getPendingStudentIds().stream()
+              .map(id -> userRepository.findById(id).orElse(null))
+              .filter(u -> u != null)
+              .toList());
+    }
 
     return dto;
   }
@@ -224,18 +240,57 @@ public class CourseService {
             score += termScore;
           }
 
-          // Tính điểm trung bình
           score = score / searchTerms.length;
 
           return new AbstractMap.SimpleEntry<>(course, score);
         })
-        .filter(entry -> entry.getValue() > 0) // Chỉ lấy các kết quả có điểm > 0
+        .filter(entry -> entry.getValue() > 0)
         .sorted((e1, e2) -> Double.compare(e2.getValue(), e1.getValue())) // Sắp xếp theo điểm giảm dần
         .map(AbstractMap.SimpleEntry::getKey)
         .toList();
   }
 
-  public void addLectureToCourseLectureIds(String courseId, String lectureId) {
-    // ... existing code ...
+  public Course requestJoinCourse(String courseId, String studentId) {
+    Course course = getById(courseId).orElseThrow(() -> new RuntimeException("Course not found"));
+
+    if (course.getStudentIds() != null && course.getStudentIds().contains(studentId)) {
+      throw new RuntimeException("Student is already enrolled in this course");
+    }
+
+    if (course.getPendingStudentIds() != null && course.getPendingStudentIds().contains(studentId)) {
+      throw new RuntimeException("Join request already exists");
+    }
+
+    if (course.getPendingStudentIds() == null) {
+      course.setPendingStudentIds(new ArrayList<>());
+    }
+    course.getPendingStudentIds().add(studentId);
+
+    return courseRepository.save(course);
+  }
+
+  public Course approveJoinRequest(String courseId, String studentId) {
+    Course course = getById(courseId).orElseThrow(() -> new RuntimeException("Course not found"));
+
+    if (course.getPendingStudentIds() == null || !course.getPendingStudentIds().remove(studentId)) {
+      throw new RuntimeException("No pending request found for this student");
+    }
+
+    if (course.getStudentIds() == null) {
+      course.setStudentIds(new ArrayList<>());
+    }
+    course.getStudentIds().add(studentId);
+
+    return courseRepository.save(course);
+  }
+
+  public Course rejectJoinRequest(String courseId, String studentId) {
+    Course course = getById(courseId).orElseThrow(() -> new RuntimeException("Course not found"));
+
+    if (course.getPendingStudentIds() == null || !course.getPendingStudentIds().remove(studentId)) {
+      throw new RuntimeException("No pending request found for this student");
+    }
+
+    return courseRepository.save(course);
   }
 }

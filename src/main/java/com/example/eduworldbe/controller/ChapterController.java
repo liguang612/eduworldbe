@@ -61,6 +61,7 @@ public class ChapterController {
         throw new RuntimeException("Unauthorized");
       }
       chapter.setId(id);
+      chapter.setCourseId(existingChapter.get().getCourseId());
       return ResponseEntity.ok(chapterService.update(id, chapter));
     }
     return ResponseEntity.notFound().build();

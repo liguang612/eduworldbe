@@ -19,7 +19,18 @@ public class ChapterService {
   private CourseRepository courseRepository;
 
   public Chapter create(Chapter chapter) {
-    return chapterRepository.save(chapter);
+    Chapter createdChapter = chapterRepository.save(chapter);
+
+    // Add chapterId to the corresponding Course's chapterIds list
+    courseRepository.findById(chapter.getCourseId()).ifPresent(course -> {
+      if (course.getChapterIds() == null) {
+        course.setChapterIds(new ArrayList<>());
+      }
+      course.getChapterIds().add(createdChapter.getId());
+      courseRepository.save(course);
+    });
+
+    return createdChapter;
   }
 
   public List<Chapter> getByCourseId(String courseId) {
@@ -36,7 +47,21 @@ public class ChapterService {
   }
 
   public void delete(String id) {
-    chapterRepository.deleteById(id);
+    Optional<Chapter> chapterOptional = chapterRepository.findById(id);
+    if (chapterOptional.isPresent()) {
+      Chapter chapterToDelete = chapterOptional.get();
+      String courseId = chapterToDelete.getCourseId();
+
+      chapterRepository.deleteById(id);
+
+      // Remove the chapterId from the corresponding Course's chapterIds list
+      courseRepository.findById(courseId).ifPresent(course -> {
+        if (course.getChapterIds() != null) {
+          course.getChapterIds().remove(id);
+          courseRepository.save(course);
+        }
+      });
+    }
   }
 
   public void addLectureToChapter(String chapterId, String lectureId) {
