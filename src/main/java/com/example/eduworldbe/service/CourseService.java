@@ -254,11 +254,11 @@ public class CourseService {
     Course course = getById(courseId).orElseThrow(() -> new RuntimeException("Course not found"));
 
     if (course.getStudentIds() != null && course.getStudentIds().contains(studentId)) {
-      throw new RuntimeException("Student is already enrolled in this course");
+      throw new RuntimeException("already_requested");
     }
 
     if (course.getPendingStudentIds() != null && course.getPendingStudentIds().contains(studentId)) {
-      throw new RuntimeException("Join request already exists");
+      throw new RuntimeException("already_enrolled");
     }
 
     if (course.getPendingStudentIds() == null) {
