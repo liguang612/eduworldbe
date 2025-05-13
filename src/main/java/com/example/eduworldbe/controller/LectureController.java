@@ -37,9 +37,9 @@ public class LectureController {
         .orElse(null);
   }
 
-  @GetMapping("/course/{courseId}")
-  public List<LectureResponse> getByCourseId(@PathVariable String courseId) {
-    return lectureService.getByCourseId(courseId).stream()
+  @GetMapping("/subject/{subjectId}")
+  public List<LectureResponse> getBySubjectId(@PathVariable String subjectId) {
+    return lectureService.getBySubjectId(subjectId).stream()
         .map(lectureService::toLectureResponse)
         .toList();
   }
@@ -53,6 +53,7 @@ public class LectureController {
 
   @PutMapping("/{id}")
   public Lecture update(@PathVariable String id, @RequestBody Lecture lecture) {
+    lecture.setId(id);
     return lectureService.update(id, lecture);
   }
 

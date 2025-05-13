@@ -16,13 +16,10 @@ public class LectureService {
   private LectureRepository lectureRepository;
 
   @Autowired
-  private CourseService courseService;
-
-  @Autowired
   private UserRepository userRepository;
 
   public Lecture create(Lecture lecture) {
-    // Không xử lý courseId nữa
+    // Không xử lý courseId nữa - giờ là subjectId
     return lectureRepository.save(lecture);
   }
 
@@ -30,8 +27,8 @@ public class LectureService {
     return lectureRepository.findById(id);
   }
 
-  public List<Lecture> getByCourseId(String courseId) {
-    return lectureRepository.findByCourseId(courseId);
+  public List<Lecture> getBySubjectId(String subjectId) {
+    return lectureRepository.findBySubjectId(subjectId);
   }
 
   public Lecture update(String id, Lecture lecture) {
@@ -73,9 +70,10 @@ public class LectureService {
     dto.setContents(lecture.getContents());
     dto.setEndQuestions(lecture.getEndQuestions());
     dto.setCategories(lecture.getCategories());
-    dto.setCourseId(lecture.getCourseId());
+    dto.setSubjectId(lecture.getSubjectId());
     dto.setTeacher(
         lecture.getTeacherId() != null ? userRepository.findById(lecture.getTeacherId()).orElse(null) : null);
+    dto.setDuration(lecture.getDuration());
     return dto;
   }
 }

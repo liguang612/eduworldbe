@@ -13,6 +13,7 @@ public class LectureResponse {
   private List<String> endQuestions;
   private List<String> categories;
   private String pdfUrl;
-  private String courseId;
+  private String subjectId;
   private User teacher;
+  private Integer duration;
 }

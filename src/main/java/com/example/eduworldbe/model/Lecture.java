@@ -20,20 +20,17 @@ public class Lecture {
   private String name;
   private String description;
 
-  // Nội dung bài giảng: lưu JSON hoặc HTML
-  @Column(columnDefinition = "TEXT")
+  @Column(columnDefinition = "MEDIUMTEXT")
   private String contents;
 
-  // Danh sách ID câu hỏi cuối bài
   @ElementCollection
   private List<String> endQuestions;
 
-  // Danh sách hashtag
   @ElementCollection
   private List<String> categories;
 
-  // ID của khóa học chứa bài giảng
-  private String courseId; // optional, không bắt buộc
+  private String subjectId;
+  private String teacherId;
 
-  private String teacherId; // id của giáo viên tạo bài giảng
+  private Integer duration;
 }

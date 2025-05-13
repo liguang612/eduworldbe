@@ -3,7 +3,6 @@ package com.example.eduworldbe.controller;
 import com.example.eduworldbe.dto.AuthRequest;
 import com.example.eduworldbe.dto.AuthResponse;
 import com.example.eduworldbe.dto.ChangePasswordRequest;
-import com.example.eduworldbe.dto.RegisterRequest;
 import com.example.eduworldbe.dto.UpdateUserRequest;
 import com.example.eduworldbe.dto.UserResponse;
 import com.example.eduworldbe.dto.UserSearchResponse;
