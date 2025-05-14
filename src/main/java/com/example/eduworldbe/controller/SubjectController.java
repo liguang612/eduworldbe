@@ -34,4 +34,9 @@ public class SubjectController {
   public List<Subject> getByGrade(@PathVariable Integer grade) {
     return subjectService.getByGrade(grade);
   }
+
+  @GetMapping("/{id}")
+  public Subject getById(@PathVariable String id) {
+    return subjectService.getById(id);
+  }
 }

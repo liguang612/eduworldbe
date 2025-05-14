@@ -9,6 +9,10 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.AbstractMap;
+import java.util.Map;
+import java.util.stream.Collectors;
+import java.util.Objects;
 
 @Service
 public class LectureService {
@@ -31,9 +35,33 @@ public class LectureService {
     return lectureRepository.findBySubjectId(subjectId);
   }
 
-  public Lecture update(String id, Lecture lecture) {
-    lecture.setId(id);
-    return lectureRepository.save(lecture);
+  public Lecture update(String id, Lecture updated) {
+    Lecture existingLecture = getById(id).orElseThrow(() -> new RuntimeException("Lecture not found"));
+
+    // Chỉ cập nhật các trường được truyền lên (không null)
+    if (updated.getName() != null) {
+      existingLecture.setName(updated.getName());
+    }
+    if (updated.getDescription() != null) {
+      existingLecture.setDescription(updated.getDescription());
+    }
+    if (updated.getContents() != null) {
+      existingLecture.setContents(updated.getContents());
+    }
+    if (updated.getEndQuestions() != null) {
+      existingLecture.setEndQuestions(updated.getEndQuestions());
+    }
+    if (updated.getCategories() != null) {
+      existingLecture.setCategories(updated.getCategories());
+    }
+    if (updated.getSubjectId() != null) {
+      existingLecture.setSubjectId(updated.getSubjectId());
+    }
+    if (updated.getDuration() != null) {
+      existingLecture.setDuration(updated.getDuration());
+    }
+
+    return lectureRepository.save(existingLecture);
   }
 
   public void delete(String id) {
@@ -75,5 +103,118 @@ public class LectureService {
         lecture.getTeacherId() != null ? userRepository.findById(lecture.getTeacherId()).orElse(null) : null);
     dto.setDuration(lecture.getDuration());
     return dto;
+  }
+
+  private int calculateLevenshteinDistance(String s1, String s2) {
+    int[][] dp = new int[s1.length() + 1][s2.length() + 1];
+
+    for (int i = 0; i <= s1.length(); i++) {
+      dp[i][0] = i;
+    }
+    for (int j = 0; j <= s2.length(); j++) {
+      dp[0][j] = j;
+    }
+
+    for (int i = 1; i <= s1.length(); i++) {
+      for (int j = 1; j <= s2.length(); j++) {
+        if (s1.charAt(i - 1) == s2.charAt(j - 1)) {
+          dp[i][j] = dp[i - 1][j - 1];
+        } else {
+          dp[i][j] = 1 + Math.min(dp[i - 1][j - 1], Math.min(dp[i - 1][j], dp[i][j - 1]));
+        }
+      }
+    }
+
+    return dp[s1.length()][s2.length()];
+  }
+
+  public List<Lecture> searchLecturesByName(List<Lecture> lectures, String keyword) {
+    if (keyword == null || keyword.trim().isEmpty()) {
+      return lectures;
+    }
+
+    String[] searchTerms = keyword.toLowerCase().split("\\s+");
+
+    return lectures.stream()
+        .map(lecture -> {
+          String lectureName = lecture.getName().toLowerCase();
+          String lectureDescription = lecture.getDescription() != null ? lecture.getDescription().toLowerCase() : "";
+          List<String> categories = lecture.getCategories() != null
+              ? lecture.getCategories().stream()
+                  .map(String::toLowerCase)
+                  .toList()
+              : List.of();
+
+          double score = 0.0;
+
+          // Tính điểm cho mỗi từ khóa
+          for (String term : searchTerms) {
+            double termScore = 0.0;
+
+            // Khớp chính xác với tên
+            if (lectureName.equals(term)) {
+              termScore += 100.0;
+            }
+            // Khớp một phần với tên
+            else if (lectureName.contains(term)) {
+              double lengthRatio = (double) term.length() / lectureName.length();
+              termScore += 80.0 * lengthRatio;
+            }
+
+            // Khớp với mô tả
+            if (lectureDescription.contains(term)) {
+              double lengthRatio = (double) term.length() / lectureDescription.length();
+              termScore += 60.0 * lengthRatio;
+            }
+
+            // Khớp với categories
+            for (String category : categories) {
+              if (category.equals(term)) {
+                termScore += 40.0;
+              } else if (category.contains(term)) {
+                double lengthRatio = (double) term.length() / category.length();
+                termScore += 20.0 * lengthRatio;
+              }
+            }
+
+            // Levenshtein distance cho tên
+            int distance = calculateLevenshteinDistance(lectureName, term);
+            if (distance <= 3) {
+              termScore += Math.max(0, 30.0 * (1 - distance / 3.0));
+            }
+
+            // Kiểm tra Levenshtein distance cho từng từ trong tên
+            String[] lectureWords = lectureName.split("\\s+");
+            for (String word : lectureWords) {
+              distance = calculateLevenshteinDistance(word, term);
+              if (distance <= 2) {
+                termScore += Math.max(0, 20.0 * (1 - distance / 2.0));
+              }
+            }
+
+            score += termScore;
+          }
+
+          score = score / searchTerms.length;
+
+          return new AbstractMap.SimpleEntry<>(lecture, score);
+        })
+        .filter(entry -> entry.getValue() > 0)
+        .sorted((e1, e2) -> Double.compare(e2.getValue(), e1.getValue())) // Sắp xếp theo điểm giảm dần
+        .map(AbstractMap.SimpleEntry::getKey)
+        .toList();
+  }
+
+  public List<Lecture> getByIdsInOrder(List<String> ids) {
+    // Lấy tất cả lectures theo ids
+    Map<String, Lecture> lectureMap = lectureRepository.findAllById(ids)
+        .stream()
+        .collect(Collectors.toMap(Lecture::getId, lecture -> lecture));
+
+    // Trả về danh sách theo thứ tự ids được truyền vào
+    return ids.stream()
+        .map(lectureMap::get)
+        .filter(Objects::nonNull)
+        .toList();
   }
 }

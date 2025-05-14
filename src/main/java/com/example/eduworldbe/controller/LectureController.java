@@ -45,8 +45,26 @@ public class LectureController {
   }
 
   @GetMapping
-  public List<LectureResponse> getAll() {
-    return lectureService.getAll().stream()
+  public List<LectureResponse> getAll(
+      @RequestParam(required = false) String subjectId,
+      @RequestParam(required = false) String keyword) {
+
+    List<Lecture> allLectures = lectureService.getAll();
+    List<Lecture> filteredLectures = allLectures;
+
+    // Apply subjectId filter if provided
+    if (subjectId != null && !subjectId.isEmpty()) {
+      filteredLectures = filteredLectures.stream()
+          .filter(lecture -> subjectId.equals(lecture.getSubjectId()))
+          .toList();
+    }
+
+    // Apply keyword search if provided
+    if (keyword != null && !keyword.trim().isEmpty()) {
+      filteredLectures = lectureService.searchLecturesByName(filteredLectures, keyword);
+    }
+
+    return filteredLectures.stream()
         .map(lectureService::toLectureResponse)
         .toList();
   }
@@ -70,6 +88,13 @@ public class LectureController {
   @PutMapping("/{id}/remove-question")
   public Lecture removeEndQuestion(@PathVariable String id, @RequestBody AddQuestionRequest req) {
     return lectureService.removeEndQuestion(id, req.getQuestionId());
+  }
+
+  @PostMapping("/by-ids")
+  public List<LectureResponse> getByIds(@RequestBody List<String> ids) {
+    return lectureService.getByIdsInOrder(ids).stream()
+        .map(lectureService::toLectureResponse)
+        .toList();
   }
 }
 

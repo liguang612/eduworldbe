@@ -23,4 +23,9 @@ public class SubjectService {
   public List<Subject> getByGrade(Integer grade) {
     return subjectRepository.findByGrade(grade);
   }
+
+  public Subject getById(String id) {
+    return subjectRepository.findById(id)
+        .orElseThrow(() -> new RuntimeException("Subject not found with id: " + id));
+  }
 }
