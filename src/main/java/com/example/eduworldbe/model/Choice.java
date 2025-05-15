@@ -4,9 +4,14 @@ import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 @Entity
-@Table(name = "choice")
+@Table(name = "choice", indexes = {
+    @Index(name = "idx_choice_question_id", columnList = "questionId"),
+    @Index(name = "idx_choice_order", columnList = "orderIndex"),
+    @Index(name = "idx_choice_question_value", columnList = "questionId,value", unique = true)
+})
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -15,9 +20,16 @@ public class Choice {
   @GeneratedValue(strategy = GenerationType.UUID)
   private String id;
 
-  private String questionId;
+  @Column(columnDefinition = "TEXT")
   private String text;
-  private String imageUrl;
-  private Boolean isAnswer;
-  private Integer orderIndex; // dùng cho ordering, dragdrop
+
+  private String value;
+  private String questionId;
+  private Integer orderIndex;
+
+  private Boolean isCorrect = false;
+
+  @Column(columnDefinition = "TEXT")
+  @JsonIgnore
+  private String textAnswer;
 }

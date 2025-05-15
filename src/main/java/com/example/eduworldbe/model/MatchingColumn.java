@@ -6,7 +6,11 @@ import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
 
 @Entity
-@Table(name = "matching_column")
+@Table(name = "matching_column", indexes = {
+    @Index(name = "idx_matching_column_question_id", columnList = "questionId"),
+    @Index(name = "idx_matching_column_side", columnList = "side"),
+    @Index(name = "idx_matching_column_order", columnList = "orderIndex")
+})
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -15,8 +19,10 @@ public class MatchingColumn {
   @GeneratedValue(strategy = GenerationType.UUID)
   private String id;
 
+  @Column(columnDefinition = "TEXT")
+  private String label;
+
   private String questionId;
-  private String side; // LEFT or RIGHT
-  private String content;
+  private String side; // left, right
   private Integer orderIndex;
 }

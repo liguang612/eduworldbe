@@ -8,7 +8,12 @@ import java.util.Date;
 import java.util.List;
 
 @Entity
-@Table(name = "question")
+@Table(name = "question", indexes = {
+    @Index(name = "idx_question_type", columnList = "type"),
+    @Index(name = "idx_question_created_by", columnList = "createdBy"),
+    @Index(name = "idx_question_created_at", columnList = "createdAt"),
+    @Index(name = "idx_question_subject_id", columnList = "subjectId")
+})
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -18,10 +23,17 @@ public class Question {
   private String id;
 
   @Column(columnDefinition = "TEXT")
-  private String text;
-  private Integer type; // 1: MCQ, 2: Matching, 3: Ordering, 4: ShortAnswer, 5: FillInBlank, 6: DragDrop
-  private String mediaUrl;
-  private Integer mediaType; // 0: image, 1: audio, 2: video, 3: pdf
+  private String title;
+
+  @Column(nullable = false)
+  private String subjectId;
+
+  private String type; // radio, checkbox, itemConnector, ordering, shortAnswer
+
+  @ManyToOne
+  @JoinColumn(name = "shared_media_id")
+  private SharedMedia sharedMedia;
+
   private Integer level;
   private String createdBy;
   @ElementCollection

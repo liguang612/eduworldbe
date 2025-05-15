@@ -8,4 +8,6 @@ public interface MatchingColumnRepository extends JpaRepository<MatchingColumn, 
   List<MatchingColumn> findByQuestionId(String questionId);
 
   List<MatchingColumn> findByQuestionIdAndSide(String questionId, String side);
+
+  List<MatchingColumn> findByQuestionIdOrderByOrderIndexAsc(String questionId);
 }

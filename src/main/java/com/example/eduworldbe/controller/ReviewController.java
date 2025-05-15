@@ -4,6 +4,7 @@ import com.example.eduworldbe.model.Review;
 import com.example.eduworldbe.model.User;
 import com.example.eduworldbe.service.ReviewService;
 import com.example.eduworldbe.util.AuthUtil;
+import org.springframework.security.access.AccessDeniedException;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -23,7 +24,7 @@ public class ReviewController {
   public Review create(@RequestBody Review review, HttpServletRequest request) {
     User currentUser = authUtil.getCurrentUser(request);
     if (currentUser == null) {
-      throw new RuntimeException("Unauthorized");
+      throw new AccessDeniedException("User not authenticated");
     }
     review.setUserId(currentUser.getId());
     return reviewService.create(review);
