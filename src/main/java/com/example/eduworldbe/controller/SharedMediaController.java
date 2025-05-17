@@ -5,7 +5,9 @@ import com.example.eduworldbe.service.SharedMediaService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.List;
 
 @RestController
@@ -17,6 +19,15 @@ public class SharedMediaController {
   @PostMapping
   public ResponseEntity<SharedMedia> create(@RequestBody SharedMedia sharedMedia) {
     return ResponseEntity.ok(sharedMediaService.create(sharedMedia));
+  }
+
+  @PostMapping("/upload")
+  public ResponseEntity<SharedMedia> createWithFile(
+      @RequestParam("file") MultipartFile file,
+      @RequestParam("title") String title,
+      @RequestParam("mediaType") Integer mediaType,
+      @RequestParam(value = "text", required = false) String text) throws IOException {
+    return ResponseEntity.ok(sharedMediaService.createWithFile(file, title, mediaType, text));
   }
 
   @GetMapping("/{id}")

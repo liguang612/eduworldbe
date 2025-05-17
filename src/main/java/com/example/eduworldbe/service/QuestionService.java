@@ -5,9 +5,11 @@ import com.example.eduworldbe.model.MatchingColumn;
 import com.example.eduworldbe.model.MatchingPair;
 import com.example.eduworldbe.model.Question;
 import com.example.eduworldbe.model.User;
+import com.example.eduworldbe.model.SharedMedia;
 import com.example.eduworldbe.repository.QuestionRepository;
 import com.example.eduworldbe.util.AuthUtil;
 import com.example.eduworldbe.dto.QuestionDetailResponse;
+import com.example.eduworldbe.dto.CreateQuestionRequest;
 
 import jakarta.servlet.http.HttpServletRequest;
 
@@ -37,10 +39,27 @@ public class QuestionService {
   @Autowired
   private MatchingPairService matchingPairService;
 
-  public Question create(Question question, HttpServletRequest request) {
-    User user = authUtil.getCurrentUser(request);
+  @Autowired
+  private SharedMediaService sharedMediaService;
+
+  public Question create(CreateQuestionRequest request, HttpServletRequest httpRequest) {
+    User user = authUtil.getCurrentUser(httpRequest);
     if (user == null) {
       throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "User not found");
+    }
+
+    Question question = new Question();
+    question.setTitle(request.getTitle());
+    question.setSubjectId(request.getSubjectId());
+    question.setType(request.getType());
+    question.setLevel(request.getLevel());
+    question.setCategories(request.getCategories());
+
+    // Xử lý SharedMedia
+    if (request.getSharedMediaId() != null) {
+      SharedMedia sharedMedia = sharedMediaService.getById(request.getSharedMediaId())
+          .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "SharedMedia not found"));
+      question.setSharedMedia(sharedMedia);
     }
 
     question.setCreatedBy(user.getId());
@@ -55,7 +74,7 @@ public class QuestionService {
   }
 
   public Optional<QuestionDetailResponse> getQuestionDetailById(String id, HttpServletRequest request) {
-    Optional<Question> questionOptional = questionRepository.findById(id);
+    Optional<Question> questionOptional = questionRepository.findWithSharedMediaById(id);
     if (questionOptional.isEmpty()) {
       return Optional.empty();
     }

@@ -2,6 +2,7 @@ package com.example.eduworldbe.controller;
 
 import com.example.eduworldbe.model.Choice;
 import com.example.eduworldbe.service.ChoiceService;
+import com.example.eduworldbe.dto.ChoiceBatchRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -17,6 +18,11 @@ public class ChoiceController {
   @PostMapping
   public ResponseEntity<Choice> create(@RequestBody Choice choice) {
     return ResponseEntity.ok(choiceService.create(choice));
+  }
+
+  @PostMapping("/batch")
+  public ResponseEntity<List<Choice>> createBatch(@RequestBody ChoiceBatchRequest request) {
+    return ResponseEntity.ok(choiceService.createBatch(request));
   }
 
   @GetMapping("/{id}")

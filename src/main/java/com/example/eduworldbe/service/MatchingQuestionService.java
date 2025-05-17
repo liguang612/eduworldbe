@@ -2,6 +2,8 @@ package com.example.eduworldbe.service;
 
 import com.example.eduworldbe.model.MatchingColumn;
 import com.example.eduworldbe.model.MatchingPair;
+import com.example.eduworldbe.model.Question;
+import com.example.eduworldbe.model.SharedMedia;
 import com.example.eduworldbe.dto.MatchingQuestionRequest;
 import com.example.eduworldbe.dto.MatchingColumnBatchRequest;
 import com.example.eduworldbe.dto.MatchingPairBatchRequest;
@@ -22,8 +24,34 @@ public class MatchingQuestionService {
   @Autowired
   private MatchingPairService matchingPairService;
 
+  @Autowired
+  private QuestionService questionService;
+
+  @Autowired
+  private SharedMediaService sharedMediaService;
+
   @Transactional
   public MatchingQuestionResult createMatchingQuestion(MatchingQuestionRequest request) {
+    // Update question with sharedMediaId if provided
+    if (request.getSharedMediaId() != null) {
+      Question question = questionService.getById(request.getQuestionId())
+          .orElseThrow(() -> new RuntimeException("Question not found"));
+      SharedMedia sharedMedia = sharedMediaService.getById(request.getSharedMediaId())
+          .orElseThrow(() -> new RuntimeException("SharedMedia not found"));
+      question.setSharedMedia(sharedMedia);
+      questionService.update(request.getQuestionId(), question);
+    }
+
+    // Delete existing columns and pairs for this question
+    List<MatchingColumn> existingColumns = matchingColumnService.getByQuestionId(request.getQuestionId());
+    List<MatchingPair> existingPairs = matchingPairService.getByQuestionId(request.getQuestionId());
+
+    // Delete existing pairs first (due to foreign key constraints)
+    existingPairs.forEach(pair -> matchingPairService.delete(pair.getId()));
+
+    // Delete existing columns
+    existingColumns.forEach(column -> matchingColumnService.delete(column.getId()));
+
     // Create columns
     MatchingColumnBatchRequest columnRequest = new MatchingColumnBatchRequest();
     columnRequest.setQuestionId(request.getQuestionId());

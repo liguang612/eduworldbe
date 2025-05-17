@@ -2,6 +2,7 @@ package com.example.eduworldbe.controller;
 
 import com.example.eduworldbe.model.Question;
 import com.example.eduworldbe.service.QuestionService;
+import com.example.eduworldbe.dto.CreateQuestionRequest;
 import com.example.eduworldbe.dto.QuestionDetailResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -20,8 +21,9 @@ public class QuestionController {
   private QuestionService questionService;
 
   @PostMapping
-  public ResponseEntity<Question> create(@Valid @RequestBody Question question, HttpServletRequest request) {
-    return ResponseEntity.ok(questionService.create(question, request));
+  public ResponseEntity<Question> create(@Valid @RequestBody CreateQuestionRequest request,
+      HttpServletRequest httpRequest) {
+    return ResponseEntity.ok(questionService.create(request, httpRequest));
   }
 
   @GetMapping("/{id}")
