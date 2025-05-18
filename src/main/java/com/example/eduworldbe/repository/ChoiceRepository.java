@@ -9,4 +9,6 @@ public interface ChoiceRepository extends JpaRepository<Choice, String> {
   List<Choice> findByQuestionId(String questionId);
 
   Optional<Choice> findByQuestionIdAndValue(String questionId, String value);
+
+  void deleteByQuestionId(String questionId);
 }

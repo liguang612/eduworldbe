@@ -10,4 +10,6 @@ public interface MatchingColumnRepository extends JpaRepository<MatchingColumn, 
   List<MatchingColumn> findByQuestionIdAndSide(String questionId, String side);
 
   List<MatchingColumn> findByQuestionIdOrderByOrderIndexAsc(String questionId);
+
+  void deleteByQuestionId(String questionId);
 }

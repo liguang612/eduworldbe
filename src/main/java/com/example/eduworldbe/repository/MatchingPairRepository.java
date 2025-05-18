@@ -6,4 +6,6 @@ import java.util.List;
 
 public interface MatchingPairRepository extends JpaRepository<MatchingPair, String> {
   List<MatchingPair> findByQuestionId(String questionId);
+
+  void deleteByQuestionId(String questionId);
 }

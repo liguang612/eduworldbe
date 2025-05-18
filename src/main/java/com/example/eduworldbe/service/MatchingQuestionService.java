@@ -84,8 +84,19 @@ public class MatchingQuestionService {
     pairRequest.setPairs(request.getPairs().stream()
         .map(pair -> {
           MatchingPairBatchRequest.MatchingPairItem item = new MatchingPairBatchRequest.MatchingPairItem();
-          item.setFrom(columns.get(pair.getLeftIndex()).getId());
-          item.setTo(columns.get(pair.getRightIndex() + request.getLeft().size()).getId());
+
+          // Only set from/to if indices are valid
+          if (pair.getLeftIndex() >= 0 && pair.getRightIndex() >= 0
+              && pair.getLeftIndex() < request.getLeft().size()
+              && pair.getRightIndex() < request.getRight().size()) {
+            item.setFrom(columns.get(pair.getLeftIndex()).getId());
+            item.setTo(columns.get(pair.getRightIndex() + request.getLeft().size()).getId());
+          } else {
+            // Set to null for invalid indices
+            item.setFrom(null);
+            item.setTo(null);
+          }
+
           return item;
         })
         .collect(Collectors.toList()));

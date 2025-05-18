@@ -17,4 +17,6 @@ public interface QuestionRepository extends JpaRepository<Question, String> {
   List<Question> findBySubjectId(String subjectId);
 
   List<Question> findByCreatedByAndSubjectId(String createdBy, String subjectId);
+
+  List<Question> findBySharedMediaId(String sharedMediaId);
 }

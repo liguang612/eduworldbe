@@ -4,6 +4,7 @@ import com.example.eduworldbe.model.Question;
 import com.example.eduworldbe.service.QuestionService;
 import com.example.eduworldbe.dto.CreateQuestionRequest;
 import com.example.eduworldbe.dto.QuestionDetailResponse;
+import com.example.eduworldbe.dto.QuestionListResponseItem;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -53,6 +54,12 @@ public class QuestionController {
   @GetMapping("/subject/{subjectId}")
   public ResponseEntity<List<Question>> getBySubjectId(@PathVariable String subjectId) {
     return ResponseEntity.ok(questionService.getBySubjectId(subjectId));
+  }
+
+  @GetMapping("/shared-media/{sharedMediaId}")
+  public ResponseEntity<List<QuestionListResponseItem>> getBySharedMediaId(@PathVariable String sharedMediaId,
+      HttpServletRequest request) {
+    return ResponseEntity.ok(questionService.getBySharedMediaId(sharedMediaId, request));
   }
 
   @PutMapping("/{id}")

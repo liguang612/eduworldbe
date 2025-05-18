@@ -10,6 +10,7 @@ import com.example.eduworldbe.repository.QuestionRepository;
 import com.example.eduworldbe.util.AuthUtil;
 import com.example.eduworldbe.dto.QuestionDetailResponse;
 import com.example.eduworldbe.dto.CreateQuestionRequest;
+import com.example.eduworldbe.dto.QuestionListResponseItem;
 
 import jakarta.servlet.http.HttpServletRequest;
 
@@ -17,10 +18,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
+import java.util.Arrays;
 
 @Service
 public class QuestionService {
@@ -60,6 +64,7 @@ public class QuestionService {
       SharedMedia sharedMedia = sharedMediaService.getById(request.getSharedMediaId())
           .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "SharedMedia not found"));
       question.setSharedMedia(sharedMedia);
+      sharedMediaService.incrementUsageCount(sharedMedia.getId());
     }
 
     question.setCreatedBy(user.getId());
@@ -89,7 +94,7 @@ public class QuestionService {
     switch (question.getType()) {
       case "radio":
       case "checkbox":
-      case "ordering":
+      case "ranking":
         List<Choice> choices = choiceService.getByQuestionId(id);
         choices.forEach(choice -> {
           if (!isCreator) {
@@ -138,6 +143,59 @@ public class QuestionService {
     return questionRepository.findBySubjectId(subjectId);
   }
 
+  public List<QuestionListResponseItem> getBySharedMediaId(String sharedMediaId, HttpServletRequest request) {
+    // Get current user from token
+    User currentUser = authUtil.getCurrentUser(request);
+
+    return questionRepository.findBySharedMediaId(sharedMediaId).stream()
+        .map(question -> {
+          QuestionListResponseItem item = new QuestionListResponseItem(question);
+
+          boolean isCreator = currentUser != null && currentUser.getId().equals(question.getCreatedBy());
+
+          if (Arrays.asList("radio", "checkbox", "ranking", "shortAnswer").contains(question.getType())) {
+            List<Choice> choices = choiceService.getByQuestionId(question.getId());
+
+            if (!isCreator) {
+              if (!"shortAnswer".equals(question.getType())) {
+                choices.forEach(choice -> {
+                  choice.setIsCorrect(null);
+                  choice.setOrderIndex(null);
+                  choice.setTextAnswer(null);
+                });
+              } else {
+                choices.forEach(choice -> {
+                  choice.setTextAnswer(null);
+                });
+              }
+            }
+
+            item.setChoices(choices);
+          }
+
+          // Get matching columns and pairs for itemConnector type
+          if ("itemConnector".equals(question.getType())) {
+            List<MatchingColumn> matchingColumns = matchingColumnService.getByQuestionId(question.getId());
+            List<MatchingPair> matchingPairs = matchingPairService.getByQuestionId(question.getId());
+
+            if (!isCreator) {
+              matchingColumns.forEach(column -> {
+                column.setOrderIndex(null);
+              });
+              matchingPairs.forEach(pair -> {
+                // You might need to add fields to MatchingPair to hide here if needed
+              });
+            }
+
+            item.setMatchingColumns(matchingColumns);
+            item.setMatchingPairs(matchingPairs);
+          }
+
+          return item;
+        })
+        .collect(Collectors.toList());
+  }
+
   public List<Question> getAllFiltered(String createdBy, String subjectId) {
     if (createdBy != null && !createdBy.isEmpty() && subjectId != null && !subjectId.isEmpty()) {
       return questionRepository.findByCreatedByAndSubjectId(createdBy, subjectId);
@@ -150,8 +208,12 @@ public class QuestionService {
     }
   }
 
+  @Transactional
   public Question update(String id, Question updated) {
-    Question existing = questionRepository.findById(id).orElseThrow();
+    Question existing = questionRepository.findById(id)
+        .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Question not found"));
+
+    // Update basic fields
     if (updated.getTitle() != null)
       existing.setTitle(updated.getTitle());
     if (updated.getSubjectId() != null)
@@ -169,10 +231,36 @@ public class QuestionService {
     if (updated.getReviewIds() != null)
       existing.setReviewIds(updated.getReviewIds());
     existing.setUpdatedAt(new Date());
+
+    // Delete all existing choices
+    choiceService.deleteByQuestionId(id);
+
+    // Delete all existing matching columns and pairs
+    matchingColumnService.deleteByQuestionId(id);
+    matchingPairService.deleteByQuestionId(id);
+
     return questionRepository.save(existing);
   }
 
+  @Transactional
   public void delete(String id) {
+    Question question = questionRepository.findById(id)
+        .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Question not found"));
+
+    // Handle SharedMedia if exists
+    if (question.getSharedMedia() != null) {
+      SharedMedia sharedMedia = question.getSharedMedia();
+      String mediaId = sharedMedia.getId();
+      Integer usageCount = sharedMedia.getUsageCount();
+
+      sharedMediaService.decrementUsageCount(mediaId);
+
+      // If this was the last question using this SharedMedia, delete the SharedMedia
+      if (usageCount - 1 == 0) {
+        sharedMediaService.delete(mediaId);
+      }
+    }
+
     questionRepository.deleteById(id);
   }
 }

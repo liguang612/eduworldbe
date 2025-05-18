@@ -22,4 +22,7 @@ public class SharedMedia {
   private String text; // For shared text content (e.g., reading comprehension passages)
 
   private String title;
+
+  @Column(nullable = false)
+  private Integer usageCount = 0; // Track number of questions using this shared media
 }

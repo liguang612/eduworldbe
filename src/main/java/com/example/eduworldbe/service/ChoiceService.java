@@ -123,4 +123,9 @@ public class ChoiceService {
   public void delete(String id) {
     choiceRepository.deleteById(id);
   }
+
+  @Transactional
+  public void deleteByQuestionId(String questionId) {
+    choiceRepository.deleteByQuestionId(questionId);
+  }
 }

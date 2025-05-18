@@ -5,6 +5,7 @@ import com.example.eduworldbe.repository.SharedMediaRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
 import java.util.List;
@@ -19,6 +20,7 @@ public class SharedMediaService {
   private FileService fileService;
 
   public SharedMedia create(SharedMedia sharedMedia) {
+    sharedMedia.setUsageCount(0);
     return sharedMediaRepository.save(sharedMedia);
   }
 
@@ -33,8 +35,27 @@ public class SharedMediaService {
     sharedMedia.setMediaType(mediaType);
     sharedMedia.setMediaUrl(mediaUrl);
     sharedMedia.setText(text);
+    sharedMedia.setUsageCount(0);
 
     return sharedMediaRepository.save(sharedMedia);
+  }
+
+  @Transactional
+  public void incrementUsageCount(String id) {
+    SharedMedia media = sharedMediaRepository.findById(id)
+        .orElseThrow(() -> new RuntimeException("SharedMedia not found"));
+    media.setUsageCount(media.getUsageCount() + 1);
+    sharedMediaRepository.save(media);
+  }
+
+  @Transactional
+  public void decrementUsageCount(String id) {
+    SharedMedia media = sharedMediaRepository.findById(id)
+        .orElseThrow(() -> new RuntimeException("SharedMedia not found"));
+    if (media.getUsageCount() > 0) {
+      media.setUsageCount(media.getUsageCount() - 1);
+      sharedMediaRepository.save(media);
+    }
   }
 
   public Optional<SharedMedia> getById(String id) {
@@ -66,8 +87,40 @@ public class SharedMediaService {
     return sharedMediaRepository.save(existing);
   }
 
+  public SharedMedia updateWithFile(String id, MultipartFile file, String title, Integer mediaType, String text)
+      throws IOException {
+    SharedMedia existing = sharedMediaRepository.findById(id)
+        .orElseThrow(() -> new RuntimeException("SharedMedia not found with id " + id));
+
+    if (file != null && !file.isEmpty()) {
+      // Delete old file if it exists
+      if (existing.getMediaUrl() != null && !existing.getMediaUrl().isEmpty()) {
+        fileService.deleteFile(existing.getMediaUrl());
+      }
+
+      String mediaUrl = fileService.uploadFile(file, "shared-media");
+      existing.setMediaUrl(mediaUrl);
+    }
+
+    if (title != null) {
+      existing.setTitle(title);
+    }
+    if (mediaType != null) {
+      existing.setMediaType(mediaType);
+    }
+    if (text != null) {
+      existing.setText(text);
+    }
+
+    return sharedMediaRepository.save(existing);
+  }
+
+  @Transactional
   public void delete(String id) {
     SharedMedia media = sharedMediaRepository.findById(id).orElseThrow();
+    if (media.getUsageCount() > 0) {
+      throw new RuntimeException("Cannot delete SharedMedia that is being used by questions");
+    }
     // Delete the file if it exists
     if (media.getMediaUrl() != null) {
       fileService.deleteFile(media.getMediaUrl());

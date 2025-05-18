@@ -80,4 +80,9 @@ public class MatchingColumnService {
     leftColumns.addAll(rightColumns);
     return matchingColumnRepository.saveAll(leftColumns);
   }
+
+  @Transactional
+  public void deleteByQuestionId(String questionId) {
+    matchingColumnRepository.deleteByQuestionId(questionId);
+  }
 }

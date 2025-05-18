@@ -52,6 +52,16 @@ public class SharedMediaController {
     return ResponseEntity.ok(sharedMediaService.searchByTitle(title));
   }
 
+  @PostMapping("/upload/{id}")
+  public ResponseEntity<SharedMedia> updateWithFile(
+      @PathVariable String id,
+      @RequestParam(value = "file", required = false) MultipartFile file,
+      @RequestParam(value = "title", required = false) String title,
+      @RequestParam(value = "mediaType", required = false) Integer mediaType,
+      @RequestParam(value = "text", required = false) String text) throws IOException {
+    return ResponseEntity.ok(sharedMediaService.updateWithFile(id, file, title, mediaType, text));
+  }
+
   @PutMapping("/{id}")
   public ResponseEntity<SharedMedia> update(@PathVariable String id, @RequestBody SharedMedia updated) {
     return ResponseEntity.ok(sharedMediaService.update(id, updated));

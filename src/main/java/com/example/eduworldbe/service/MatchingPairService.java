@@ -61,4 +61,9 @@ public class MatchingPairService {
 
     return matchingPairRepository.saveAll(pairs);
   }
+
+  @Transactional
+  public void deleteByQuestionId(String questionId) {
+    matchingPairRepository.deleteByQuestionId(questionId);
+  }
 }
