@@ -1,0 +1,284 @@
+package com.example.eduworldbe.service;
+
+import com.example.eduworldbe.model.Exam;
+import com.example.eduworldbe.model.Question;
+import com.example.eduworldbe.repository.ExamRepository;
+import com.example.eduworldbe.repository.QuestionRepository;
+import com.example.eduworldbe.dto.ExamResponse;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
+import java.util.Random;
+
+@Service
+public class ExamService {
+  @Autowired
+  private ExamRepository examRepository;
+
+  @Autowired
+  private QuestionRepository questionRepository;
+
+  @Autowired
+  private ReviewService reviewService;
+
+  public Exam create(Exam exam) {
+    if (exam.getQuestionIds() == null) {
+      exam.setQuestionIds(new ArrayList<>());
+    }
+    if (exam.getReviewIds() == null) {
+      exam.setReviewIds(new ArrayList<>());
+    }
+    if (exam.getCategories() == null) {
+      exam.setCategories(new ArrayList<>());
+    }
+    return examRepository.save(exam);
+  }
+
+  public Optional<Exam> getById(String id) {
+    return examRepository.findById(id);
+  }
+
+  public List<Exam> getAll() {
+    return examRepository.findAll();
+  }
+
+  public List<Exam> getByClassId(String classId) {
+    return examRepository.findByClassId(classId);
+  }
+
+  public List<Exam> getByCreatedBy(String userId) {
+    return examRepository.findByCreatedBy(userId);
+  }
+
+  public List<Exam> getActiveExamsByClassId(String classId) {
+    return examRepository.findActiveExamsByClassId(classId, new Date());
+  }
+
+  public List<Exam> getPastExamsByClassId(String classId) {
+    return examRepository.findPastExamsByClassId(classId, new Date());
+  }
+
+  public List<Exam> getUpcomingExamsByClassId(String classId) {
+    return examRepository.findUpcomingExamsByClassId(classId, new Date());
+  }
+
+  @Transactional
+  public Exam update(String id, Exam updatedExam) {
+    Optional<Exam> existingExamOpt = examRepository.findById(id);
+    if (existingExamOpt.isPresent()) {
+      Exam existingExam = existingExamOpt.get();
+      existingExam.setTitle(updatedExam.getTitle());
+      existingExam.setEasyCount(updatedExam.getEasyCount());
+      existingExam.setMediumCount(updatedExam.getMediumCount());
+      existingExam.setHardCount(updatedExam.getHardCount());
+      existingExam.setVeryHardCount(updatedExam.getVeryHardCount());
+      existingExam.setOpenTime(updatedExam.getOpenTime());
+      existingExam.setCloseTime(updatedExam.getCloseTime());
+      existingExam.setMaxScore(updatedExam.getMaxScore());
+      existingExam.setDurationMinutes(updatedExam.getDurationMinutes());
+      existingExam.setShuffleQuestion(updatedExam.getShuffleQuestion());
+      existingExam.setShuffleChoice(updatedExam.getShuffleChoice());
+      existingExam.setCategories(updatedExam.getCategories());
+      existingExam.setAllowReview(updatedExam.getAllowReview());
+      existingExam.setMaxAttempts(updatedExam.getMaxAttempts());
+      return examRepository.save(existingExam);
+    } else {
+      throw new RuntimeException("Exam not found with id: " + id);
+    }
+  }
+
+  @Transactional
+  public void delete(String id) {
+    examRepository.deleteById(id);
+  }
+
+  @Transactional
+  public Exam addQuestionToExam(String examId, String questionId) {
+    Optional<Exam> examOpt = examRepository.findById(examId);
+    Optional<Question> questionOpt = questionRepository.findById(questionId);
+
+    if (examOpt.isPresent() && questionOpt.isPresent()) {
+      Exam exam = examOpt.get();
+      if (exam.getQuestionIds() == null) {
+        exam.setQuestionIds(new ArrayList<>());
+      }
+
+      if (!exam.getQuestionIds().contains(questionId)) {
+        exam.getQuestionIds().add(questionId);
+        return examRepository.save(exam);
+      }
+      return exam;
+    } else {
+      throw new RuntimeException("Exam or Question not found");
+    }
+  }
+
+  @Transactional
+  public Exam removeQuestionFromExam(String examId, String questionId) {
+    Optional<Exam> examOpt = examRepository.findById(examId);
+
+    if (examOpt.isPresent()) {
+      Exam exam = examOpt.get();
+      if (exam.getQuestionIds() != null) {
+        exam.getQuestionIds().remove(questionId);
+        return examRepository.save(exam);
+      }
+      return exam;
+    } else {
+      throw new RuntimeException("Exam not found");
+    }
+  }
+
+  @Transactional
+  public Exam addQuestionsToExam(String examId, List<String> questionIds) {
+    Optional<Exam> examOpt = examRepository.findById(examId);
+
+    if (examOpt.isPresent()) {
+      Exam exam = examOpt.get();
+      if (exam.getQuestionIds() == null) {
+        exam.setQuestionIds(new ArrayList<>());
+      }
+
+      for (String questionId : questionIds) {
+        if (!exam.getQuestionIds().contains(questionId)) {
+          exam.getQuestionIds().add(questionId);
+        }
+      }
+
+      return examRepository.save(exam);
+    } else {
+      throw new RuntimeException("Exam not found");
+    }
+  }
+
+  public List<Question> getExamQuestions(String examId) {
+    Optional<Exam> examOpt = examRepository.findById(examId);
+
+    if (examOpt.isPresent()) {
+      Exam exam = examOpt.get();
+      if (exam.getQuestionIds() != null && !exam.getQuestionIds().isEmpty()) {
+        return questionRepository.findAllById(exam.getQuestionIds());
+      }
+      return new ArrayList<>();
+    } else {
+      throw new RuntimeException("Exam not found");
+    }
+  }
+
+  public List<Question> generateExamQuestions(String examId) {
+    Optional<Exam> examOpt = examRepository.findById(examId);
+
+    if (examOpt.isPresent()) {
+      Exam exam = examOpt.get();
+      if (exam.getQuestionIds() == null || exam.getQuestionIds().isEmpty()) {
+        return new ArrayList<>();
+      }
+
+      List<Question> allQuestions = questionRepository.findAllById(exam.getQuestionIds());
+
+      // Group questions by level
+      List<Question> level1Questions = allQuestions.stream()
+          .filter(q -> q.getLevel() != null && q.getLevel() == 1)
+          .collect(Collectors.toList());
+
+      List<Question> level2Questions = allQuestions.stream()
+          .filter(q -> q.getLevel() != null && q.getLevel() == 2)
+          .collect(Collectors.toList());
+
+      List<Question> level3Questions = allQuestions.stream()
+          .filter(q -> q.getLevel() != null && q.getLevel() == 3)
+          .collect(Collectors.toList());
+
+      List<Question> level4Questions = allQuestions.stream()
+          .filter(q -> q.getLevel() != null && q.getLevel() == 4)
+          .collect(Collectors.toList());
+
+      List<Question> selectedQuestions = new ArrayList<>();
+      Random random = new Random();
+
+      // Select random questions for each level based on counts
+      selectRandomQuestions(selectedQuestions, level1Questions, exam.getEasyCount(), random);
+      selectRandomQuestions(selectedQuestions, level2Questions, exam.getMediumCount(), random);
+      selectRandomQuestions(selectedQuestions, level3Questions, exam.getHardCount(), random);
+      selectRandomQuestions(selectedQuestions, level4Questions, exam.getVeryHardCount(), random);
+
+      // Shuffle questions if needed
+      if (exam.getShuffleQuestion()) {
+        java.util.Collections.shuffle(selectedQuestions);
+      }
+
+      return selectedQuestions;
+    } else {
+      throw new RuntimeException("Exam not found");
+    }
+  }
+
+  private void selectRandomQuestions(List<Question> selectedQuestions, List<Question> questions,
+      Integer count, Random random) {
+    if (count == null || count <= 0 || questions.isEmpty()) {
+      return;
+    }
+
+    // If we don't have enough questions of this level, use all available
+    if (questions.size() <= count) {
+      selectedQuestions.addAll(questions);
+      return;
+    }
+
+    // Select random questions
+    List<Question> availableQuestions = new ArrayList<>(questions);
+    for (int i = 0; i < count && !availableQuestions.isEmpty(); i++) {
+      int randomIndex = random.nextInt(availableQuestions.size());
+      selectedQuestions.add(availableQuestions.remove(randomIndex));
+    }
+  }
+
+  public ExamResponse toExamResponse(Exam exam) {
+    ExamResponse response = new ExamResponse();
+    response.setId(exam.getId());
+    response.setClassId(exam.getClassId());
+    response.setTitle(exam.getTitle());
+    response.setOpenTime(exam.getOpenTime());
+    response.setCloseTime(exam.getCloseTime());
+    response.setMaxScore(exam.getMaxScore());
+    response.setDurationMinutes(exam.getDurationMinutes());
+    response.setShuffleQuestion(exam.getShuffleQuestion());
+    response.setShuffleChoice(exam.getShuffleChoice());
+    response.setCreatedBy(exam.getCreatedBy());
+    response.setCreatedAt(exam.getCreatedAt());
+    response.setUpdatedAt(exam.getUpdatedAt());
+    response.setCategories(exam.getCategories());
+
+    // Set level counts
+    response.setLevel1Count(exam.getEasyCount());
+    response.setLevel2Count(exam.getMediumCount());
+    response.setLevel3Count(exam.getHardCount());
+    response.setLevel4Count(exam.getVeryHardCount());
+
+    // Calculate total questions
+    response.setTotalQuestions(
+        (exam.getEasyCount() != null ? exam.getEasyCount() : 0) +
+            (exam.getMediumCount() != null ? exam.getMediumCount() : 0) +
+            (exam.getHardCount() != null ? exam.getHardCount() : 0) +
+            (exam.getVeryHardCount() != null ? exam.getVeryHardCount() : 0));
+
+    // Calculate question bank size
+    response.setQuestionBankSize(exam.getQuestionIds() != null ? exam.getQuestionIds().size() : 0);
+
+    // Get average rating
+    response.setAverageRating(reviewService.getAverageScore(4, exam.getId()));
+    response.setReviewCount(reviewService.getReviewCount(4, exam.getId()));
+
+    response.setAllowReview(exam.getAllowReview());
+    response.setMaxAttempts(exam.getMaxAttempts());
+
+    return response;
+  }
+}
