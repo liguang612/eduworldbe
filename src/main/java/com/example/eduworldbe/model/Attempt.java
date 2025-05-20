@@ -42,6 +42,13 @@ public class Attempt {
   private Boolean submitted = false;
   private Integer score;
   private Double percentageScore;
+  private Date submittedAt;
+
+  // Điểm số cho từng level
+  private Integer easyScore; // Điểm cho câu level 1
+  private Integer mediumScore; // Điểm cho câu level 2
+  private Integer hardScore; // Điểm cho câu level 3
+  private Integer veryHardScore; // Điểm cho câu level 4
 
   @PrePersist
   protected void onCreate() {
