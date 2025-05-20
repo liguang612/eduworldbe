@@ -5,6 +5,8 @@ import com.example.eduworldbe.model.Question;
 import com.example.eduworldbe.repository.ExamRepository;
 import com.example.eduworldbe.repository.QuestionRepository;
 import com.example.eduworldbe.dto.ExamResponse;
+import com.example.eduworldbe.model.Attempt;
+import com.example.eduworldbe.repository.AttemptRepository;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -27,6 +29,9 @@ public class ExamService {
 
   @Autowired
   private ReviewService reviewService;
+
+  @Autowired
+  private AttemptRepository attemptRepository;
 
   public Exam create(Exam exam) {
     if (exam.getQuestionIds() == null) {
@@ -280,5 +285,30 @@ public class ExamService {
     response.setMaxAttempts(exam.getMaxAttempts());
 
     return response;
+  }
+
+  public Attempt createAttempt(String examId, String userId) {
+    Optional<Exam> examOpt = examRepository.findById(examId);
+    if (examOpt.isPresent()) {
+      Exam exam = examOpt.get();
+      Attempt attempt = new Attempt();
+      attempt.setExamId(examId);
+      attempt.setUserId(userId);
+      attempt.setStartTime(new Date());
+      attempt.setEndTime(new Date(System.currentTimeMillis() + exam.getDurationMinutes() * 60000));
+      attempt.setSubmitted(false);
+      attempt.setScore(0);
+      attempt.setPercentageScore(0.0);
+
+      // Copy điểm số từ Exam sang Attempt
+      attempt.setEasyScore(exam.getEasyScore());
+      attempt.setMediumScore(exam.getMediumScore());
+      attempt.setHardScore(exam.getHardScore());
+      attempt.setVeryHardScore(exam.getVeryHardScore());
+
+      return attemptRepository.save(attempt);
+    } else {
+      throw new RuntimeException("Exam not found");
+    }
   }
 }

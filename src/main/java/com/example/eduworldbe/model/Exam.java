@@ -35,6 +35,12 @@ public class Exam {
   private Integer hardCount = 0;
   private Integer veryHardCount = 0;
 
+  // Điểm số cho từng level
+  private Integer easyScore = 1; // Điểm cho câu level 1
+  private Integer mediumScore = 2; // Điểm cho câu level 2
+  private Integer hardScore = 3; // Điểm cho câu level 3
+  private Integer veryHardScore = 4; // Điểm cho câu level 4
+
   private Date openTime;
   private Date closeTime;
 
