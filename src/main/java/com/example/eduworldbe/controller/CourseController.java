@@ -253,14 +253,4 @@ class AddMemberRequest {
 }
 
 // DTO cho add/remove lecture
-class AddLectureRequest {
-  private String lectureId;
 
-  public String getLectureId() {
-    return lectureId;
-  }
-
-  public void setLectureId(String lectureId) {
-    this.lectureId = lectureId;
-  }
-}

@@ -14,6 +14,12 @@ import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.RequestBody;
 
 import java.util.List;
+import org.springframework.http.HttpStatus;
+import com.example.eduworldbe.util.AuthUtil;
+import com.example.eduworldbe.model.User;
+import java.util.Date;
+import java.util.Map;
+import java.util.HashMap;
 
 @RestController
 @RequestMapping("/api/questions")
@@ -21,6 +27,9 @@ public class QuestionController {
   @Autowired
   private QuestionService questionService;
 
+  @Autowired
+  private AuthUtil authUtil;
+  
   @PostMapping
   public ResponseEntity<Question> create(@Valid @RequestBody CreateQuestionRequest request,
       HttpServletRequest httpRequest) {
@@ -71,5 +80,36 @@ public class QuestionController {
   public ResponseEntity<Void> delete(@PathVariable String id) {
     questionService.delete(id);
     return ResponseEntity.ok().build();
+  }
+
+  @GetMapping("/search")
+  public ResponseEntity<List<Question>> search(
+      @RequestParam(required = false) String keyword,
+      @RequestParam(required = false) String createdBy,
+      @RequestParam(required = false) String subjectId) {
+    List<Question> filteredQuestions = questionService.getAllFiltered(createdBy, subjectId);
+    return ResponseEntity.ok(questionService.searchQuestions(filteredQuestions, keyword));
+  }
+
+  @PostMapping("/details")
+  public ResponseEntity<?> getDetailsByIds(@RequestBody List<String> ids, HttpServletRequest request) {    
+    try {
+      if (ids == null) {
+        return ResponseEntity.badRequest().body("Danh sách ID không được null");
+      }
+      
+      if (ids.isEmpty()) {
+        return ResponseEntity.badRequest().body("Danh sách ID không được để trống");
+      }
+      
+      List<QuestionDetailResponse> result = questionService.getQuestionDetailsByIds(ids, request);
+
+      return ResponseEntity.ok(result);
+    } catch (Exception e) {
+      System.out.println("Lỗi xử lý chi tiết: " + e.getClass().getName() + ": " + e.getMessage());
+      e.printStackTrace();
+      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+          .body("Lỗi xử lý: " + e.getMessage());
+    }
   }
 }

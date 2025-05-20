@@ -7,7 +7,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import jakarta.servlet.http.HttpServletRequest;
 import com.example.eduworldbe.util.AuthUtil;
-
+import com.example.eduworldbe.dto.AddLectureRequest;
 import java.util.List;
 import java.util.Optional;
 
@@ -113,18 +113,5 @@ public class ChapterController {
       return ResponseEntity.ok(chapterService.getById(id).get());
     }
     return ResponseEntity.notFound().build();
-  }
-}
-
-// DTO cho add/remove lecture
-class AddLectureRequest {
-  private String lectureId;
-
-  public String getLectureId() {
-    return lectureId;
-  }
-
-  public void setLectureId(String lectureId) {
-    this.lectureId = lectureId;
   }
 }
