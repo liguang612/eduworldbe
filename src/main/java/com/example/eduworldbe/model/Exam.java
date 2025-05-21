@@ -7,7 +7,6 @@ import lombok.AllArgsConstructor;
 
 import java.util.Date;
 import java.util.List;
-import java.util.Map;
 
 @Entity
 @Table(name = "exam", indexes = {
@@ -35,11 +34,10 @@ public class Exam {
   private Integer hardCount = 0;
   private Integer veryHardCount = 0;
 
-  // Điểm số cho từng level
-  private Integer easyScore = 1; // Điểm cho câu level 1
-  private Integer mediumScore = 2; // Điểm cho câu level 2
-  private Integer hardScore = 3; // Điểm cho câu level 3
-  private Integer veryHardScore = 4; // Điểm cho câu level 4
+  private Double easyScore = 1.0;
+  private Double mediumScore = 2.0;
+  private Double hardScore = 3.0;
+  private Double veryHardScore = 4.0;
 
   private Date openTime;
   private Date closeTime;
@@ -62,6 +60,7 @@ public class Exam {
   private List<String> categories;
 
   private Boolean allowReview = true;
+  private Boolean allowViewAnswer = false;
 
   private Integer maxAttempts = 1;
 

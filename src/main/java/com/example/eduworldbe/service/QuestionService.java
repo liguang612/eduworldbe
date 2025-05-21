@@ -6,6 +6,7 @@ import com.example.eduworldbe.model.MatchingPair;
 import com.example.eduworldbe.model.Question;
 import com.example.eduworldbe.model.User;
 import com.example.eduworldbe.model.SharedMedia;
+import com.example.eduworldbe.repository.ChoiceRepository;
 import com.example.eduworldbe.repository.QuestionRepository;
 import com.example.eduworldbe.util.AuthUtil;
 import com.example.eduworldbe.dto.QuestionDetailResponse;
@@ -27,12 +28,19 @@ import java.util.stream.Collectors;
 import java.util.Arrays;
 import java.util.AbstractMap;
 import java.util.ArrayList;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import java.util.Comparator;
+import java.util.Map;
+import java.util.HashMap;
 
 @Service
 public class QuestionService {
   @Autowired
   private QuestionRepository questionRepository;
 
+  @Autowired
+  private ChoiceRepository choiceRepository;
   @Autowired
   private AuthUtil authUtil;
 
@@ -47,6 +55,9 @@ public class QuestionService {
 
   @Autowired
   private SharedMediaService sharedMediaService;
+
+  @Autowired
+  private ObjectMapper objectMapper;
 
   public Question create(CreateQuestionRequest request, HttpServletRequest httpRequest) {
     User user = authUtil.getCurrentUser(httpRequest);
@@ -97,32 +108,69 @@ public class QuestionService {
       case "radio":
       case "checkbox":
       case "ranking":
-        List<Choice> choices = choiceService.getByQuestionId(id);
-        choices.forEach(choice -> {
-          if (!isCreator) {
-            choice.setIsCorrect(null);
-            choice.setOrderIndex(null);
-            choice.setTextAnswer(null);
+        List<Choice> fetchedChoices = choiceService.getByQuestionId(id);
+        if (!isCreator) {
+          // Case study: Tại sao lại phải tạo dãy đối tượng mới như này? -> Tránh cache
+          // của hibernate.
+          List<Choice> choicesForResponse = new ArrayList<>();
+          for (Choice fetchedChoice : fetchedChoices) {
+            Choice responseChoice = new Choice();
+
+            responseChoice.setId(fetchedChoice.getId());
+            responseChoice.setQuestionId(fetchedChoice.getQuestionId());
+            responseChoice.setText(fetchedChoice.getText());
+            responseChoice.setValue(fetchedChoice.getValue());
+            responseChoice.setIsCorrect(null);
+            responseChoice.setOrderIndex(null);
+            responseChoice.setTextAnswer(null);
+
+            choicesForResponse.add(responseChoice);
           }
-        });
-        detailResponse.setChoices(choices);
+          detailResponse.setChoices(choicesForResponse);
+        } else {
+          detailResponse.setChoices(fetchedChoices);
+        }
         break;
       case "itemConnector":
         List<MatchingColumn> matchingColumns = matchingColumnService.getByQuestionId(id);
         if (isCreator) {
           List<MatchingPair> matchingPairs = matchingPairService.getByQuestionId(id);
           detailResponse.setMatchingPairs(matchingPairs);
+        } else {
+          List<MatchingColumn> columnsForResponse = new ArrayList<>();
+          for (MatchingColumn col : matchingColumns) {
+            MatchingColumn responseCol = new MatchingColumn();
+
+            responseCol.setId(col.getId());
+            responseCol.setQuestionId(col.getQuestionId());
+            responseCol.setLabel(col.getLabel());
+            responseCol.setOrderIndex(null);
+            columnsForResponse.add(responseCol);
+          }
+          detailResponse.setMatchingColumns(columnsForResponse);
         }
         detailResponse.setMatchingColumns(matchingColumns);
         break;
       case "shortAnswer":
-        List<Choice> shortAnswerChoices = choiceService.getByQuestionId(id);
+        List<Choice> shortAnswerChoicesFetched = choiceService.getByQuestionId(id);
         if (!isCreator) {
-          shortAnswerChoices.forEach(choice -> {
-            choice.setValue(null);
-          });
+          List<Choice> choicesForResponse = new ArrayList<>();
+          for (Choice fetchedChoice : shortAnswerChoicesFetched) {
+            Choice responseChoice = new Choice();
+
+            responseChoice.setId(fetchedChoice.getId());
+            responseChoice.setQuestionId(fetchedChoice.getQuestionId());
+            responseChoice.setText(fetchedChoice.getText());
+            responseChoice.setValue(null);
+            responseChoice.setIsCorrect(null);
+            responseChoice.setOrderIndex(null);
+
+            choicesForResponse.add(responseChoice);
+          }
+          detailResponse.setChoices(choicesForResponse);
+        } else {
+          detailResponse.setChoices(shortAnswerChoicesFetched);
         }
-        detailResponse.setChoices(shortAnswerChoices);
         break;
     }
 
@@ -270,7 +318,7 @@ public class QuestionService {
     if (ids == null || ids.isEmpty()) {
       return new ArrayList<>();
     }
-    
+
     return ids.stream()
         .map(id -> {
           try {
@@ -389,5 +437,135 @@ public class QuestionService {
         .sorted((e1, e2) -> Double.compare(e2.getValue(), e1.getValue())) // Sắp xếp theo điểm giảm dần
         .map(AbstractMap.SimpleEntry::getKey)
         .toList();
+  }
+
+  public boolean checkAnswer(QuestionDetailResponse question, Object userAnswer) {
+    if (question == null || userAnswer == null) {
+      return false;
+    }
+
+    try {
+      switch (question.getType()) {
+        case "radio": {
+          List<Choice> choices = choiceService.getByQuestionId(question.getId());
+          Optional<Choice> correctChoice = choices.stream()
+              .filter(Choice::getIsCorrect)
+              .findFirst();
+          return correctChoice.isPresent() && correctChoice.get().getValue().equals(userAnswer);
+        }
+        case "checkbox": {
+          List<Choice> choices = choiceRepository.findByQuestionId(question.getId());
+          List<String> correctValues = choices.stream()
+              .filter(Choice::getIsCorrect)
+              .map(Choice::getValue)
+              .sorted()
+              .toList();
+          List<String> userValues = objectMapper.readValue(objectMapper.writeValueAsString(userAnswer),
+              new TypeReference<List<String>>() {
+              });
+          userValues.sort(String::compareTo);
+          return correctValues.equals(userValues);
+        }
+        case "shortAnswer": {
+          List<Choice> choices = choiceRepository.findByQuestionId(question.getId());
+          if (choices.isEmpty())
+            return false;
+          return choices.get(0).getValue().equals(userAnswer);
+        }
+        case "ranking": {
+          List<Choice> choices = choiceRepository.findByQuestionId(question.getId());
+          List<String> correctOrder = choices.stream()
+              .sorted(Comparator.comparing(Choice::getOrderIndex))
+              .map(Choice::getValue)
+              .toList();
+          List<String> userOrder = objectMapper.readValue(objectMapper.writeValueAsString(userAnswer),
+              new TypeReference<List<String>>() {
+              });
+          return correctOrder.equals(userOrder);
+        }
+        case "itemConnector": {
+          List<MatchingPair> correctPairs = matchingPairService.getByQuestionId(question.getId());
+          List<Map<String, String>> userPairs = objectMapper.readValue(objectMapper.writeValueAsString(userAnswer),
+              new TypeReference<List<Map<String, String>>>() {
+              });
+
+          if (correctPairs.size() != userPairs.size())
+            return false;
+
+          return correctPairs.stream().allMatch(correctPair -> userPairs.stream().anyMatch(
+              userPair -> userPair.get("from").equals(correctPair.getFrom()) &&
+                  userPair.get("to").equals(correctPair.getTo())));
+        }
+        default:
+          return false;
+      }
+    } catch (Exception e) {
+      e.printStackTrace();
+      return false;
+    }
+  }
+
+  public Object getCorrectAnswerFormatted(QuestionDetailResponse question) {
+    if (question == null || question.getType() == null) {
+      return null;
+    }
+
+    switch (question.getType()) {
+      case "radio": {
+        List<Choice> choices = choiceService.getByQuestionId(question.getId());
+        if (choices != null && !choices.isEmpty()) {
+          Optional<Choice> correctChoice = choices.stream()
+              .filter(Choice::getIsCorrect)
+              .findFirst();
+          return correctChoice.map(Choice::getValue).orElse(null);
+        }
+        return null;
+      }
+      case "shortAnswer": {
+        List<Choice> choices = choiceService.getByQuestionId(question.getId());
+        if (choices != null && !choices.isEmpty()) {
+          Optional<Choice> correctChoice = choices.stream()
+              .findFirst();
+          return correctChoice.map(Choice::getValue).orElse(null);
+        }
+        return null;
+      }
+      case "checkbox": {
+        List<Choice> choices = choiceService.getByQuestionId(question.getId());
+        if (choices != null && !choices.isEmpty()) {
+          return choices.stream()
+              .filter(Choice::getIsCorrect)
+              .map(Choice::getValue)
+              .toList();
+        }
+        return new ArrayList<>();
+      }
+      case "ranking": {
+        List<Choice> choices = choiceService.getByQuestionId(question.getId());
+        if (choices != null && !choices.isEmpty()) {
+          return choices.stream()
+              .sorted(Comparator.comparing(Choice::getOrderIndex))
+              .map(Choice::getValue)
+              .toList();
+        }
+        return new ArrayList<>();
+      }
+      case "itemConnector": {
+        List<MatchingPair> pairs = matchingPairService.getByQuestionId(question.getId());
+        if (pairs != null && !pairs.isEmpty()) {
+          return pairs.stream()
+              .map(pair -> {
+                Map<String, String> map = new HashMap<>();
+                map.put("from", pair.getFrom());
+                map.put("to", pair.getTo());
+                return map;
+              })
+              .toList();
+        }
+        return new ArrayList<>();
+      }
+      default:
+        return null;
+    }
   }
 }

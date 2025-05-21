@@ -19,14 +19,19 @@ public class ExamResponse {
   private Date createdAt;
   private Date updatedAt;
   private List<String> categories;
-  private Integer level1Count;
-  private Integer level2Count;
-  private Integer level3Count;
-  private Integer level4Count;
+  private Integer easyCount;
+  private Integer mediumCount;
+  private Integer hardCount;
+  private Integer veryHardCount;
   private Integer totalQuestions;
   private Integer questionBankSize;
   private Double averageRating;
   private Integer reviewCount;
   private Boolean allowReview;
   private Integer maxAttempts;
+  private Boolean allowViewAnswer;
+  private Double easyScore;
+  private Double mediumScore;
+  private Double hardScore;
+  private Double veryHardScore;
 }

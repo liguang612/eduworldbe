@@ -77,13 +77,22 @@ public class ExamService {
   @Transactional
   public Exam update(String id, Exam updatedExam) {
     Optional<Exam> existingExamOpt = examRepository.findById(id);
+    System.out.println("updatedExam: " + updatedExam);
+    System.out.println("easyScore: " + updatedExam.getEasyScore());
+    System.out.println("mediumScore: " + updatedExam.getMediumScore());
+    System.out.println("hardScore: " + updatedExam.getHardScore());
+    System.out.println("veryHardScore: " + updatedExam.getVeryHardScore());
     if (existingExamOpt.isPresent()) {
       Exam existingExam = existingExamOpt.get();
       existingExam.setTitle(updatedExam.getTitle());
       existingExam.setEasyCount(updatedExam.getEasyCount());
+      existingExam.setEasyScore(updatedExam.getEasyScore());
       existingExam.setMediumCount(updatedExam.getMediumCount());
+      existingExam.setMediumScore(updatedExam.getMediumScore());
       existingExam.setHardCount(updatedExam.getHardCount());
+      existingExam.setHardScore(updatedExam.getHardScore());
       existingExam.setVeryHardCount(updatedExam.getVeryHardCount());
+      existingExam.setVeryHardScore(updatedExam.getVeryHardScore());
       existingExam.setOpenTime(updatedExam.getOpenTime());
       existingExam.setCloseTime(updatedExam.getCloseTime());
       existingExam.setMaxScore(updatedExam.getMaxScore());
@@ -92,6 +101,7 @@ public class ExamService {
       existingExam.setShuffleChoice(updatedExam.getShuffleChoice());
       existingExam.setCategories(updatedExam.getCategories());
       existingExam.setAllowReview(updatedExam.getAllowReview());
+      existingExam.setAllowViewAnswer(updatedExam.getAllowViewAnswer());
       existingExam.setMaxAttempts(updatedExam.getMaxAttempts());
       return examRepository.save(existingExam);
     } else {
@@ -262,10 +272,10 @@ public class ExamService {
     response.setCategories(exam.getCategories());
 
     // Set level counts
-    response.setLevel1Count(exam.getEasyCount());
-    response.setLevel2Count(exam.getMediumCount());
-    response.setLevel3Count(exam.getHardCount());
-    response.setLevel4Count(exam.getVeryHardCount());
+    response.setEasyCount(exam.getEasyCount());
+    response.setMediumCount(exam.getMediumCount());
+    response.setHardCount(exam.getHardCount());
+    response.setVeryHardCount(exam.getVeryHardCount());
 
     // Calculate total questions
     response.setTotalQuestions(
@@ -282,7 +292,14 @@ public class ExamService {
     response.setReviewCount(reviewService.getReviewCount(4, exam.getId()));
 
     response.setAllowReview(exam.getAllowReview());
+    response.setAllowViewAnswer(exam.getAllowViewAnswer());
     response.setMaxAttempts(exam.getMaxAttempts());
+
+    // Set scores for each level
+    response.setEasyScore(exam.getEasyScore());
+    response.setMediumScore(exam.getMediumScore());
+    response.setHardScore(exam.getHardScore());
+    response.setVeryHardScore(exam.getVeryHardScore());
 
     return response;
   }

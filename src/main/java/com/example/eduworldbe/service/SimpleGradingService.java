@@ -2,7 +2,8 @@ package com.example.eduworldbe.service;
 
 import com.example.eduworldbe.dto.SimpleGradeRequest;
 import com.example.eduworldbe.dto.SimpleGradeResponse;
-import com.example.eduworldbe.model.Question;
+import com.example.eduworldbe.dto.QuestionDetailResponse;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -15,27 +16,40 @@ public class SimpleGradingService {
   @Autowired
   private QuestionService questionService;
 
+  @Autowired
+  private HttpServletRequest httpRequest;
+
   public SimpleGradeResponse gradeAnswers(SimpleGradeRequest request) {
     SimpleGradeResponse response = new SimpleGradeResponse();
     Map<String, Boolean> results = new HashMap<>();
+    Map<String, Object> correctAnswers = new HashMap<>();
     int correctCount = 0;
 
-    // Lấy danh sách câu hỏi
-    List<Question> questions = questionService.getByIds(request.getAnswers().keySet());
+    List<String> questionIds = request.getAnswers().keySet().stream().toList();
+    List<QuestionDetailResponse> questions = questionService.getQuestionDetailsByIds(questionIds,
+        httpRequest);
 
-    // Chấm điểm từng câu
-    for (Question question : questions) {
-      String userAnswer = request.getAnswers().get(question.getId());
+    // Chấm điểm và thu thập đáp án đúng
+    for (QuestionDetailResponse question : questions) {
+      String questionId = question.getId();
+      Object userAnswer = request.getAnswers().get(questionId);
+
+      // Chấm điểm
       boolean isCorrect = questionService.checkAnswer(question, userAnswer);
-      results.put(question.getId(), isCorrect);
+      results.put(questionId, isCorrect);
       if (isCorrect) {
         correctCount++;
       }
+
+      // Lấy đáp án đúng
+      Object correctAnswer = questionService.getCorrectAnswerFormatted(question);
+      correctAnswers.put(questionId, correctAnswer);
     }
 
     response.setResults(results);
     response.setCorrectCount(correctCount);
     response.setTotalCount(questions.size());
+    response.setCorrectAnswers(correctAnswers);
 
     return response;
   }

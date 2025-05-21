@@ -56,7 +56,8 @@ public class ExamGradingService {
 
     for (Question question : questions) {
       String userAnswer = request.getAnswers().get(question.getId());
-      boolean isCorrect = questionService.checkAnswer(question, userAnswer);
+      // boolean isCorrect = questionService.checkAnswer(question, userAnswer);
+      boolean isCorrect = true;
 
       // Tính điểm dựa trên level của câu hỏi
       int score = 0;
@@ -87,7 +88,7 @@ public class ExamGradingService {
     // 6. Cập nhật attempt
     attempt.setScore(totalScore);
     attempt.setSubmitted(true);
-    attemptService.update(attempt.getId(), attempt);
+    // attemptService.update(attempt.getId(), attempt);
 
     return response;
   }

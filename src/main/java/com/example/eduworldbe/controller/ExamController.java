@@ -4,7 +4,9 @@ import com.example.eduworldbe.model.Exam;
 import com.example.eduworldbe.model.Question;
 import com.example.eduworldbe.model.User;
 import com.example.eduworldbe.service.ExamService;
+import com.example.eduworldbe.service.QuestionService;
 import com.example.eduworldbe.dto.ExamResponse;
+import com.example.eduworldbe.dto.QuestionDetailResponse;
 import com.example.eduworldbe.util.AuthUtil;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,6 +19,9 @@ import jakarta.servlet.http.HttpServletRequest;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import java.util.ArrayList;
+import java.util.Map;
+import java.util.HashMap;
 
 @RestController
 @RequestMapping("/api/exams")
@@ -26,6 +31,9 @@ public class ExamController {
 
   @Autowired
   private AuthUtil authUtil;
+
+  @Autowired
+  private QuestionService questionService;
 
   @PostMapping
   public ResponseEntity<Exam> createExam(@RequestBody Exam exam, HttpServletRequest request) {
@@ -206,6 +214,31 @@ public class ExamController {
   public ResponseEntity<List<Question>> getExamQuestions(@PathVariable String examId) {
     List<Question> questions = examService.getExamQuestions(examId);
     return ResponseEntity.ok(questions);
+  }
+
+  @GetMapping("/{examId}/questions/details")
+  public ResponseEntity<?> getExamQuestionsDetails(@PathVariable String examId, HttpServletRequest request) {
+    Optional<Exam> examOpt = examService.getById(examId);
+    if (examOpt.isPresent()) {
+      Exam exam = examOpt.get();
+      Map<String, Object> response = new HashMap<>();
+
+      // Add exam information
+      response.put("exam", examService.toExamResponse(exam));
+
+      // Add list of detailed questions
+      if (exam.getQuestionIds() != null && !exam.getQuestionIds().isEmpty()) {
+        List<QuestionDetailResponse> questions = questionService.getQuestionDetailsByIds(exam.getQuestionIds(),
+            request);
+        response.put("questions", questions);
+      } else {
+        response.put("questions", new ArrayList<>());
+      }
+
+      return ResponseEntity.ok(response);
+    } else {
+      return ResponseEntity.notFound().build();
+    }
   }
 
   @GetMapping("/{examId}/questions/generate")

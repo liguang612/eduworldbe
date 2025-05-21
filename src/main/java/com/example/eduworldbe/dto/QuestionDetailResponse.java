@@ -19,7 +19,7 @@ public class QuestionDetailResponse {
   private String id;
   private String title;
   private String subjectId;
-  private String type; // radio, checkbox, itemConnector, ordering, shortAnswer
+  private String type; // radio, checkbox, itemConnector, ranking, shortAnswer
   private SharedMedia sharedMedia;
   private Integer level;
   private String createdBy;
