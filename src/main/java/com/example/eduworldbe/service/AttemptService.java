@@ -31,7 +31,7 @@ public class AttemptService {
   public Attempt create(Attempt attempt) {
     // If this is a new attempt, generate questions based on exam settings
     if (attempt.getQuestionIds() == null || attempt.getQuestionIds().isEmpty()) {
-      Exam exam = examRepository.findById(attempt.getExamId())
+      examRepository.findById(attempt.getExamId())
           .orElseThrow(() -> new RuntimeException("Exam not found"));
 
       List<Question> generatedQuestions = examService.generateExamQuestions(attempt.getExamId());
@@ -111,9 +111,7 @@ public class AttemptService {
       attempt.setSubmitted(true);
       attempt.setEndTime(new Date());
 
-      // TODO: Implement scoring logic based on choices selected
-      // This is a placeholder for now
-      attempt.setScore(0);
+      attempt.setScore(0.0);
       attempt.setPercentageScore(0.0);
 
       return attemptRepository.save(attempt);

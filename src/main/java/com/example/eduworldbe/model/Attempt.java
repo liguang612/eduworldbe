@@ -40,7 +40,7 @@ public class Attempt {
   private Date startTime;
   private Date endTime;
   private Boolean submitted = false;
-  private Integer score;
+  private Double score;
   private Double percentageScore;
   private Date submittedAt;
 

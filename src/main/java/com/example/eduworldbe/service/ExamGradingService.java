@@ -22,9 +22,6 @@ public class ExamGradingService {
   @Autowired
   private ExamService examService;
 
-  @Autowired
-  private QuestionService questionService;
-
   @Transactional
   public GradeExamResponse gradeExam(GradeExamRequest request) {
     // 1. Lấy thông tin attempt
@@ -51,8 +48,8 @@ public class ExamGradingService {
     response.setUserId(attempt.getUserId());
 
     // 5. Chấm điểm từng câu
-    Map<String, Integer> questionScores = new HashMap<>();
-    int totalScore = 0;
+    Map<String, Double> questionScores = new HashMap<>();
+    double totalScore = 0;
 
     for (Question question : questions) {
       String userAnswer = request.getAnswers().get(question.getId());
@@ -60,7 +57,7 @@ public class ExamGradingService {
       boolean isCorrect = true;
 
       // Tính điểm dựa trên level của câu hỏi
-      int score = 0;
+      double score = 0;
       if (isCorrect) {
         switch (question.getLevel()) {
           case 1:

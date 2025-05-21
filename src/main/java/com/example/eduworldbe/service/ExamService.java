@@ -314,7 +314,7 @@ public class ExamService {
       attempt.setStartTime(new Date());
       attempt.setEndTime(new Date(System.currentTimeMillis() + exam.getDurationMinutes() * 60000));
       attempt.setSubmitted(false);
-      attempt.setScore(0);
+      attempt.setScore(0.0);
       attempt.setPercentageScore(0.0);
 
       // Copy điểm số từ Exam sang Attempt
