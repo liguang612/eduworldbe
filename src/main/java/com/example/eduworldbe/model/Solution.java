@@ -28,7 +28,7 @@ public class Solution {
   @Column(columnDefinition = "MEDIUMTEXT")
   private String content;
 
-  private String status; // PENDING, APPROVED, REJECTED
+  private Integer status; // 0: PENDING, 1: APPROVED, 2: REJECTED
 
   private String reviewedBy;
   private Date reviewedAt;
@@ -38,6 +38,6 @@ public class Solution {
   @PrePersist
   protected void onCreate() {
     createdAt = new Date();
-    status = "PENDING";
+    status = 0;
   }
 }

@@ -12,9 +12,9 @@ public interface SolutionRepository extends JpaRepository<Solution, String> {
 
   List<Solution> findByCreatedBy(String createdBy);
 
-  List<Solution> findByStatus(String status);
+  List<Solution> findByStatus(Integer status);
 
-  Page<Solution> findByStatus(String status, Pageable pageable);
+  Page<Solution> findByStatus(Integer status, Pageable pageable);
 
-  Page<Solution> findByQuestionIdAndStatus(String questionId, String status, Pageable pageable);
+  Page<Solution> findByQuestionIdAndStatus(String questionId, Integer status, Pageable pageable);
 }
