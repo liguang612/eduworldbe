@@ -16,7 +16,6 @@ import jakarta.servlet.http.HttpServletRequest;
 
 import java.util.Date;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
 @RestController
@@ -125,39 +124,6 @@ public class AttemptController {
     Optional<Attempt> activeAttemptOpt = attemptService.getActiveAttempt(currentUser.getId(), examId);
     if (activeAttemptOpt.isPresent()) {
       return ResponseEntity.ok(activeAttemptOpt.get());
-    } else {
-      return ResponseEntity.notFound().build();
-    }
-  }
-
-  @PutMapping("/{id}/choices")
-  public ResponseEntity<Attempt> updateChoices(
-      @PathVariable String id,
-      @RequestBody Map<String, String> choices,
-      HttpServletRequest request) {
-    User currentUser = authUtil.getCurrentUser(request);
-    if (currentUser == null) {
-      throw new AccessDeniedException("User not authenticated");
-    }
-
-    Optional<Attempt> attemptOpt = attemptService.getById(id);
-    if (attemptOpt.isPresent()) {
-      Attempt attempt = attemptOpt.get();
-
-      // Check if the attempt belongs to the current user
-      if (!attempt.getUserId().equals(currentUser.getId())) {
-        throw new AccessDeniedException("You are not authorized to update this attempt");
-      }
-
-      // Check if the attempt is already submitted
-      if (attempt.getSubmitted()) {
-        return ResponseEntity
-            .status(HttpStatus.BAD_REQUEST)
-            .body(attempt);
-      }
-
-      Attempt updatedAttempt = attemptService.updateChoices(id, choices);
-      return ResponseEntity.ok(updatedAttempt);
     } else {
       return ResponseEntity.notFound().build();
     }

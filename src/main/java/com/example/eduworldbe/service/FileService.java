@@ -29,9 +29,10 @@ public class FileService {
       Files.copy(file.getInputStream(), filePath);
 
       return "/uploads/" + directory + "/" + fileName;
-    } catch (IOException e) {
-      throw new RuntimeException("Could not store the file. Error: " + e.getMessage());
+    } catch (Exception e) {
+      System.out.println("Error uploading file: " + e.getMessage());
     }
+    return null;
   }
 
   public void deleteFile(String fileUrl) {
@@ -40,15 +41,14 @@ public class FileService {
     }
 
     try {
-      // Remove leading slash and "uploads/" from the URL
       String relativePath = fileUrl.replaceFirst("^/uploads/", "");
       Path filePath = Paths.get(uploadDir, relativePath);
 
       if (Files.exists(filePath)) {
         Files.delete(filePath);
       }
-    } catch (IOException e) {
-      throw new RuntimeException("Could not delete the file. Error: " + e.getMessage());
+    } catch (Exception e) {
+      System.out.println("Error deleting file: " + e.getMessage());
     }
   }
 }

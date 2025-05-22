@@ -31,12 +31,6 @@ public class Attempt {
   @ElementCollection
   private List<String> questionIds;
 
-  @ElementCollection
-  @CollectionTable(name = "attempt_choices", joinColumns = @JoinColumn(name = "attempt_id"))
-  @MapKeyColumn(name = "question_id")
-  @Column(name = "choice_ids")
-  private Map<String, String> choicesSelected;
-
   private Date startTime;
   private Date endTime;
   private Boolean submitted = false;

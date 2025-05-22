@@ -4,7 +4,6 @@ import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 
 @Entity
 @Table(name = "choice", indexes = {
@@ -28,8 +27,4 @@ public class Choice {
   private Integer orderIndex;
 
   private Boolean isCorrect = false;
-
-  @Column(columnDefinition = "TEXT")
-  @JsonIgnore
-  private String textAnswer;
 }

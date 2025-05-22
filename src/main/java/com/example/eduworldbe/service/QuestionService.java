@@ -122,7 +122,6 @@ public class QuestionService {
             responseChoice.setValue(fetchedChoice.getValue());
             responseChoice.setIsCorrect(null);
             responseChoice.setOrderIndex(null);
-            responseChoice.setTextAnswer(null);
 
             choicesForResponse.add(responseChoice);
           }
@@ -211,11 +210,10 @@ public class QuestionService {
                 choices.forEach(choice -> {
                   choice.setIsCorrect(null);
                   choice.setOrderIndex(null);
-                  choice.setTextAnswer(null);
                 });
               } else {
                 choices.forEach(choice -> {
-                  choice.setTextAnswer(null);
+                  choice.setValue(null);
                 });
               }
             }
@@ -301,14 +299,8 @@ public class QuestionService {
     if (question.getSharedMedia() != null) {
       SharedMedia sharedMedia = question.getSharedMedia();
       String mediaId = sharedMedia.getId();
-      Integer usageCount = sharedMedia.getUsageCount();
 
       sharedMediaService.decrementUsageCount(mediaId);
-
-      // If this was the last question using this SharedMedia, delete the SharedMedia
-      if (usageCount - 1 == 0) {
-        sharedMediaService.delete(mediaId);
-      }
     }
 
     questionRepository.deleteById(id);

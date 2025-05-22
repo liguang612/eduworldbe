@@ -1,7 +1,6 @@
 package com.example.eduworldbe.service;
 
 import com.example.eduworldbe.model.Attempt;
-import com.example.eduworldbe.model.Exam;
 import com.example.eduworldbe.model.Question;
 import com.example.eduworldbe.repository.AttemptRepository;
 import com.example.eduworldbe.repository.ExamRepository;
@@ -10,7 +9,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
@@ -44,10 +42,6 @@ public class AttemptService {
       attempt.setQuestionIds(questionIds);
     }
 
-    if (attempt.getChoicesSelected() == null) {
-      attempt.setChoicesSelected(new HashMap<>());
-    }
-
     return attemptRepository.save(attempt);
   }
 
@@ -69,30 +63,6 @@ public class AttemptService {
 
   public Optional<Attempt> getActiveAttempt(String userId, String examId) {
     return attemptRepository.findByUserIdAndExamIdAndSubmitted(userId, examId, false);
-  }
-
-  @Transactional
-  public Attempt updateChoices(String attemptId, Map<String, String> choices) {
-    Optional<Attempt> attemptOpt = attemptRepository.findById(attemptId);
-
-    if (attemptOpt.isPresent()) {
-      Attempt attempt = attemptOpt.get();
-
-      // Check if the attempt is already submitted
-      if (attempt.getSubmitted()) {
-        throw new RuntimeException("Cannot update choices for submitted attempt");
-      }
-
-      // Update the choices
-      if (attempt.getChoicesSelected() == null) {
-        attempt.setChoicesSelected(new HashMap<>());
-      }
-
-      attempt.getChoicesSelected().putAll(choices);
-      return attemptRepository.save(attempt);
-    } else {
-      throw new RuntimeException("Attempt not found");
-    }
   }
 
   @Transactional

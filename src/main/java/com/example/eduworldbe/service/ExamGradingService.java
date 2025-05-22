@@ -5,6 +5,7 @@ import com.example.eduworldbe.dto.GradeExamResponse;
 import com.example.eduworldbe.model.Attempt;
 import com.example.eduworldbe.model.Exam;
 import com.example.eduworldbe.model.Question;
+import com.example.eduworldbe.dto.QuestionDetailResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -13,6 +14,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
+
+import jakarta.servlet.http.HttpServletRequest;
 
 @Service
 public class ExamGradingService {
@@ -21,6 +25,12 @@ public class ExamGradingService {
 
   @Autowired
   private ExamService examService;
+
+  @Autowired
+  private QuestionService questionService;
+
+  @Autowired
+  private HttpServletRequest httpRequest;
 
   @Transactional
   public GradeExamResponse gradeExam(GradeExamRequest request) {
@@ -41,6 +51,14 @@ public class ExamGradingService {
     // 3. Lấy danh sách câu hỏi
     List<Question> questions = examService.getExamQuestions(exam.getId());
 
+    // 3.5. Get detailed question information
+    List<String> questionIds = questions.stream()
+        .map(Question::getId)
+        .collect(Collectors.toList());
+    Map<String, QuestionDetailResponse> questionDetailsMap = questionService
+        .getQuestionDetailsByIds(questionIds, httpRequest).stream()
+        .collect(Collectors.toMap(QuestionDetailResponse::getId, detail -> detail));
+
     // 4. Tạo response
     GradeExamResponse response = new GradeExamResponse();
     response.setAttemptId(attempt.getId());
@@ -53,8 +71,9 @@ public class ExamGradingService {
 
     for (Question question : questions) {
       String userAnswer = request.getAnswers().get(question.getId());
-      // boolean isCorrect = questionService.checkAnswer(question, userAnswer);
-      boolean isCorrect = true;
+
+      QuestionDetailResponse questionDetail = questionDetailsMap.get(question.getId());
+      boolean isCorrect = questionService.checkAnswer(questionDetail, userAnswer);
 
       // Tính điểm dựa trên level của câu hỏi
       double score = 0;
