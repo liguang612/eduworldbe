@@ -9,17 +9,23 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 
 import com.example.eduworldbe.model.ExamAttempt;
 import com.example.eduworldbe.service.ExamAttemptService;
 import com.example.eduworldbe.util.AuthUtil;
 import com.example.eduworldbe.dto.ExamAttemptResponse;
+import com.example.eduworldbe.dto.ExamAttemptListResponse;
+import com.example.eduworldbe.dto.ExamAttemptDetailResponse;
 
 import jakarta.servlet.http.HttpServletRequest;
 
 import com.example.eduworldbe.model.User;
 
 import lombok.extern.slf4j.Slf4j;
+
+import java.util.List;
 
 // ExamAttemptController.java
 @RestController
@@ -60,8 +66,9 @@ public class ExamAttemptController {
     response.setScore(attempt.getScore());
     response.setCreatedAt(attempt.getCreatedAt());
     response.setUpdatedAt(attempt.getUpdatedAt());
+    response.setShuffleChoice(attempt.getShuffleChoice());
+    response.setShuffleQuestion(attempt.getShuffleQuestion());
 
-    // Nếu là attempt đang in_progress thì lấy thêm thông tin câu trả lời đã lưu
     if ("in_progress".equals(attempt.getStatus())) {
       response.setSavedAnswers(examAttemptService.getSavedAnswers(attempt.getId()));
     }
@@ -89,5 +96,37 @@ public class ExamAttemptController {
   public ResponseEntity<Void> deleteAttempt(@PathVariable String attemptId) {
     examAttemptService.deleteAttempt(attemptId);
     return ResponseEntity.noContent().build();
+  }
+
+  @DeleteMapping("/batch-delete")
+  public ResponseEntity<Void> deleteAttempts(@RequestBody List<String> attemptIds) {
+    examAttemptService.deleteAttempts(attemptIds);
+    return ResponseEntity.noContent().build();
+  }
+
+  @GetMapping
+  public ResponseEntity<List<ExamAttemptListResponse>> getAttempts(
+      @RequestParam(required = false) String status,
+      HttpServletRequest request) {
+    User user = authUtil.getCurrentUser(request);
+    if (user == null) {
+      throw new AccessDeniedException("User not authenticated");
+    }
+
+    List<ExamAttemptListResponse> attempts = examAttemptService.getAttemptsByUserAndStatus(user.getId(), status);
+    return ResponseEntity.ok(attempts);
+  }
+
+  @GetMapping("/{attemptId}")
+  public ResponseEntity<ExamAttemptDetailResponse> getAttemptDetail(
+      @PathVariable String attemptId,
+      HttpServletRequest request) {
+    User user = authUtil.getCurrentUser(request);
+    if (user == null) {
+      throw new AccessDeniedException("User not authenticated");
+    }
+
+    ExamAttemptDetailResponse attempt = examAttemptService.getAttemptDetail(attemptId);
+    return ResponseEntity.ok(attempt);
   }
 }

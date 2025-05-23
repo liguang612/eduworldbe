@@ -462,7 +462,9 @@ public class QuestionService {
           List<Choice> choices = choiceRepository.findByQuestionId(question.getId());
           if (choices.isEmpty())
             return false;
-          return choices.get(0).getValue().equals(userAnswer);
+          String correctAnswer = choices.get(0).getValue().toLowerCase().replace(".", "");
+          String userAnswerStr = userAnswer.toString().toLowerCase().replace(".", "");
+          return correctAnswer.equals(userAnswerStr);
         }
         case "ranking": {
           List<Choice> choices = choiceRepository.findByQuestionId(question.getId());

@@ -57,6 +57,12 @@ public class ExamAttempt {
   @Column(name = "updated_at")
   private Date updatedAt;
 
+  @Column(name = "shuffle_choice")
+  private Boolean shuffleChoice;
+
+  @Column(name = "shuffle_question")
+  private Boolean shuffleQuestion;
+
   @PrePersist
   protected void onCreate() {
     createdAt = new Date();

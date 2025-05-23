@@ -31,10 +31,16 @@ public class LectureController {
   }
 
   @GetMapping("/{id}")
-  public LectureResponse getById(@PathVariable String id) {
+  public LectureResponse getById(@PathVariable String id, HttpServletRequest request) {
+    User currentUser = authUtil.getCurrentUser(request);
+    if (currentUser == null) {
+      throw new RuntimeException("Unauthorized");
+    }
+
     return lectureService.getById(id)
+        .filter(lecture -> (currentUser.getRole() == 0 || currentUser.getId().equals(lecture.getTeacherId())))
         .map(lectureService::toLectureResponse)
-        .orElse(null);
+        .orElseThrow(() -> new RuntimeException("Lecture not found or you do not have permission to view it"));
   }
 
   @GetMapping("/subject/{subjectId}")
@@ -47,19 +53,26 @@ public class LectureController {
   @GetMapping
   public List<LectureResponse> getAll(
       @RequestParam(required = false) String subjectId,
-      @RequestParam(required = false) String keyword) {
+      @RequestParam(required = false) String keyword,
+      HttpServletRequest request) {
 
-    List<Lecture> allLectures = lectureService.getAll();
-    List<Lecture> filteredLectures = allLectures;
-
-    // Apply subjectId filter if provided
-    if (subjectId != null && !subjectId.isEmpty()) {
-      filteredLectures = filteredLectures.stream()
-          .filter(lecture -> subjectId.equals(lecture.getSubjectId()))
-          .toList();
+    User currentUser = authUtil.getCurrentUser(request);
+    if (currentUser == null) {
+      throw new RuntimeException("Unauthorized");
     }
 
-    // Apply keyword search if provided
+    List<Lecture> allLectures;
+
+    if (subjectId == null || subjectId.isEmpty()) {
+      allLectures = lectureService.getAll();
+    } else {
+      allLectures = lectureService.getBySubjectId(subjectId);
+    }
+
+    List<Lecture> filteredLectures = allLectures.stream()
+        .filter(lecture -> currentUser.getId().equals(lecture.getTeacherId()))
+        .toList();
+
     if (keyword != null && !keyword.trim().isEmpty()) {
       filteredLectures = lectureService.searchLecturesByName(filteredLectures, keyword);
     }
@@ -70,29 +83,86 @@ public class LectureController {
   }
 
   @PutMapping("/{id}")
-  public Lecture update(@PathVariable String id, @RequestBody Lecture lecture) {
+  public Lecture update(@PathVariable String id, @RequestBody Lecture lecture, HttpServletRequest request) {
+    User currentUser = authUtil.getCurrentUser(request);
+    if (currentUser == null) {
+      throw new RuntimeException("Unauthorized");
+    }
+
+    Lecture existingLecture = lectureService.getById(id)
+        .orElseThrow(() -> new RuntimeException("Lecture not found"));
+
+    if (!currentUser.getId().equals(existingLecture.getTeacherId())) {
+      throw new RuntimeException("You do not have permission to update this lecture");
+    }
+
     lecture.setId(id);
     return lectureService.update(id, lecture);
   }
 
   @DeleteMapping("/{id}")
-  public void delete(@PathVariable String id) {
+  public void delete(@PathVariable String id, HttpServletRequest request) {
+    User currentUser = authUtil.getCurrentUser(request);
+    if (currentUser == null) {
+      throw new RuntimeException("Unauthorized");
+    }
+
+    Lecture existingLecture = lectureService.getById(id)
+        .orElseThrow(() -> new RuntimeException("Lecture not found"));
+
+    if (!currentUser.getId().equals(existingLecture.getTeacherId())) {
+      throw new RuntimeException("You do not have permission to delete this lecture");
+    }
+
     lectureService.delete(id);
   }
 
   @PutMapping("/{id}/add-question")
-  public Lecture addEndQuestion(@PathVariable String id, @RequestBody AddQuestionRequest req) {
+  public Lecture addEndQuestion(@PathVariable String id, @RequestBody AddQuestionRequest req,
+      HttpServletRequest request) {
+    User currentUser = authUtil.getCurrentUser(request);
+    if (currentUser == null) {
+      throw new RuntimeException("Unauthorized");
+    }
+
+    Lecture existingLecture = lectureService.getById(id)
+        .orElseThrow(() -> new RuntimeException("Lecture not found"));
+
+    if (!currentUser.getId().equals(existingLecture.getTeacherId())) {
+      throw new RuntimeException("You do not have permission to add questions to this lecture");
+    }
+
     return lectureService.addEndQuestion(id, req.getQuestionId());
   }
 
   @PutMapping("/{id}/remove-question")
-  public Lecture removeEndQuestion(@PathVariable String id, @RequestBody AddQuestionRequest req) {
+  public Lecture removeEndQuestion(@PathVariable String id, @RequestBody AddQuestionRequest req,
+      HttpServletRequest request) {
+    User currentUser = authUtil.getCurrentUser(request);
+    if (currentUser == null) {
+      throw new RuntimeException("Unauthorized");
+    }
+
+    Lecture existingLecture = lectureService.getById(id)
+        .orElseThrow(() -> new RuntimeException("Lecture not found"));
+
+    if (!currentUser.getId().equals(existingLecture.getTeacherId())) {
+      throw new RuntimeException("You do not have permission to remove questions from this lecture");
+    }
+
     return lectureService.removeEndQuestion(id, req.getQuestionId());
   }
 
   @PostMapping("/by-ids")
-  public List<LectureResponse> getByIds(@RequestBody List<String> ids) {
-    return lectureService.getByIdsInOrder(ids).stream()
+  public List<LectureResponse> getByIds(@RequestBody List<String> ids, HttpServletRequest request) {
+    User currentUser = authUtil.getCurrentUser(request);
+    if (currentUser == null) {
+      throw new RuntimeException("Unauthorized");
+    }
+
+    List<Lecture> ownedLectures = lectureService.getByIdsInOrder(ids);
+
+    return ownedLectures.stream()
         .map(lectureService::toLectureResponse)
         .toList();
   }
