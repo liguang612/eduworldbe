@@ -7,6 +7,8 @@ import com.example.eduworldbe.repository.QuestionRepository;
 import com.example.eduworldbe.dto.ExamResponse;
 import com.example.eduworldbe.model.Attempt;
 import com.example.eduworldbe.repository.AttemptRepository;
+import com.example.eduworldbe.model.Course;
+import com.example.eduworldbe.model.Subject;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -32,6 +34,12 @@ public class ExamService {
 
   @Autowired
   private AttemptRepository attemptRepository;
+
+  @Autowired
+  private CourseService courseService;
+
+  @Autowired
+  private SubjectService subjectService;
 
   public Exam create(Exam exam) {
     if (exam.getQuestionIds() == null) {
@@ -255,7 +263,7 @@ public class ExamService {
     }
   }
 
-  public ExamResponse toExamResponse(Exam exam) {
+  public ExamResponse toExamResponse(Exam exam, Course course) {
     ExamResponse response = new ExamResponse();
     response.setId(exam.getId());
     response.setClassId(exam.getClassId());
@@ -301,7 +309,26 @@ public class ExamService {
     response.setHardScore(exam.getHardScore());
     response.setVeryHardScore(exam.getVeryHardScore());
 
+    // Add Course information
+    if (course != null) {
+      response.setClassName(course.getName()); // Giả định Course có phương thức getName()
+      // Lấy thông tin Subject từ subjectId của Course
+      try {
+        Subject subject = subjectService.getById(course.getSubjectId());
+        response.setSubjectName(subject.getName());
+        response.setGrade(subject.getGrade());
+      } catch (RuntimeException e) {
+        // Xử lý trường hợp không tìm thấy Subject
+        System.err.println("Subject not found for course: " + course.getId() + ", subjectId: " + course.getSubjectId());
+      }
+    }
+
     return response;
+  }
+
+  public ExamResponse toExamResponse(Exam exam) {
+    Course course = courseService.getById(exam.getClassId()).orElse(null);
+    return toExamResponse(exam, course);
   }
 
   public Attempt createAttempt(String examId, String userId) {
@@ -327,5 +354,38 @@ public class ExamService {
     } else {
       throw new RuntimeException("Exam not found");
     }
+  }
+
+  public List<ExamResponse> getUpcomingExams(String userId, Integer userRole, Integer total) {
+    Date currentTime = new Date();
+    List<Exam> exams;
+
+    if (userRole != null && userRole == 1) {
+      // Nếu là giáo viên, lấy các exam do họ tạo và sắp/đang diễn ra
+      exams = examRepository.findUpcomingExamsByTeacher(userId, currentTime);
+    } else {
+      // Nếu là học sinh, lấy tất cả exam sắp/đang diễn ra và lọc ở service
+      exams = examRepository.findAllUpcomingExams(currentTime);
+
+      // Lọc các exam thuộc khóa học mà học sinh đang tham gia
+      if (userId != null) {
+        List<Course> enrolledCourses = courseService.getEnrolledCourses(userId);
+        List<String> enrolledCourseIds = enrolledCourses.stream()
+            .map(Course::getId)
+            .toList();
+
+        exams = exams.stream()
+            .filter(exam -> enrolledCourseIds.contains(exam.getClassId()))
+            .toList();
+      }
+    }
+
+    return exams.stream()
+        .map(exam -> {
+          Course course = courseService.getById(exam.getClassId()).orElse(null);
+          return toExamResponse(exam, course);
+        })
+        .limit(total)
+        .toList();
   }
 }

@@ -24,6 +24,7 @@ import com.example.eduworldbe.model.ExamAttempt;
 import com.example.eduworldbe.model.MatchingColumn;
 import com.example.eduworldbe.model.MatchingPair;
 import com.example.eduworldbe.model.Question;
+import com.example.eduworldbe.model.User;
 import com.example.eduworldbe.repository.AttemptChoiceRepository;
 import com.example.eduworldbe.repository.AttemptMatchingColumnRepository;
 import com.example.eduworldbe.repository.AttemptMatchingPairRepository;
@@ -34,6 +35,7 @@ import com.example.eduworldbe.repository.ExamAttemptRepository;
 import com.example.eduworldbe.repository.MatchingColumnRepository;
 import com.example.eduworldbe.repository.MatchingPairRepository;
 import com.example.eduworldbe.repository.QuestionRepository;
+import com.example.eduworldbe.repository.UserRepository;
 import com.example.eduworldbe.dto.QuestionDetailResponse;
 import com.example.eduworldbe.dto.ExamAttemptListResponse;
 import com.example.eduworldbe.dto.ExamAttemptDetailResponse;
@@ -56,6 +58,7 @@ public class ExamAttemptService {
   private final ChoiceRepository choiceRepository;
   private final MatchingColumnRepository matchingColumnRepository;
   private final MatchingPairRepository matchingPairRepository;
+  private final UserRepository userRepository;
 
   @Autowired
   private CourseService courseService;
@@ -74,7 +77,8 @@ public class ExamAttemptService {
       QuestionRepository questionRepository,
       ChoiceRepository choiceRepository,
       MatchingColumnRepository matchingColumnRepository,
-      MatchingPairRepository matchingPairRepository) {
+      MatchingPairRepository matchingPairRepository,
+      UserRepository userRepository) {
     this.examAttemptRepository = examAttemptRepository;
     this.attemptQuestionRepository = attemptQuestionRepository;
     this.attemptChoiceRepository = attemptChoiceRepository;
@@ -85,6 +89,7 @@ public class ExamAttemptService {
     this.choiceRepository = choiceRepository;
     this.matchingColumnRepository = matchingColumnRepository;
     this.matchingPairRepository = matchingPairRepository;
+    this.userRepository = userRepository;
   }
 
   public ExamAttempt startAttempt(String userId, String examId) {
@@ -405,6 +410,15 @@ public class ExamAttemptService {
     response.setClassId(attempt.getClassId());
     response.setClassName(courseService.getById(attempt.getClassId()).get().getName());
 
+    // Lấy thông tin học sinh
+    User student = userRepository.findById(attempt.getUserId())
+        .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+    response.setUserId(student.getId());
+    response.setStudentName(student.getName());
+    response.setStudentEmail(student.getEmail());
+    response.setStudentAvatar(student.getAvatar());
+    response.setStudentSchool(student.getSchool());
+
     // Lấy danh sách câu hỏi và câu trả lời
     List<AttemptQuestion> attemptQuestions = attemptQuestionRepository.findByAttemptId(attemptId);
     Map<String, String> answers = attemptQuestions.stream()
@@ -481,5 +495,33 @@ public class ExamAttemptService {
     }
 
     return response;
+  }
+
+  public List<ExamAttemptListResponse> getAttemptsByExamId(String examId) {
+    List<ExamAttempt> attempts = examAttemptRepository.findByExamId(examId);
+
+    return attempts.stream().map(attempt -> {
+      ExamAttemptListResponse response = new ExamAttemptListResponse();
+      response.setId(attempt.getId());
+      response.setTitle(attempt.getTitle());
+      response.setScore(attempt.getScore());
+      response.setMaxScore(attempt.getMaxScore());
+      response.setStartTime(attempt.getStartTime());
+      response.setEndTime(attempt.getEndTime());
+      response.setStatus(attempt.getStatus());
+      response.setClassId(attempt.getClassId());
+      response.setClassName(courseService.getById(attempt.getClassId()).get().getName());
+      response.setUserId(attempt.getUserId());
+
+      // Lấy thông tin học sinh
+      User student = userRepository.findById(attempt.getUserId())
+          .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+      response.setStudentName(student.getName());
+      response.setStudentAvatar(student.getAvatar());
+      response.setStudentSchool(student.getSchool());
+      response.setStudentGrade(student.getGrade());
+
+      return response;
+    }).collect(Collectors.toList());
   }
 }

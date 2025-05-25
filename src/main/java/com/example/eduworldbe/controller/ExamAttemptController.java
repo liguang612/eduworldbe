@@ -129,4 +129,17 @@ public class ExamAttemptController {
     ExamAttemptDetailResponse attempt = examAttemptService.getAttemptDetail(attemptId);
     return ResponseEntity.ok(attempt);
   }
+
+  @GetMapping("/exam/{examId}")
+  public ResponseEntity<List<ExamAttemptListResponse>> getAttemptsByExamId(
+      @PathVariable String examId,
+      HttpServletRequest request) {
+    User user = authUtil.getCurrentUser(request);
+    if (user == null) {
+      throw new AccessDeniedException("User not authenticated");
+    }
+
+    List<ExamAttemptListResponse> attempts = examAttemptService.getAttemptsByExamId(examId);
+    return ResponseEntity.ok(attempts);
+  }
 }

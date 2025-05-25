@@ -228,6 +228,78 @@ public class CourseController {
     Course updatedCourse = courseService.rejectJoinRequest(id, studentId);
     return ResponseEntity.ok(courseService.toCourseResponse(updatedCourse));
   }
+
+  @GetMapping("/teacher/{teacherId}")
+  public List<CourseResponse> getByTeacherId(@PathVariable String teacherId) {
+    return courseService.getByTeacherId(teacherId).stream()
+        .map(courseService::toCourseResponse)
+        .toList();
+  }
+
+  @GetMapping("/highlight")
+  public List<CourseResponse> getHighlightCourses(
+      @RequestParam(required = false, defaultValue = "10") Integer total,
+      HttpServletRequest request) {
+    User currentUser = authUtil.getCurrentUser(request);
+    if (currentUser == null) {
+      throw new RuntimeException("Unauthorized");
+    }
+    return courseService.getHighlightCourses(currentUser.getId(), currentUser.getRole(), total);
+  }
+
+  @GetMapping("/search")
+  public List<CourseResponse> searchCourses(
+      @RequestParam(required = false) String subjectId,
+      @RequestParam(required = false) Boolean enrolled,
+      @RequestParam(required = false) String keyword,
+      HttpServletRequest request) {
+    User currentUser = authUtil.getCurrentUser(request);
+    if (currentUser == null) {
+      throw new RuntimeException("Unauthorized");
+    }
+
+    List<Course> allCourses = courseService.getAll(); // Get all courses first
+    List<Course> filteredCourses;
+
+    if (currentUser.getRole() == 1) {
+      // Đang xem những lớp học mình tạo | là TA
+      filteredCourses = allCourses.stream()
+          .filter(course -> currentUser.getId().equals(course.getTeacherId())
+              || (course.getTeacherAssistantIds() != null
+                  && course.getTeacherAssistantIds().contains(currentUser.getId())))
+          .toList();
+
+    } else {
+      if (Boolean.TRUE.equals(enrolled)) {
+        // Đang xem những lớp học mình được thêm vào
+        filteredCourses = allCourses.stream()
+            .filter(course -> course.getStudentIds() != null && course.getStudentIds().contains(currentUser.getId()))
+            .toList();
+      } else {
+        // Đang xem những lớp học không bị ẩn | bị ẩn nhưng được thêm vào
+        filteredCourses = allCourses.stream()
+            .filter(course -> !course.isHidden()
+                || (course.getStudentIds() != null && course.getStudentIds().contains(currentUser.getId())))
+            .toList();
+      }
+    }
+
+    // Apply subjectId filter if provided
+    if (subjectId != null && !subjectId.isEmpty()) {
+      filteredCourses = filteredCourses.stream()
+          .filter(course -> subjectId.equals(course.getSubjectId()))
+          .toList();
+    }
+
+    // Apply keyword search if provided
+    if (keyword != null && !keyword.trim().isEmpty()) {
+      filteredCourses = courseService.searchCoursesByName(filteredCourses, keyword);
+    }
+
+    return filteredCourses.stream()
+        .map(courseService::toCourseResponse)
+        .toList();
+  }
 }
 
 // DTO cho add/remove member
@@ -253,4 +325,3 @@ class AddMemberRequest {
 }
 
 // DTO cho add/remove lecture
-

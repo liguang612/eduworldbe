@@ -15,4 +15,11 @@ public class ExamAttemptListResponse {
   private String status;
   private String className;
   private String classId;
+  private String userId;
+
+  // Thông tin học sinh
+  private String studentName;
+  private String studentAvatar;
+  private String studentSchool;
+  private Integer studentGrade;
 }

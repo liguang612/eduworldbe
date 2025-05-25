@@ -20,4 +20,11 @@ public class ExamAttemptDetailResponse {
   private Map<String, String> answers;
   private List<QuestionDetailResponse> questions;
   private Map<String, Object> correctAnswers;
+
+  // Thông tin học sinh
+  private String userId;
+  private String studentName;
+  private String studentEmail;
+  private String studentAvatar;
+  private String studentSchool;
 }

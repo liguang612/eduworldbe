@@ -246,4 +246,15 @@ public class ExamController {
     List<Question> questions = examService.generateExamQuestions(examId);
     return ResponseEntity.ok(questions);
   }
+
+  @GetMapping("/upcoming")
+  public List<ExamResponse> getUpcomingExams(
+      @RequestParam(required = false, defaultValue = "10") Integer total,
+      HttpServletRequest request) {
+    User currentUser = authUtil.getCurrentUser(request);
+    if (currentUser == null) {
+      throw new RuntimeException("Unauthorized");
+    }
+    return examService.getUpcomingExams(currentUser.getId(), currentUser.getRole(), total);
+  }
 }

@@ -40,6 +40,8 @@ public class SolutionService {
 
     solution.setCreatedBy(currentUser.getId());
 
+    System.out.println("currentUser.getRole() = " + currentUser.getRole());
+
     if (currentUser.getRole() == 1) {
       solution.setStatus(1);
     } else {
@@ -58,7 +60,7 @@ public class SolutionService {
   public List<SolutionResponse> getByQuestionId(String questionId) {
     List<Solution> solutions = solutionRepository.findByQuestionId(questionId);
     return solutions.stream()
-        .map(this::convertToResponse)
+        .map(solution -> convertToResponse(solution))
         .collect(Collectors.toList());
   }
 

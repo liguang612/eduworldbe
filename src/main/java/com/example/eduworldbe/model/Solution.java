@@ -38,6 +38,8 @@ public class Solution {
   @PrePersist
   protected void onCreate() {
     createdAt = new Date();
-    status = 0;
+    if (status == null) {
+      status = 0;
+    }
   }
 }

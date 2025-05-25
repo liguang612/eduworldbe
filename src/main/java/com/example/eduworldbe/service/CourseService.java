@@ -293,4 +293,21 @@ public class CourseService {
 
     return courseRepository.save(course);
   }
+
+  public List<CourseResponse> getHighlightCourses(String userId, Integer userRole, Integer total) {
+    List<Course> courses;
+
+    if (userRole != null && userRole == 1) {
+      // Nếu là giáo viên, lấy các khóa học do họ tạo
+      courses = courseRepository.findHighlightCoursesByTeacher(userId);
+    } else {
+      // Nếu là học sinh, lấy các khóa học không bị ẩn
+      courses = courseRepository.findHighlightCoursesForStudent();
+    }
+
+    return courses.stream()
+        .map(this::toCourseResponse)
+        .limit(total)
+        .toList();
+  }
 }
