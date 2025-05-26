@@ -29,6 +29,9 @@ public class Lecture {
   @ElementCollection
   private List<String> categories;
 
+  @ElementCollection
+  private List<String> reviewIds;
+
   private String subjectId;
   private String teacherId;
 

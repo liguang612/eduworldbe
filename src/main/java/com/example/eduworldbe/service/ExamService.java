@@ -92,25 +92,66 @@ public class ExamService {
     System.out.println("veryHardScore: " + updatedExam.getVeryHardScore());
     if (existingExamOpt.isPresent()) {
       Exam existingExam = existingExamOpt.get();
-      existingExam.setTitle(updatedExam.getTitle());
-      existingExam.setEasyCount(updatedExam.getEasyCount());
-      existingExam.setEasyScore(updatedExam.getEasyScore());
-      existingExam.setMediumCount(updatedExam.getMediumCount());
-      existingExam.setMediumScore(updatedExam.getMediumScore());
-      existingExam.setHardCount(updatedExam.getHardCount());
-      existingExam.setHardScore(updatedExam.getHardScore());
-      existingExam.setVeryHardCount(updatedExam.getVeryHardCount());
-      existingExam.setVeryHardScore(updatedExam.getVeryHardScore());
-      existingExam.setOpenTime(updatedExam.getOpenTime());
-      existingExam.setCloseTime(updatedExam.getCloseTime());
-      existingExam.setMaxScore(updatedExam.getMaxScore());
-      existingExam.setDurationMinutes(updatedExam.getDurationMinutes());
-      existingExam.setShuffleQuestion(updatedExam.getShuffleQuestion());
-      existingExam.setShuffleChoice(updatedExam.getShuffleChoice());
-      existingExam.setCategories(updatedExam.getCategories());
-      existingExam.setAllowReview(updatedExam.getAllowReview());
-      existingExam.setAllowViewAnswer(updatedExam.getAllowViewAnswer());
-      existingExam.setMaxAttempts(updatedExam.getMaxAttempts());
+      if (updatedExam.getTitle() != null) {
+        existingExam.setTitle(updatedExam.getTitle());
+      }
+      if (updatedExam.getEasyCount() != null) {
+        existingExam.setEasyCount(updatedExam.getEasyCount());
+      }
+      if (updatedExam.getEasyScore() != null) {
+        existingExam.setEasyScore(updatedExam.getEasyScore());
+      }
+      if (updatedExam.getMediumCount() != null) {
+        existingExam.setMediumCount(updatedExam.getMediumCount());
+      }
+      if (updatedExam.getMediumScore() != null) {
+        existingExam.setMediumScore(updatedExam.getMediumScore());
+      }
+      if (updatedExam.getHardCount() != null) {
+        existingExam.setHardCount(updatedExam.getHardCount());
+      }
+      if (updatedExam.getHardScore() != null) {
+        existingExam.setHardScore(updatedExam.getHardScore());
+      }
+      if (updatedExam.getVeryHardCount() != null) {
+        existingExam.setVeryHardCount(updatedExam.getVeryHardCount());
+      }
+      if (updatedExam.getVeryHardScore() != null) {
+        existingExam.setVeryHardScore(updatedExam.getVeryHardScore());
+      }
+      if (updatedExam.getOpenTime() != null) {
+        existingExam.setOpenTime(updatedExam.getOpenTime());
+      }
+      if (updatedExam.getCloseTime() != null) {
+        existingExam.setCloseTime(updatedExam.getCloseTime());
+      }
+      if (updatedExam.getMaxScore() != null) {
+        existingExam.setMaxScore(updatedExam.getMaxScore());
+      }
+      if (updatedExam.getDurationMinutes() != null) {
+        existingExam.setDurationMinutes(updatedExam.getDurationMinutes());
+      }
+      if (updatedExam.getShuffleQuestion() != null) {
+        existingExam.setShuffleQuestion(updatedExam.getShuffleQuestion());
+      }
+      if (updatedExam.getShuffleChoice() != null) {
+        existingExam.setShuffleChoice(updatedExam.getShuffleChoice());
+      }
+      if (updatedExam.getCategories() != null) {
+        existingExam.setCategories(updatedExam.getCategories());
+      }
+      if (updatedExam.getAllowReview() != null) {
+        existingExam.setAllowReview(updatedExam.getAllowReview());
+      }
+      if (updatedExam.getAllowViewAnswer() != null) {
+        existingExam.setAllowViewAnswer(updatedExam.getAllowViewAnswer());
+      }
+      if (updatedExam.getMaxAttempts() != null) {
+        existingExam.setMaxAttempts(updatedExam.getMaxAttempts());
+      }
+      if (updatedExam.getQuestionIds() != null) {
+        existingExam.setQuestionIds(updatedExam.getQuestionIds());
+      }
       return examRepository.save(existingExam);
     } else {
       throw new RuntimeException("Exam not found with id: " + id);

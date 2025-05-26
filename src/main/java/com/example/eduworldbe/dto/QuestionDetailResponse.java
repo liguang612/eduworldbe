@@ -43,7 +43,6 @@ public class QuestionDetailResponse {
     this.createdBy = question.getCreatedBy();
     this.categories = question.getCategories();
     this.solutionIds = question.getSolutionIds();
-    this.reviewIds = question.getReviewIds();
     this.createdAt = question.getCreatedAt();
     this.updatedAt = question.getUpdatedAt();
 

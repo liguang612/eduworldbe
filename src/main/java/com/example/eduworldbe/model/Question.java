@@ -40,8 +40,6 @@ public class Question {
   private List<String> categories;
   @ElementCollection
   private List<String> solutionIds;
-  @ElementCollection
-  private List<String> reviewIds;
   private Date createdAt;
   private Date updatedAt;
 }

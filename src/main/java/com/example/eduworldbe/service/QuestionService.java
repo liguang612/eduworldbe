@@ -276,8 +276,6 @@ public class QuestionService {
       existing.setCategories(updated.getCategories());
     if (updated.getSolutionIds() != null)
       existing.setSolutionIds(updated.getSolutionIds());
-    if (updated.getReviewIds() != null)
-      existing.setReviewIds(updated.getReviewIds());
     existing.setUpdatedAt(new Date());
 
     // Delete all existing choices
