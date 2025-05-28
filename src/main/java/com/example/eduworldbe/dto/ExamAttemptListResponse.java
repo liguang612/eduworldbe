@@ -16,6 +16,7 @@ public class ExamAttemptListResponse {
   private String className;
   private String classId;
   private String userId;
+  private String examId;
 
   // Thông tin học sinh
   private String studentName;

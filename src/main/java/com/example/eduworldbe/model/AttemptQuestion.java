@@ -19,7 +19,7 @@ public class AttemptQuestion {
     @Column(name = "question_id")
     private String questionId;
 
-    private String level;
+    private Integer level;
     private String type;
     private String title;
 

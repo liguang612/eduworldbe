@@ -5,6 +5,8 @@ import com.example.eduworldbe.model.User;
 import com.example.eduworldbe.model.ReviewComment;
 import com.example.eduworldbe.dto.ReviewResponse;
 import com.example.eduworldbe.dto.ReviewCommentResponse;
+import com.example.eduworldbe.dto.ReviewPageResponse;
+import com.example.eduworldbe.dto.ReviewStatisticsResponse;
 import com.example.eduworldbe.service.ReviewService;
 import com.example.eduworldbe.util.AuthUtil;
 import org.springframework.security.access.AccessDeniedException;
@@ -38,9 +40,20 @@ public class ReviewController {
     return reviewService.getByTarget(targetType, targetId);
   }
 
-  @GetMapping("/average")
-  public double getAverageScore(@RequestParam Integer targetType, @RequestParam String targetId) {
-    return reviewService.getAverageScore(targetType, targetId);
+  @GetMapping("/page")
+  public ReviewPageResponse getByTargetWithPagination(
+      @RequestParam Integer targetType,
+      @RequestParam String targetId,
+      @RequestParam(defaultValue = "0") int page,
+      @RequestParam(defaultValue = "10") int size) {
+    return reviewService.getByTargetWithPagination(targetType, targetId, page, size);
+  }
+
+  @GetMapping("/statistics")
+  public ReviewStatisticsResponse getStatistics(
+      @RequestParam Integer targetType,
+      @RequestParam String targetId) {
+    return reviewService.getStatistics(targetType, targetId);
   }
 
   @PostMapping("/{reviewId}/comments")
@@ -52,7 +65,7 @@ public class ReviewController {
     if (currentUser == null) {
       throw new AccessDeniedException("User not authenticated");
     }
-    return reviewService.addComment(reviewId, currentUser.getId(), content);
+    return reviewService.addComment(reviewId, currentUser.getId(), content.substring(1, content.length() - 1));
   }
 
   @GetMapping("/{reviewId}/comments")
@@ -67,5 +80,14 @@ public class ReviewController {
       throw new AccessDeniedException("User not authenticated");
     }
     reviewService.deleteComment(commentId);
+  }
+
+  @PutMapping("/{reviewId}")
+  public Review update(@PathVariable String reviewId, @RequestBody Review review, HttpServletRequest request) {
+    User currentUser = authUtil.getCurrentUser(request);
+    if (currentUser == null) {
+      throw new AccessDeniedException("User not authenticated");
+    }
+    return reviewService.update(reviewId, review);
   }
 }

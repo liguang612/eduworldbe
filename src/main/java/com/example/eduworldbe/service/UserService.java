@@ -8,6 +8,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.stream.Collectors;
+import com.example.eduworldbe.dto.UserInfoDTO;
 
 @Service
 public class UserService {
@@ -112,5 +113,20 @@ public class UserService {
     }
 
     return dp[s1.length()][s2.length()];
+  }
+
+  public UserInfoDTO getUserInfo(String userId) {
+    User user = findById(userId);
+    if (user == null) {
+      throw new RuntimeException("User not found");
+    }
+
+    UserInfoDTO userInfo = new UserInfoDTO();
+    userInfo.setId(userId);
+    userInfo.setUserName(user.getName());
+    userInfo.setUserAvatar(user.getAvatar());
+    userInfo.setUserSchool(user.getSchool());
+
+    return userInfo;
   }
 }

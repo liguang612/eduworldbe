@@ -22,4 +22,6 @@ public class CourseResponse {
   private List<String> reviewIds;
   private double averageRating;
   private boolean hidden;
+  private boolean allowStudentPost;
+  private boolean requirePostApproval;
 }

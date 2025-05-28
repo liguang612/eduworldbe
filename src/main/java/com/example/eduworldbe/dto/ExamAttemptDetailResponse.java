@@ -17,6 +17,7 @@ public class ExamAttemptDetailResponse {
   private String status;
   private String className;
   private String classId;
+  private Integer duration;
   private Map<String, String> answers;
   private List<QuestionDetailResponse> questions;
   private Map<String, Object> correctAnswers;

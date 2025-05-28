@@ -101,8 +101,8 @@ public class ExamAttemptService {
 
       // Kiểm tra thời gian làm bài
       Date now = new Date();
-      long timeElapsed = now.getTime() - attempt.getStartTime().getTime();
-      long timeElapsedMinutes = timeElapsed / (60 * 1000); // Chuyển đổi từ milliseconds sang phút
+      long timeElapsed = now.getTime() - attempt.getStartTime().getTime(); // đơn vị: ms
+      long timeElapsedMinutes = timeElapsed / (60 * 1000);
 
       // Nếu thời gian làm bài vượt quá duration, tự động nộp bài
       if (timeElapsedMinutes >= attempt.getDuration()) {
@@ -157,31 +157,35 @@ public class ExamAttemptService {
     // 4. Chọn ngẫu nhiên câu hỏi theo số lượng yêu cầu cho từng level
     List<Question> selectedQuestions = new ArrayList<>();
 
-    // Chọn câu hỏi level 1 (Easy)
+    // Chọn câu hỏi level 1 (Nhận biết)
     if (questionsByLevel.containsKey(1)) {
       List<Question> easyQuestions = questionsByLevel.get(1);
       Collections.shuffle(easyQuestions);
+
       selectedQuestions.addAll(easyQuestions.subList(0, Math.min(exam.getEasyCount(), easyQuestions.size())));
     }
 
-    // Chọn câu hỏi level 2 (Medium)
+    // Chọn câu hỏi level 2 (Thông hiểu)
     if (questionsByLevel.containsKey(2)) {
       List<Question> mediumQuestions = questionsByLevel.get(2);
       Collections.shuffle(mediumQuestions);
+
       selectedQuestions.addAll(mediumQuestions.subList(0, Math.min(exam.getMediumCount(), mediumQuestions.size())));
     }
 
-    // Chọn câu hỏi level 3 (Hard)
+    // Chọn câu hỏi level 3 (Vận dụng)
     if (questionsByLevel.containsKey(3)) {
       List<Question> hardQuestions = questionsByLevel.get(3);
       Collections.shuffle(hardQuestions);
+
       selectedQuestions.addAll(hardQuestions.subList(0, Math.min(exam.getHardCount(), hardQuestions.size())));
     }
 
-    // Chọn câu hỏi level 4 (Very Hard)
+    // Chọn câu hỏi level 4 (Vận dụng cao)
     if (questionsByLevel.containsKey(4)) {
       List<Question> veryHardQuestions = questionsByLevel.get(4);
       Collections.shuffle(veryHardQuestions);
+
       selectedQuestions
           .addAll(veryHardQuestions.subList(0, Math.min(exam.getVeryHardCount(), veryHardQuestions.size())));
     }
@@ -191,11 +195,11 @@ public class ExamAttemptService {
       AttemptQuestion attemptQuestion = new AttemptQuestion();
       attemptQuestion.setAttemptId(attempt.getId());
       attemptQuestion.setQuestionId(question.getId());
-      attemptQuestion.setLevel(String.valueOf(question.getLevel()));
+      attemptQuestion.setLevel(question.getLevel());
       attemptQuestion.setType(question.getType());
       attemptQuestion.setTitle(question.getTitle());
       attemptQuestion.setSharedMedia(question.getSharedMedia());
-      attemptQuestion.setAnswer(""); // Khởi tạo câu trả lời rỗng
+      attemptQuestion.setAnswer("");
       attemptQuestion = attemptQuestionRepository.save(attemptQuestion);
 
       // 6. Copy choices hoặc matching data tùy theo loại câu hỏi
@@ -237,6 +241,11 @@ public class ExamAttemptService {
       }
     }
 
+    List<AttemptQuestion> attemptQuestions = attemptQuestionRepository.findByAttemptId(attempt.getId());
+    for (AttemptQuestion attemptQuestion : attemptQuestions) {
+      System.out.println(attemptQuestion.getQuestionId());
+    }
+
     // Attempt mới thì status là started (Phải copyWith vì nếu như setStatus ở
     // instance dùng để save thì DB biến đổi theo :/)
     ExamAttempt newAttempt = attempt.copyWith();
@@ -245,6 +254,10 @@ public class ExamAttemptService {
   }
 
   public void saveAnswer(String attemptId, String questionId, String answer) {
+    System.out.println(attemptId);
+    System.out.println(questionId);
+    System.out.println(answer);
+
     AttemptQuestion attemptQuestion = attemptQuestionRepository
         .findByAttemptIdAndQuestionId(attemptId, questionId)
         .orElseThrow(() -> new ResourceNotFoundException("Question not found in attempt"));
@@ -390,6 +403,7 @@ public class ExamAttemptService {
       response.setStatus(attempt.getStatus());
       response.setClassId(attempt.getClassId());
       response.setClassName(courseService.getById(attempt.getClassId()).get().getName());
+      response.setExamId(attempt.getExamId());
 
       return response;
     }).collect(Collectors.toList());
@@ -409,6 +423,7 @@ public class ExamAttemptService {
     response.setStatus(attempt.getStatus());
     response.setClassId(attempt.getClassId());
     response.setClassName(courseService.getById(attempt.getClassId()).get().getName());
+    response.setDuration(attempt.getDuration());
 
     // Lấy thông tin học sinh
     User student = userRepository.findById(attempt.getUserId())
@@ -441,14 +456,13 @@ public class ExamAttemptService {
                   choice.setId(ac.getChoiceId());
                   choice.setText(ac.getText());
                   choice.setValue(ac.getValue());
-                  choice.setIsCorrect(ac.getIsCorrect());
-                  choice.setOrderIndex(ac.getOrderIndex());
+                  choice.setIsCorrect(attempt.getStatus().equals("submitted") ? ac.getIsCorrect() : null);
+                  choice.setOrderIndex(attempt.getStatus().equals("submitted") ? ac.getOrderIndex() : null);
                   return choice;
                 })
                 .collect(Collectors.toList()));
           } else {
             List<AttemptMatchingColumn> attemptColumns = attemptMatchingColumnRepository.findByQuestionId(aq.getId());
-            List<AttemptMatchingPair> attemptPairs = attemptMatchingPairRepository.findByQuestionId(aq.getId());
 
             List<MatchingColumn> columns = attemptColumns.stream()
                 .map(ac -> {
@@ -460,18 +474,21 @@ public class ExamAttemptService {
                 })
                 .collect(Collectors.toList());
 
-            List<MatchingPair> pairs = attemptPairs.stream()
-                .map(ap -> {
-                  MatchingPair pair = new MatchingPair();
-                  pair.setId(ap.getMatchingPairId());
-                  pair.setFrom(ap.getSource());
-                  pair.setTo(ap.getTarget());
-                  return pair;
-                })
-                .collect(Collectors.toList());
+            if (attempt.getStatus().equals("submitted")) {
+              List<AttemptMatchingPair> attemptPairs = attemptMatchingPairRepository.findByQuestionId(aq.getId());
+              List<MatchingPair> pairs = attempt.getStatus().equals("submitted") ? attemptPairs.stream()
+                  .map(ap -> {
+                    MatchingPair pair = new MatchingPair();
+                    pair.setId(ap.getMatchingPairId());
+                    pair.setFrom(ap.getSource());
+                    pair.setTo(ap.getTarget());
+                    return pair;
+                  })
+                  .collect(Collectors.toList()) : null;
+              questionDetail.setMatchingPairs(pairs);
+            }
 
             questionDetail.setMatchingColumns(columns);
-            questionDetail.setMatchingPairs(pairs);
           }
 
           return questionDetail;
@@ -485,7 +502,7 @@ public class ExamAttemptService {
     Exam exam = examRepository.findById(attempt.getExamId())
         .orElseThrow(() -> new ResourceNotFoundException("Exam not found"));
 
-    if (exam.getAllowViewAnswer() != null && exam.getAllowViewAnswer()) {
+    if (exam.getAllowViewAnswer() == true) {
       Map<String, Object> correctAnswers = new HashMap<>();
       for (QuestionDetailResponse question : questions) {
         Object correctAnswer = questionService.getCorrectAnswerFormatted(question);

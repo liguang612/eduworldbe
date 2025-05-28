@@ -7,7 +7,9 @@ import lombok.AllArgsConstructor;
 import java.util.Date;
 
 @Entity
-@Table(name = "review")
+@Table(name = "review", indexes = {
+    @Index(name = "idx_review_created_at", columnList = "created_at")
+})
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -23,5 +25,6 @@ public class Review {
   private String comment;
 
   @Temporal(TemporalType.TIMESTAMP)
+  @Column(name = "created_at", nullable = false)
   private Date createdAt;
 }

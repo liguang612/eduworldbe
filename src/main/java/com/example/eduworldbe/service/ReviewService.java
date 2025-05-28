@@ -8,6 +8,8 @@ import com.example.eduworldbe.model.User;
 import com.example.eduworldbe.model.ReviewComment;
 import com.example.eduworldbe.dto.ReviewResponse;
 import com.example.eduworldbe.dto.ReviewCommentResponse;
+import com.example.eduworldbe.dto.ReviewPageResponse;
+import com.example.eduworldbe.dto.ReviewStatisticsResponse;
 import com.example.eduworldbe.repository.ReviewRepository;
 import com.example.eduworldbe.repository.CourseRepository;
 import com.example.eduworldbe.repository.ExamRepository;
@@ -15,11 +17,15 @@ import com.example.eduworldbe.repository.LectureRepository;
 import com.example.eduworldbe.repository.UserRepository;
 import com.example.eduworldbe.repository.ReviewCommentRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.Date;
 import java.util.List;
 import java.util.ArrayList;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -74,8 +80,22 @@ public class ReviewService {
     return savedReview;
   }
 
+  public Review update(String reviewId, Review review) {
+    Review existingReview = reviewRepository.findById(reviewId).orElse(null);
+    if (existingReview == null) {
+      throw new RuntimeException("Review not found");
+    }
+    if (review.getScore() != 0) {
+      existingReview.setScore(review.getScore());
+    }
+    if (review.getComment() != null) {
+      existingReview.setComment(review.getComment());
+    }
+    return reviewRepository.save(existingReview);
+  }
+
   public List<ReviewResponse> getByTarget(Integer targetType, String targetId) {
-    List<Review> reviews = reviewRepository.findByTargetTypeAndTargetId(targetType, targetId);
+    List<Review> reviews = reviewRepository.findByTargetTypeAndTargetIdOrderByCreatedAtDesc(targetType, targetId);
     return reviews.stream()
         .map(review -> {
           User user = userRepository.findById(review.getUserId()).orElse(null);
@@ -102,7 +122,6 @@ public class ReviewService {
     return getByTarget(targetType, targetId).size();
   }
 
-  // Thêm comment vào review
   public ReviewComment addComment(String reviewId, String userId, String content) {
     ReviewComment comment = new ReviewComment();
     comment.setReviewId(reviewId);
@@ -111,7 +130,6 @@ public class ReviewService {
     return reviewCommentRepository.save(comment);
   }
 
-  // Lấy danh sách comment của một review
   public List<ReviewCommentResponse> getComments(String reviewId) {
     List<ReviewComment> comments = reviewCommentRepository.findByReviewId(reviewId);
     return comments.stream()
@@ -122,8 +140,52 @@ public class ReviewService {
         .collect(Collectors.toList());
   }
 
-  // Xóa comment
   public void deleteComment(String commentId) {
     reviewCommentRepository.deleteById(commentId);
+  }
+
+  public ReviewPageResponse getByTargetWithPagination(Integer targetType, String targetId, int page, int size) {
+    Pageable pageable = PageRequest.of(page, size);
+    Page<Review> reviewPage = reviewRepository.findByTargetTypeAndTargetIdOrderByCreatedAtDesc(targetType, targetId,
+        pageable);
+
+    List<ReviewResponse> reviewResponses = reviewPage.getContent().stream()
+        .map(review -> {
+          User user = userRepository.findById(review.getUserId()).orElse(null);
+          return ReviewResponse.fromReviewAndUser(review, user, new ArrayList<>());
+        })
+        .collect(Collectors.toList());
+
+    ReviewPageResponse response = new ReviewPageResponse();
+    response.setReviews(reviewResponses);
+    response.setCurrentPage(page);
+    response.setTotalPages(reviewPage.getTotalPages());
+    response.setTotalElements(reviewPage.getTotalElements());
+
+    return response;
+  }
+
+  public ReviewStatisticsResponse getStatistics(Integer targetType, String targetId) {
+    List<Review> reviews = reviewRepository.findByTargetTypeAndTargetIdOrderByCreatedAtDesc(targetType, targetId);
+
+    double averageScore = reviews.stream()
+        .mapToInt(Review::getScore)
+        .average()
+        .orElse(0.0);
+
+    Map<Integer, Long> scoreDistribution = reviews.stream()
+        .collect(Collectors.groupingBy(
+            Review::getScore,
+            Collectors.counting()));
+
+    for (int i = 1; i <= 5; i++) {
+      scoreDistribution.putIfAbsent(i, 0L);
+    }
+
+    ReviewStatisticsResponse response = new ReviewStatisticsResponse();
+    response.setAverageScore(averageScore);
+    response.setScoreDistribution(scoreDistribution);
+
+    return response;
   }
 }

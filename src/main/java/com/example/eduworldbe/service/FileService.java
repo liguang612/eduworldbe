@@ -4,11 +4,11 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.UUID;
+import java.util.List;
 
 @Service
 public class FileService {
@@ -35,6 +35,10 @@ public class FileService {
     return null;
   }
 
+  /**
+   * Xóa file từ storage dựa trên URL
+   * URL format: /uploads/images/abc.jpg
+   */
   public void deleteFile(String fileUrl) {
     if (fileUrl == null || fileUrl.isEmpty()) {
       return;
@@ -48,7 +52,29 @@ public class FileService {
         Files.delete(filePath);
       }
     } catch (Exception e) {
-      System.out.println("Error deleting file: " + e.getMessage());
+      // Log error nhưng không throw exception để không ảnh hưởng đến luồng chính
+      e.printStackTrace();
     }
+  }
+
+  /**
+   * Xóa nhiều file cùng lúc
+   */
+  public void deleteFiles(List<String> fileUrls) {
+    if (fileUrls == null) {
+      return;
+    }
+
+    fileUrls.forEach(this::deleteFile);
+  }
+
+  public void deleteUnusedFiles(List<String> oldUrls, List<String> newUrls) {
+    if (oldUrls == null || newUrls == null) {
+      return;
+    }
+
+    oldUrls.stream()
+        .filter(url -> !newUrls.contains(url))
+        .forEach(this::deleteFile);
   }
 }

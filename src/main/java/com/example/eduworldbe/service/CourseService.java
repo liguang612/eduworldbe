@@ -51,11 +51,6 @@ public class CourseService {
     if (updated.getAvatar() != null) {
       existingCourse.setAvatar(updated.getAvatar());
     }
-
-    // Subject và giáo viên tạo lớp không bao giờ bị thay đổi
-    // existingCourse.setSubjectId(updated.getSubjectId());
-    // existingCourse.setTeacherId(updated.getTeacherId());
-
     if (updated.getAllCategories() != null) {
       existingCourse.setAllCategories(updated.getAllCategories());
     }
@@ -72,6 +67,8 @@ public class CourseService {
       existingCourse.setReviewIds(updated.getReviewIds());
     }
     existingCourse.setHidden(updated.isHidden());
+    existingCourse.setAllowStudentPost(updated.isAllowStudentPost());
+    existingCourse.setRequirePostApproval(updated.isRequirePostApproval());
 
     return courseRepository.save(existingCourse);
   }
@@ -106,6 +103,8 @@ public class CourseService {
         .toList() : null);
     dto.setReviewIds(course.getReviewIds());
     dto.setHidden(course.isHidden());
+    dto.setAllowStudentPost(course.isAllowStudentPost());
+    dto.setRequirePostApproval(course.isRequirePostApproval());
 
     dto.setTeacher(course.getTeacherId() != null ? userRepository.findById(course.getTeacherId()).orElse(null) : null);
 
