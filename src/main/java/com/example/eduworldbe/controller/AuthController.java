@@ -8,6 +8,7 @@ import com.example.eduworldbe.dto.UserResponse;
 import com.example.eduworldbe.dto.UserSearchResponse;
 import com.example.eduworldbe.model.User;
 import com.example.eduworldbe.service.UserService;
+import com.example.eduworldbe.service.FileUploadService;
 import com.example.eduworldbe.util.AuthUtil;
 import com.example.eduworldbe.util.JwtUtil;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,7 +20,7 @@ import org.springframework.web.bind.annotation.RestController;
 import jakarta.servlet.http.HttpServletRequest;
 import java.util.List;
 import org.springframework.web.multipart.MultipartFile;
-import com.example.eduworldbe.service.FileService;
+import java.io.IOException;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -37,7 +38,7 @@ public class AuthController {
   private AuthUtil authUtil;
 
   @Autowired
-  private FileService fileService;
+  private FileUploadService fileUploadService;
 
   @PostMapping("/register")
   public User register(
@@ -49,7 +50,7 @@ public class AuthController {
       @RequestParam(value = "address", required = false) String address,
       @RequestParam(value = "role", required = false) Integer role,
       @RequestParam(value = "birthday", required = false) String birthday,
-      @RequestParam(value = "avatar", required = false) MultipartFile avatar) {
+      @RequestParam(value = "avatar", required = false) MultipartFile avatar) throws IOException {
 
     User user = new User();
     user.setEmail(email);
@@ -71,7 +72,7 @@ public class AuthController {
 
     // Upload avatar if provided
     if (avatar != null && !avatar.isEmpty()) {
-      String avatarUrl = fileService.uploadFile(avatar, "users");
+      String avatarUrl = fileUploadService.uploadFile(avatar, "user");
       user.setAvatar(avatarUrl);
     }
 
@@ -165,7 +166,7 @@ public class AuthController {
   @PostMapping("/users/avatar")
   public ResponseEntity<UserResponse> uploadAvatar(
       @RequestParam("file") MultipartFile file,
-      HttpServletRequest request) {
+      HttpServletRequest request) throws IOException {
     User currentUser = authUtil.getCurrentUser(request);
     if (currentUser == null) {
       throw new RuntimeException("Unauthorized");
@@ -173,12 +174,13 @@ public class AuthController {
 
     // Delete old avatar if exists
     if (currentUser.getAvatar() != null && !currentUser.getAvatar().isEmpty()) {
-      fileService.deleteFile(currentUser.getAvatar());
+      fileUploadService.deleteFile(currentUser.getAvatar());
     }
 
-    String avatarUrl = fileService.uploadFile(file, "users");
+    String avatarUrl = fileUploadService.uploadFile(file, "user");
     User updatedUser = new User();
     updatedUser.setAvatar(avatarUrl);
+
     User savedUser = userService.update(currentUser.getId(), updatedUser);
 
     return ResponseEntity.ok(new UserResponse(

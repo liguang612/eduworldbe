@@ -12,6 +12,7 @@ import com.example.eduworldbe.util.AuthUtil;
 import com.example.eduworldbe.dto.QuestionDetailResponse;
 import com.example.eduworldbe.dto.CreateQuestionRequest;
 import com.example.eduworldbe.dto.QuestionListResponseItem;
+import com.example.eduworldbe.dto.UpdateQuestionRequest;
 
 import jakarta.servlet.http.HttpServletRequest;
 
@@ -257,26 +258,36 @@ public class QuestionService {
   }
 
   @Transactional
-  public Question update(String id, Question updated) {
+  public Question update(String id, UpdateQuestionRequest request) {
     Question existing = questionRepository.findById(id)
         .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Question not found"));
 
     // Update basic fields
-    if (updated.getTitle() != null)
-      existing.setTitle(updated.getTitle());
-    if (updated.getSubjectId() != null)
-      existing.setSubjectId(updated.getSubjectId());
-    if (updated.getType() != null)
-      existing.setType(updated.getType());
-    if (updated.getSharedMedia() != null)
-      existing.setSharedMedia(updated.getSharedMedia());
-    if (updated.getLevel() != null)
-      existing.setLevel(updated.getLevel());
-    if (updated.getCategories() != null)
-      existing.setCategories(updated.getCategories());
-    if (updated.getSolutionIds() != null)
-      existing.setSolutionIds(updated.getSolutionIds());
+    if (request.getTitle() != null)
+      existing.setTitle(request.getTitle());
+    if (request.getType() != null)
+      existing.setType(request.getType());
+    if (request.getLevel() != null)
+      existing.setLevel(request.getLevel());
+    if (request.getCategories() != null)
+      existing.setCategories(request.getCategories());
+    if (request.getSolutionIds() != null)
+      existing.setSolutionIds(request.getSolutionIds());
     existing.setUpdatedAt(new Date());
+
+    // Handle SharedMedia update
+    if (request.getSharedMediaId() != null) {
+      SharedMedia sharedMedia = sharedMediaService.getById(request.getSharedMediaId())
+          .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "SharedMedia not found"));
+
+      // Decrement usage count of old shared media if exists
+      if (existing.getSharedMedia() != null) {
+        sharedMediaService.decrementUsageCount(existing.getSharedMedia().getId());
+      }
+
+      existing.setSharedMedia(sharedMedia);
+      sharedMediaService.incrementUsageCount(sharedMedia.getId());
+    }
 
     // Delete all existing choices
     choiceService.deleteByQuestionId(id);
@@ -314,7 +325,6 @@ public class QuestionService {
           try {
             return getQuestionDetailById(id, request);
           } catch (Exception e) {
-            // Log lỗi để kiểm tra
             System.out.println("Lỗi khi lấy chi tiết câu hỏi ID: " + id + " - " + e.getMessage());
             return Optional.<QuestionDetailResponse>empty();
           }

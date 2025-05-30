@@ -2,6 +2,7 @@ package com.example.eduworldbe.controller;
 
 import com.example.eduworldbe.service.FileUploadService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -15,13 +16,27 @@ public class FileUploadController {
   @Autowired
   private FileUploadService fileUploadService;
 
-  @PostMapping("/upload/{folder}")
-  public Map<String, String> uploadFile(@PathVariable String folder, @RequestParam("file") MultipartFile file)
-      throws IOException {
-    String url = fileUploadService.uploadFile(file, folder);
+  @PostMapping("/upload")
+  public ResponseEntity<?> uploadFile(
+      @RequestParam("file") MultipartFile file,
+      @RequestParam("type") String type) throws IOException {
+    String url = fileUploadService.uploadFile(file, type);
+    return ResponseEntity.ok().body(new FileUploadResponse(url));
+  }
+}
 
-    Map<String, String> response = new HashMap<>();
-    response.put("url", url);
-    return response;
+class FileUploadResponse {
+  private String url;
+
+  public FileUploadResponse(String url) {
+    this.url = url;
+  }
+
+  public String getUrl() {
+    return url;
+  }
+
+  public void setUrl(String url) {
+    this.url = url;
   }
 }

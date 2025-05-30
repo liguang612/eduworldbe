@@ -42,7 +42,7 @@ public class AuthUtil {
 
     // Student has access to enrolled courses
     if (currentUser.getRole() == 0) {
-      return courseService.getEnrolledCourses(currentUser.getId()).stream()
+      return courseService.getEnrolledCoursesOptimized(currentUser.getId(), null).stream()
           .anyMatch(course -> course.getId().equals(courseId));
     }
 

@@ -17,7 +17,7 @@ public class SharedMediaService {
   private SharedMediaRepository sharedMediaRepository;
 
   @Autowired
-  private FileService fileService;
+  private FileUploadService fileUploadService;
 
   public SharedMedia create(SharedMedia sharedMedia) {
     sharedMedia.setUsageCount(0);
@@ -26,8 +26,8 @@ public class SharedMediaService {
 
   public SharedMedia createWithFile(MultipartFile file, String title, Integer mediaType, String text)
       throws IOException {
-    // Upload file using FileService
-    String mediaUrl = fileService.uploadFile(file, "shared-media");
+    // Upload file using FileUploadService
+    String mediaUrl = fileUploadService.uploadFile(file, "shared-media");
 
     // Create and save shared media
     SharedMedia sharedMedia = new SharedMedia();
@@ -95,10 +95,10 @@ public class SharedMediaService {
     if (file != null && !file.isEmpty()) {
       // Delete old file if it exists
       if (existing.getMediaUrl() != null && !existing.getMediaUrl().isEmpty()) {
-        fileService.deleteFile(existing.getMediaUrl());
+        fileUploadService.deleteFile(existing.getMediaUrl());
       }
 
-      String mediaUrl = fileService.uploadFile(file, "shared-media");
+      String mediaUrl = fileUploadService.uploadFile(file, "shared-media");
       existing.setMediaUrl(mediaUrl);
     }
 
@@ -123,7 +123,7 @@ public class SharedMediaService {
     }
     // Delete the file if it exists
     if (media.getMediaUrl() != null) {
-      fileService.deleteFile(media.getMediaUrl());
+      fileUploadService.deleteFile(media.getMediaUrl());
     }
     sharedMediaRepository.deleteById(id);
   }

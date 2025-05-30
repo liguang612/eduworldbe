@@ -17,4 +17,6 @@ public interface ReviewRepository extends JpaRepository<Review, String> {
       String targetId);
 
   List<Review> findByUserIdOrderByCreatedAtDesc(String userId);
+
+  List<Review> findByTargetTypeAndTargetId(Integer targetType, String targetId);
 }

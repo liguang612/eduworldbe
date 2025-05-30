@@ -2,7 +2,7 @@ package com.example.eduworldbe.controller;
 
 import com.example.eduworldbe.model.Course;
 import com.example.eduworldbe.service.CourseService;
-import com.example.eduworldbe.service.FileService;
+import com.example.eduworldbe.service.FileUploadService;
 import com.example.eduworldbe.dto.CourseResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -12,6 +12,7 @@ import com.example.eduworldbe.util.AuthUtil;
 import com.example.eduworldbe.model.User;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
 
@@ -22,7 +23,7 @@ public class CourseController {
   private CourseService courseService;
 
   @Autowired
-  private FileService fileService;
+  private FileUploadService fileUploadService;
 
   @Autowired
   private AuthUtil authUtil;
@@ -48,43 +49,13 @@ public class CourseController {
       throw new RuntimeException("Unauthorized");
     }
 
-    List<Course> allCourses = courseService.getAll(); // Get all courses first
-    List<Course> filteredCourses;
-
-    if (currentUser.getRole() == 1) {
-      // Đang xem những lớp học mình tạo | là TA
-      filteredCourses = allCourses.stream()
-          .filter(course -> currentUser.getId().equals(course.getTeacherId())
-              || (course.getTeacherAssistantIds() != null
-                  && course.getTeacherAssistantIds().contains(currentUser.getId())))
-          .toList();
-
-    } else {
-      if (Boolean.TRUE.equals(enrolled)) {
-        // Đang xem những lớp học mình được thêm vào
-        filteredCourses = allCourses.stream()
-            .filter(course -> course.getStudentIds() != null && course.getStudentIds().contains(currentUser.getId()))
-            .toList();
-      } else {
-        // Đang xem những lớp học không bị ẩn | bị ẩn nhưng được thêm vào
-        filteredCourses = allCourses.stream()
-            .filter(course -> !course.isHidden()
-                || (course.getStudentIds() != null && course.getStudentIds().contains(currentUser.getId())))
-            .toList();
-      }
-    }
-
-    // Apply subjectId filter if provided
-    if (subjectId != null && !subjectId.isEmpty()) {
-      filteredCourses = filteredCourses.stream()
-          .filter(course -> subjectId.equals(course.getSubjectId()))
-          .toList();
-    }
-
-    // Apply keyword search if provided
-    if (keyword != null && !keyword.trim().isEmpty()) {
-      filteredCourses = courseService.searchCoursesByName(filteredCourses, keyword);
-    }
+    // Use optimized method that performs filtering at database level
+    List<Course> filteredCourses = courseService.getCoursesOptimized(
+        currentUser.getId(),
+        currentUser.getRole(),
+        subjectId,
+        enrolled,
+        keyword);
 
     return filteredCourses.stream()
         .map(courseService::toCourseResponse)
@@ -123,15 +94,15 @@ public class CourseController {
   @PostMapping("/{id}/avatar")
   public ResponseEntity<Course> uploadAvatar(
       @PathVariable String id,
-      @RequestParam("file") MultipartFile file) {
+      @RequestParam("file") MultipartFile file) throws IOException {
     Optional<Course> course = courseService.getById(id);
     if (course.isPresent()) {
       // Delete old avatar if exists
       if (course.get().getAvatar() != null && !course.get().getAvatar().isEmpty()) {
-        fileService.deleteFile(course.get().getAvatar());
+        fileUploadService.deleteFile(course.get().getAvatar());
       }
 
-      String avatarUrl = fileService.uploadFile(file, "courses");
+      String avatarUrl = fileUploadService.uploadFile(file, "course");
       Course updatedCourse = course.get();
       updatedCourse.setAvatar(avatarUrl);
 
@@ -258,43 +229,13 @@ public class CourseController {
       throw new RuntimeException("Unauthorized");
     }
 
-    List<Course> allCourses = courseService.getAll(); // Get all courses first
-    List<Course> filteredCourses;
-
-    if (currentUser.getRole() == 1) {
-      // Đang xem những lớp học mình tạo | là TA
-      filteredCourses = allCourses.stream()
-          .filter(course -> currentUser.getId().equals(course.getTeacherId())
-              || (course.getTeacherAssistantIds() != null
-                  && course.getTeacherAssistantIds().contains(currentUser.getId())))
-          .toList();
-
-    } else {
-      if (Boolean.TRUE.equals(enrolled)) {
-        // Đang xem những lớp học mình được thêm vào
-        filteredCourses = allCourses.stream()
-            .filter(course -> course.getStudentIds() != null && course.getStudentIds().contains(currentUser.getId()))
-            .toList();
-      } else {
-        // Đang xem những lớp học không bị ẩn | bị ẩn nhưng được thêm vào
-        filteredCourses = allCourses.stream()
-            .filter(course -> !course.isHidden()
-                || (course.getStudentIds() != null && course.getStudentIds().contains(currentUser.getId())))
-            .toList();
-      }
-    }
-
-    // Apply subjectId filter if provided
-    if (subjectId != null && !subjectId.isEmpty()) {
-      filteredCourses = filteredCourses.stream()
-          .filter(course -> subjectId.equals(course.getSubjectId()))
-          .toList();
-    }
-
-    // Apply keyword search if provided
-    if (keyword != null && !keyword.trim().isEmpty()) {
-      filteredCourses = courseService.searchCoursesByName(filteredCourses, keyword);
-    }
+    // Use the same optimized method as getAll - they have identical logic
+    List<Course> filteredCourses = courseService.getCoursesOptimized(
+        currentUser.getId(),
+        currentUser.getRole(),
+        subjectId,
+        enrolled,
+        keyword);
 
     return filteredCourses.stream()
         .map(courseService::toCourseResponse)

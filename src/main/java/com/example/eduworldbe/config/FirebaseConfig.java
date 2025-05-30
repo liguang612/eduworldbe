@@ -16,7 +16,7 @@ public class FirebaseConfig {
     FirebaseOptions options = FirebaseOptions.builder()
         .setCredentials(GoogleCredentials.fromStream(
             new ClassPathResource("service-account-file.json").getInputStream()))
-        .setStorageBucket("eduworld-6ba8b.appspot.com")
+        .setStorageBucket("eduworld-6ba8b.firebasestorage.app")
         .build();
     return FirebaseApp.initializeApp(options);
   }

@@ -5,6 +5,7 @@ import com.example.eduworldbe.service.QuestionService;
 import com.example.eduworldbe.dto.CreateQuestionRequest;
 import com.example.eduworldbe.dto.QuestionDetailResponse;
 import com.example.eduworldbe.dto.QuestionListResponseItem;
+import com.example.eduworldbe.dto.UpdateQuestionRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -64,8 +65,8 @@ public class QuestionController {
   }
 
   @PutMapping("/{id}")
-  public ResponseEntity<Question> update(@PathVariable String id, @RequestBody Question updated) {
-    return ResponseEntity.ok(questionService.update(id, updated));
+  public ResponseEntity<Question> update(@PathVariable String id, @Valid @RequestBody UpdateQuestionRequest request) {
+    return ResponseEntity.ok(questionService.update(id, request));
   }
 
   @DeleteMapping("/{id}")

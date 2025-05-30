@@ -1,12 +1,18 @@
 package com.example.eduworldbe.service;
 
 import com.example.eduworldbe.model.Course;
+import com.example.eduworldbe.model.Post;
+import com.example.eduworldbe.model.Review;
 import com.example.eduworldbe.repository.CourseRepository;
 import com.example.eduworldbe.repository.ChapterRepository;
 import com.example.eduworldbe.repository.UserRepository;
+import com.example.eduworldbe.repository.PostRepository;
+import com.example.eduworldbe.repository.CommentRepository;
+import com.example.eduworldbe.repository.ReviewRepository;
 import com.example.eduworldbe.dto.CourseResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
@@ -26,6 +32,15 @@ public class CourseService {
 
   @Autowired
   private ReviewService reviewService;
+
+  @Autowired
+  private PostRepository postRepository;
+
+  @Autowired
+  private CommentRepository commentRepository;
+
+  @Autowired
+  private ReviewRepository reviewRepository;
 
   public Course create(Course course) {
     return courseRepository.save(course);
@@ -73,18 +88,36 @@ public class CourseService {
     return courseRepository.save(existingCourse);
   }
 
+  @Transactional
   public void delete(String id) {
     Optional<Course> courseOptional = courseRepository.findById(id);
 
     if (courseOptional.isPresent()) {
       Course courseToDelete = courseOptional.get();
 
+      // 1. Delete all chapters and their lectures
       if (courseToDelete.getChapterIds() != null) {
         for (String chapterId : courseToDelete.getChapterIds()) {
           chapterRepository.deleteById(chapterId);
         }
       }
 
+      // 2. Delete all posts and their comments
+      List<Post> posts = postRepository.findByCourseId(courseToDelete.getId());
+      for (Post post : posts) {
+        // Delete all comments of the post
+        if (post.getComments() != null) {
+          commentRepository.deleteAll(post.getComments());
+        }
+        // Delete the post
+        postRepository.delete(post);
+      }
+
+      // 3. Delete all reviews
+      List<Review> reviews = reviewRepository.findByTargetTypeAndTargetId(1, courseToDelete.getId());
+      reviewRepository.deleteAll(reviews);
+
+      // 4. Finally delete the course
       courseRepository.deleteById(id);
     }
   }
@@ -151,9 +184,39 @@ public class CourseService {
   }
 
   public List<Course> getEnrolledCourses(String studentId) {
-    return courseRepository.findAll().stream()
-        .filter(course -> course.getStudentIds() != null && course.getStudentIds().contains(studentId))
-        .toList();
+    return getEnrolledCoursesOptimized(studentId, null);
+  }
+
+  public List<Course> getCoursesOptimized(String userId, Integer userRole, String subjectId, Boolean enrolled,
+      String keyword) {
+    String normalizedSubjectId = (subjectId != null && subjectId.trim().isEmpty()) ? null : subjectId;
+    String normalizedKeyword = (keyword != null && keyword.trim().isEmpty()) ? null : keyword;
+
+    List<Course> filteredCourses;
+
+    if (userRole != null && userRole == 1) {
+      filteredCourses = courseRepository.findTeacherCoursesWithFilters(userId, normalizedSubjectId);
+    } else {
+      // Student role
+      if (Boolean.TRUE.equals(enrolled)) {
+        // Get enrolled courses only
+        filteredCourses = courseRepository.findEnrolledCoursesWithFilters(userId, normalizedSubjectId);
+      } else {
+        // Get available courses (not hidden OR enrolled)
+        filteredCourses = courseRepository.findAvailableCoursesWithFilters(userId, normalizedSubjectId);
+      }
+    }
+
+    // Then apply fuzzy keyword search if provided
+    if (normalizedKeyword != null) {
+      filteredCourses = searchCoursesByName(filteredCourses, normalizedKeyword);
+    }
+
+    return filteredCourses;
+  }
+
+  public List<Course> getEnrolledCoursesOptimized(String studentId, String subjectId) {
+    return courseRepository.findEnrolledCourses(studentId, subjectId);
   }
 
   private int calculateLevenshteinDistance(String s1, String s2) {
@@ -204,9 +267,7 @@ public class CourseService {
             // Khớp chính xác
             if (courseName.equals(term)) {
               termScore += 100.0;
-            }
-            // Khớp một phần
-            else if (courseName.contains(term)) {
+            } else if (courseName.contains(term)) {
               double lengthRatio = (double) term.length() / courseName.length();
               termScore += 80.0 * lengthRatio;
             }
@@ -297,10 +358,8 @@ public class CourseService {
     List<Course> courses;
 
     if (userRole != null && userRole == 1) {
-      // Nếu là giáo viên, lấy các khóa học do họ tạo
       courses = courseRepository.findHighlightCoursesByTeacher(userId);
     } else {
-      // Nếu là học sinh, lấy các khóa học không bị ẩn
       courses = courseRepository.findHighlightCoursesForStudent();
     }
 

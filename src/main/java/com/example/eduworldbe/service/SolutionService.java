@@ -40,8 +40,6 @@ public class SolutionService {
 
     solution.setCreatedBy(currentUser.getId());
 
-    System.out.println("currentUser.getRole() = " + currentUser.getRole());
-
     if (currentUser.getRole() == 1) {
       solution.setStatus(1);
     } else {

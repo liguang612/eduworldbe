@@ -12,7 +12,6 @@ import java.util.List;
 
 @Service
 public class FileService {
-
   @Value("${file.upload-dir}")
   private String uploadDir;
 

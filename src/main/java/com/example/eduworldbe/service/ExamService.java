@@ -85,11 +85,6 @@ public class ExamService {
   @Transactional
   public Exam update(String id, Exam updatedExam) {
     Optional<Exam> existingExamOpt = examRepository.findById(id);
-    System.out.println("updatedExam: " + updatedExam);
-    System.out.println("easyScore: " + updatedExam.getEasyScore());
-    System.out.println("mediumScore: " + updatedExam.getMediumScore());
-    System.out.println("hardScore: " + updatedExam.getHardScore());
-    System.out.println("veryHardScore: " + updatedExam.getVeryHardScore());
     if (existingExamOpt.isPresent()) {
       Exam existingExam = existingExamOpt.get();
       if (updatedExam.getTitle() != null) {

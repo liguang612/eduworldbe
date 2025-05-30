@@ -241,11 +241,6 @@ public class ExamAttemptService {
       }
     }
 
-    List<AttemptQuestion> attemptQuestions = attemptQuestionRepository.findByAttemptId(attempt.getId());
-    for (AttemptQuestion attemptQuestion : attemptQuestions) {
-      System.out.println(attemptQuestion.getQuestionId());
-    }
-
     // Attempt mới thì status là started (Phải copyWith vì nếu như setStatus ở
     // instance dùng để save thì DB biến đổi theo :/)
     ExamAttempt newAttempt = attempt.copyWith();
@@ -254,10 +249,6 @@ public class ExamAttemptService {
   }
 
   public void saveAnswer(String attemptId, String questionId, String answer) {
-    System.out.println(attemptId);
-    System.out.println(questionId);
-    System.out.println(answer);
-
     AttemptQuestion attemptQuestion = attemptQuestionRepository
         .findByAttemptIdAndQuestionId(attemptId, questionId)
         .orElseThrow(() -> new ResourceNotFoundException("Question not found in attempt"));

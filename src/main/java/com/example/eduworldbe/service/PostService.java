@@ -27,7 +27,7 @@ public class PostService {
   private UserService userService;
 
   @Autowired
-  private FileService fileService;
+  private FileUploadService fileUploadService;
 
   @Transactional
   public PostDTO createPost(CreatePostRequest request, String userId) {
@@ -70,7 +70,7 @@ public class PostService {
     }
 
     // Xóa những ảnh không còn được sử dụng
-    fileService.deleteUnusedFiles(post.getImageUrls(), request.getImageUrls());
+    fileUploadService.deleteUnusedFiles(post.getImageUrls(), request.getImageUrls());
 
     post.setContent(request.getContent());
     post.setImageUrls(request.getImageUrls());
@@ -96,7 +96,7 @@ public class PostService {
     }
 
     // Xóa tất cả các ảnh của post
-    fileService.deleteFiles(post.getImageUrls());
+    fileUploadService.deleteFiles(post.getImageUrls());
 
     postRepository.delete(post);
   }
