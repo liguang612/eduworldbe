@@ -26,9 +26,6 @@ public class MatchingQuestionService {
   @Autowired
   private QuestionService questionService;
 
-  @Autowired
-  private SharedMediaService sharedMediaService;
-
   @Transactional
   public MatchingQuestionResult createMatchingQuestion(MatchingQuestionRequest request) {
     // Update question with sharedMediaId if provided
