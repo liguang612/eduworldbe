@@ -7,6 +7,7 @@ import lombok.AllArgsConstructor;
 
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 
 @Entity
 @Table(name = "attempt", indexes = {
