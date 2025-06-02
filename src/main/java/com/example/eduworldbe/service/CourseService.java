@@ -10,6 +10,7 @@ import com.example.eduworldbe.repository.PostRepository;
 import com.example.eduworldbe.repository.CommentRepository;
 import com.example.eduworldbe.repository.ReviewRepository;
 import com.example.eduworldbe.dto.CourseResponse;
+import com.example.eduworldbe.util.StringUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -219,29 +220,6 @@ public class CourseService {
     return courseRepository.findEnrolledCourses(studentId, subjectId);
   }
 
-  private int calculateLevenshteinDistance(String s1, String s2) {
-    int[][] dp = new int[s1.length() + 1][s2.length() + 1];
-
-    for (int i = 0; i <= s1.length(); i++) {
-      dp[i][0] = i;
-    }
-    for (int j = 0; j <= s2.length(); j++) {
-      dp[0][j] = j;
-    }
-
-    for (int i = 1; i <= s1.length(); i++) {
-      for (int j = 1; j <= s2.length(); j++) {
-        if (s1.charAt(i - 1) == s2.charAt(j - 1)) {
-          dp[i][j] = dp[i - 1][j - 1];
-        } else {
-          dp[i][j] = 1 + Math.min(dp[i - 1][j - 1], Math.min(dp[i - 1][j], dp[i][j - 1]));
-        }
-      }
-    }
-
-    return dp[s1.length()][s2.length()];
-  }
-
   public List<Course> searchCoursesByName(List<Course> courses, String keyword) {
     if (keyword == null || keyword.trim().isEmpty()) {
       return courses;
@@ -283,7 +261,7 @@ public class CourseService {
             }
 
             // Levenshtein distance
-            int distance = calculateLevenshteinDistance(courseName, term);
+            int distance = StringUtil.calculateLevenshteinDistance(courseName, term);
             if (distance <= 3) {
               termScore += Math.max(0, 30.0 * (1 - distance / 3.0));
             }
@@ -291,7 +269,7 @@ public class CourseService {
             // Kiểm tra Levenshtein distance cho từng từ trong tên
             String[] courseWords = courseName.split("\\s+");
             for (String word : courseWords) {
-              distance = calculateLevenshteinDistance(word, term);
+              distance = StringUtil.calculateLevenshteinDistance(word, term);
               if (distance <= 2) {
                 termScore += Math.max(0, 20.0 * (1 - distance / 2.0));
               }
@@ -367,5 +345,9 @@ public class CourseService {
         .map(this::toCourseResponse)
         .limit(total)
         .toList();
+  }
+
+  public List<Course> getCoursesContainingLecture(String lectureId) {
+    return courseRepository.findCoursesContainingLecture(lectureId);
   }
 }

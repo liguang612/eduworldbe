@@ -1,12 +1,17 @@
 package com.example.eduworldbe.service;
 
 import com.example.eduworldbe.model.Course;
+import com.example.eduworldbe.model.Exam;
 import com.example.eduworldbe.model.Favourite;
 import com.example.eduworldbe.model.Lecture;
 import com.example.eduworldbe.model.User;
 import com.example.eduworldbe.repository.FavouriteRepository;
 import com.example.eduworldbe.repository.UserRepository;
+import com.example.eduworldbe.dto.ExamResponse;
 import com.example.eduworldbe.dto.FavouriteDetailDTO;
+import com.example.eduworldbe.dto.CourseResponse;
+import com.example.eduworldbe.dto.LectureResponse;
+import com.example.eduworldbe.util.StringUtil;
 
 import lombok.RequiredArgsConstructor;
 
@@ -17,6 +22,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.AbstractMap;
 
 @Service
 @RequiredArgsConstructor
@@ -87,19 +93,29 @@ public class FavouriteService {
   }
 
   // New methods to get detailed information
-  public List<FavouriteDetailDTO> getDetailedFavouritesByType(Integer type, String userId) {
+  public List<FavouriteDetailDTO> getDetailedFavouritesByType(Integer type, String userId, String keyword) {
     List<Favourite> favourites = getFavouritesByType(type, userId);
-    return favourites.stream()
+    List<FavouriteDetailDTO> detailedFavourites = favourites.stream()
         .map(this::convertToDetailDTO)
         .collect(Collectors.toList());
+
+    if (keyword != null && !keyword.trim().isEmpty()) {
+      detailedFavourites = filterFavouritesByKeyword(detailedFavourites, keyword);
+    }
+    return detailedFavourites;
   }
 
-  public List<FavouriteDetailDTO> getDetailedFavouritesByTypeAndSubject(Integer type, String userId,
-      String subjectId) {
+  public List<FavouriteDetailDTO> getDetailedFavouritesByTypeAndSubject(Integer type, String userId, String subjectId,
+      String keyword) {
     List<Favourite> favourites = getFavouritesByTypeAndSubject(type, userId, subjectId);
-    return favourites.stream()
+    List<FavouriteDetailDTO> detailedFavourites = favourites.stream()
         .map(this::convertToDetailDTO)
         .collect(Collectors.toList());
+
+    if (keyword != null && !keyword.trim().isEmpty()) {
+      detailedFavourites = filterFavouritesByKeyword(detailedFavourites, keyword);
+    }
+    return detailedFavourites;
   }
 
   private FavouriteDetailDTO convertToDetailDTO(Favourite favourite) {
@@ -124,10 +140,73 @@ public class FavouriteService {
         }
         break;
       case 4:
-        dto.setDetails(examService.getById(favourite.getTargetId()).orElse(null));
+        Exam exam = examService.getById(favourite.getTargetId()).orElse(null);
+        if (exam != null) {
+          ExamResponse examResponse = examService.toExamResponse(exam);
+          examResponse.setFavourite(true);
+
+          dto.setDetails(examResponse);
+        }
         break;
     }
 
     return dto;
+  }
+
+  private List<FavouriteDetailDTO> filterFavouritesByKeyword(List<FavouriteDetailDTO> dtos, String keyword) {
+    if (keyword == null || keyword.trim().isEmpty()) {
+      return dtos;
+    }
+    String[] searchTerms = keyword.toLowerCase().split("\\s+");
+
+    return dtos.stream()
+        .map(dto -> {
+          String itemName = "";
+          Object details = dto.getDetails();
+
+          if (details instanceof CourseResponse) {
+            itemName = ((CourseResponse) details).getName();
+          } else if (details instanceof LectureResponse) {
+            itemName = ((LectureResponse) details).getName();
+          } else if (details instanceof ExamResponse) {
+            itemName = ((ExamResponse) details).getTitle();
+          }
+
+          if (itemName == null || itemName.trim().isEmpty()) {
+            return new AbstractMap.SimpleEntry<>(dto, 0.0);
+          }
+
+          itemName = itemName.toLowerCase();
+          double score = 0.0;
+
+          for (String term : searchTerms) {
+            double termScore = 0.0;
+            if (itemName.equals(term)) {
+              termScore += 100.0;
+            } else if (itemName.contains(term)) {
+              double lengthRatio = (double) term.length() / itemName.length();
+              termScore += 80.0 * lengthRatio;
+            }
+
+            int distance = StringUtil.calculateLevenshteinDistance(itemName, term);
+            if (distance <= 3) {
+              termScore += Math.max(0, 30.0 * (1 - (double) distance / 3.0));
+            }
+            String[] itemWords = itemName.split("\\s+");
+            for (String word : itemWords) {
+              distance = StringUtil.calculateLevenshteinDistance(word, term);
+              if (distance <= 2) {
+                termScore += Math.max(0, 20.0 * (1 - (double) distance / 2.0));
+              }
+            }
+            score += termScore;
+          }
+          score = (searchTerms.length > 0) ? (score / searchTerms.length) : 0.0;
+          return new AbstractMap.SimpleEntry<>(dto, score);
+        })
+        .filter(entry -> entry.getValue() > 0)
+        .sorted((e1, e2) -> Double.compare(e2.getValue(), e1.getValue()))
+        .map(AbstractMap.SimpleEntry::getKey)
+        .collect(Collectors.toList());
   }
 }

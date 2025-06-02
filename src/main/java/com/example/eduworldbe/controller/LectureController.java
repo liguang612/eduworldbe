@@ -60,9 +60,21 @@ public class LectureController {
     // filter: là giáo viên (== teacherId ) hoặc là học sinh (== studentId) hoặc là
     // trợ giảng (== teacherAssistantId)
     LectureResponse lectureResponse = lectureService.getById(id)
-        .filter(lecture -> (userId.equals(lecture.getTeacherId())
-            || (course != null && (course.getStudentIds().contains(userId)
-                || course.getTeacherAssistantIds().contains(userId)))))
+        .filter(lecture -> {
+          if (userId.equals(lecture.getTeacherId())) {
+            return true;
+          }
+
+          if (course != null) {
+            return course.getStudentIds().contains(userId)
+                || course.getTeacherAssistantIds().contains(userId);
+          }
+
+          List<Course> coursesContainingLecture = courseService.getCoursesContainingLecture(id);
+          return coursesContainingLecture.stream()
+              .anyMatch(c -> c.getStudentIds().contains(userId)
+                  || c.getTeacherAssistantIds().contains(userId));
+        })
         .map(lectureService::toLectureResponse)
         .orElseThrow(() -> new RuntimeException("Lecture not found or you do not have permission to view it"));
 

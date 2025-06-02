@@ -95,19 +95,21 @@ public class FavouriteController {
   @GetMapping("/detailed/{type}")
   public ResponseEntity<List<FavouriteDetailDTO>> getDetailedFavouritesByType(
       @PathVariable Integer type,
+      @RequestParam(required = false) String keyword,
       HttpServletRequest request) {
     User currentUser = authUtil.getCurrentUser(request);
     if (currentUser == null) {
       throw new AccessDeniedException("User not authenticated");
     }
 
-    return ResponseEntity.ok(favouriteService.getDetailedFavouritesByType(type, currentUser.getId()));
+    return ResponseEntity.ok(favouriteService.getDetailedFavouritesByType(type, currentUser.getId(), keyword));
   }
 
   @GetMapping("/detailed/{type}/subject/{subjectId}")
   public ResponseEntity<List<FavouriteDetailDTO>> getDetailedFavouritesByTypeAndSubject(
       @PathVariable Integer type,
       @PathVariable String subjectId,
+      @RequestParam(required = false) String keyword,
       HttpServletRequest request) {
     User currentUser = authUtil.getCurrentUser(request);
     if (currentUser == null) {
@@ -115,6 +117,6 @@ public class FavouriteController {
     }
 
     return ResponseEntity
-        .ok(favouriteService.getDetailedFavouritesByTypeAndSubject(type, currentUser.getId(), subjectId));
+        .ok(favouriteService.getDetailedFavouritesByTypeAndSubject(type, currentUser.getId(), subjectId, keyword));
   }
 }

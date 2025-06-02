@@ -18,9 +18,9 @@ public interface FavouriteRepository extends JpaRepository<Favourite, Long> {
   List<Favourite> findByTypeAndUser(Integer type, User user);
 
   @Query("SELECT f FROM Favourite f WHERE f.type = :type AND f.user = :user AND " +
-      "((:type = 1 AND EXISTS (SELECT c FROM Course c WHERE c.id = f.targetId)) OR " +
-      "(:type = 2 AND EXISTS (SELECT l FROM Lecture l WHERE l.id = f.targetId)) OR " +
-      "(:type = 4 AND EXISTS (SELECT e FROM Exam e WHERE e.id = f.targetId)))")
+      "((:type = 1 AND EXISTS (SELECT c FROM Course c WHERE c.id = f.targetId AND c.subjectId = :subjectId)) OR " +
+      "(:type = 2 AND EXISTS (SELECT l FROM Lecture l WHERE l.id = f.targetId AND l.subjectId = :subjectId)) OR " +
+      "(:type = 4 AND EXISTS (SELECT e FROM Exam e INNER JOIN Course c ON e.classId = c.id WHERE e.id = f.targetId AND c.subjectId = :subjectId)))")
   List<Favourite> findByTypeAndUserAndSubjectId(
       @Param("type") Integer type,
       @Param("user") User user,
