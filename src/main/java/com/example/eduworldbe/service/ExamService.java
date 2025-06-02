@@ -114,12 +114,11 @@ public class ExamService {
       if (updatedExam.getVeryHardScore() != null) {
         existingExam.setVeryHardScore(updatedExam.getVeryHardScore());
       }
-      if (updatedExam.getOpenTime() != null) {
-        existingExam.setOpenTime(updatedExam.getOpenTime());
-      }
-      if (updatedExam.getCloseTime() != null) {
-        existingExam.setCloseTime(updatedExam.getCloseTime());
-      }
+
+      // Thời gian mở đề và đóng đề có thể là null (vĩnh viễn)
+      existingExam.setOpenTime(updatedExam.getOpenTime());
+      existingExam.setCloseTime(updatedExam.getCloseTime());
+
       if (updatedExam.getMaxScore() != null) {
         existingExam.setMaxScore(updatedExam.getMaxScore());
       }
@@ -355,7 +354,8 @@ public class ExamService {
         response.setGrade(subject.getGrade());
       } catch (RuntimeException e) {
         // Xử lý trường hợp không tìm thấy Subject
-        System.err.println("Subject not found for course: " + course.getId() + ", subjectId: " + course.getSubjectId());
+        System.err
+            .println("Subject not found for course: " + course.getId() + ", subjectId: " + course.getSubjectId());
       }
     }
 
