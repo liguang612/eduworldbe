@@ -162,9 +162,9 @@ public class CourseController {
       courseService.requestJoinCourse(id, currentUser.getId());
       return ResponseEntity.ok(200000);
     } catch (RuntimeException e) {
-      if (e.getMessage().equals("already_enrolled")) {
+      if (e.getMessage().equals("already_requested")) {
         return ResponseEntity.ok(200001);
-      } else if (e.getMessage().equals("already_requested")) {
+      } else if (e.getMessage().equals("already_enrolled")) {
         return ResponseEntity.ok(200002);
       }
       throw e;
