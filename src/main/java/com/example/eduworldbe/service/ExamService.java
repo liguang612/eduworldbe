@@ -10,6 +10,10 @@ import com.example.eduworldbe.repository.AttemptRepository;
 import com.example.eduworldbe.model.Course;
 import com.example.eduworldbe.model.Subject;
 
+import com.example.eduworldbe.model.Notification;
+import com.example.eduworldbe.model.NotificationType;
+import com.example.eduworldbe.repository.CourseRepository;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -20,6 +24,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.Random;
+import java.util.concurrent.ExecutionException;
 
 @Service
 public class ExamService {
@@ -39,7 +44,13 @@ public class ExamService {
   private CourseService courseService;
 
   @Autowired
+  private CourseRepository courseRepository;
+
+  @Autowired
   private SubjectService subjectService;
+
+  @Autowired
+  private NotificationService notificationService;
 
   public Exam create(Exam exam) {
     if (exam.getQuestionIds() == null) {
@@ -51,7 +62,34 @@ public class ExamService {
     if (exam.getCategories() == null) {
       exam.setCategories(new ArrayList<>());
     }
-    return examRepository.save(exam);
+    Exam savedExam = examRepository.save(exam);
+
+    if (savedExam.getClassId() != null && savedExam.getCreatedBy() != null) {
+      courseRepository.findById(savedExam.getClassId()).ifPresent(course -> {
+        if (course.getStudentIds() != null && !course.getStudentIds().isEmpty()) {
+          String actorId = savedExam.getCreatedBy();
+
+          for (String studentId : course.getStudentIds()) {
+            if (actorId.equals(studentId)) {
+              continue;
+            }
+            try {
+              notificationService.createNotification(Notification.builder()
+                  .userId(studentId)
+                  .type(NotificationType.NEW_EXAM_IN_COURSE)
+                  .actorId(actorId)
+                  .examId(savedExam.getId())
+                  .courseId(savedExam.getClassId()));
+            } catch (ExecutionException | InterruptedException e) {
+              System.err.println(
+                  "Failed to create NEW_EXAM_IN_COURSE notification for user " + studentId + ": " + e.getMessage());
+              Thread.currentThread().interrupt();
+            }
+          }
+        }
+      });
+    }
+    return savedExam;
   }
 
   public Optional<Exam> getById(String id) {
@@ -115,7 +153,6 @@ public class ExamService {
         existingExam.setVeryHardScore(updatedExam.getVeryHardScore());
       }
 
-      // Thời gian mở đề và đóng đề có thể là null (vĩnh viễn)
       existingExam.setOpenTime(updatedExam.getOpenTime());
       existingExam.setCloseTime(updatedExam.getCloseTime());
 
@@ -241,7 +278,6 @@ public class ExamService {
 
       List<Question> allQuestions = questionRepository.findAllById(exam.getQuestionIds());
 
-      // Group questions by level
       List<Question> level1Questions = allQuestions.stream()
           .filter(q -> q.getLevel() != null && q.getLevel() == 1)
           .collect(Collectors.toList());
@@ -261,13 +297,11 @@ public class ExamService {
       List<Question> selectedQuestions = new ArrayList<>();
       Random random = new Random();
 
-      // Select random questions for each level based on counts
       selectRandomQuestions(selectedQuestions, level1Questions, exam.getEasyCount(), random);
       selectRandomQuestions(selectedQuestions, level2Questions, exam.getMediumCount(), random);
       selectRandomQuestions(selectedQuestions, level3Questions, exam.getHardCount(), random);
       selectRandomQuestions(selectedQuestions, level4Questions, exam.getVeryHardCount(), random);
 
-      // Shuffle questions if needed
       if (exam.getShuffleQuestion()) {
         java.util.Collections.shuffle(selectedQuestions);
       }
@@ -284,13 +318,11 @@ public class ExamService {
       return;
     }
 
-    // If we don't have enough questions of this level, use all available
     if (questions.size() <= count) {
       selectedQuestions.addAll(questions);
       return;
     }
 
-    // Select random questions
     List<Question> availableQuestions = new ArrayList<>(questions);
     for (int i = 0; i < count && !availableQuestions.isEmpty(); i++) {
       int randomIndex = random.nextInt(availableQuestions.size());
@@ -314,23 +346,19 @@ public class ExamService {
     response.setUpdatedAt(exam.getUpdatedAt());
     response.setCategories(exam.getCategories());
 
-    // Set level counts
     response.setEasyCount(exam.getEasyCount());
     response.setMediumCount(exam.getMediumCount());
     response.setHardCount(exam.getHardCount());
     response.setVeryHardCount(exam.getVeryHardCount());
 
-    // Calculate total questions
     response.setTotalQuestions(
         (exam.getEasyCount() != null ? exam.getEasyCount() : 0) +
             (exam.getMediumCount() != null ? exam.getMediumCount() : 0) +
             (exam.getHardCount() != null ? exam.getHardCount() : 0) +
             (exam.getVeryHardCount() != null ? exam.getVeryHardCount() : 0));
 
-    // Calculate question bank size
     response.setQuestionBankSize(exam.getQuestionIds() != null ? exam.getQuestionIds().size() : 0);
 
-    // Get average rating
     response.setAverageRating(reviewService.getAverageScore(4, exam.getId()));
     response.setReviewCount(reviewService.getReviewCount(4, exam.getId()));
 
@@ -338,22 +366,18 @@ public class ExamService {
     response.setAllowViewAnswer(exam.getAllowViewAnswer());
     response.setMaxAttempts(exam.getMaxAttempts());
 
-    // Set scores for each level
     response.setEasyScore(exam.getEasyScore());
     response.setMediumScore(exam.getMediumScore());
     response.setHardScore(exam.getHardScore());
     response.setVeryHardScore(exam.getVeryHardScore());
 
-    // Add Course information
     if (course != null) {
-      response.setClassName(course.getName()); // Giả định Course có phương thức getName()
-      // Lấy thông tin Subject từ subjectId của Course
+      response.setClassName(course.getName());
       try {
         Subject subject = subjectService.getById(course.getSubjectId());
         response.setSubjectName(subject.getName());
         response.setGrade(subject.getGrade());
       } catch (RuntimeException e) {
-        // Xử lý trường hợp không tìm thấy Subject
         System.err
             .println("Subject not found for course: " + course.getId() + ", subjectId: " + course.getSubjectId());
       }
@@ -380,7 +404,6 @@ public class ExamService {
       attempt.setScore(0.0);
       attempt.setPercentageScore(0.0);
 
-      // Copy điểm số từ Exam sang Attempt
       attempt.setEasyScore(exam.getEasyScore());
       attempt.setMediumScore(exam.getMediumScore());
       attempt.setHardScore(exam.getHardScore());
@@ -397,13 +420,10 @@ public class ExamService {
     List<Exam> exams;
 
     if (userRole != null && userRole == 1) {
-      // Nếu là giáo viên, lấy các exam do họ tạo và sắp/đang diễn ra
       exams = examRepository.findUpcomingExamsByTeacher(userId, currentTime);
     } else {
-      // Nếu là học sinh, lấy tất cả exam sắp/đang diễn ra và lọc ở service
       exams = examRepository.findAllUpcomingExams(currentTime);
 
-      // Lọc các exam thuộc khóa học mà học sinh đang tham gia
       if (userId != null) {
         List<Course> enrolledCourses = courseService.getEnrolledCourses(userId);
         List<String> enrolledCourseIds = enrolledCourses.stream()

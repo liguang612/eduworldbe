@@ -14,6 +14,9 @@ import com.example.eduworldbe.util.StringUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import com.example.eduworldbe.model.NotificationType;
+import com.example.eduworldbe.model.Notification;
+import java.util.concurrent.ExecutionException;
 
 import java.util.List;
 import java.util.Optional;
@@ -42,6 +45,9 @@ public class CourseService {
 
   @Autowired
   private ReviewRepository reviewRepository;
+
+  @Autowired
+  private NotificationService notificationService;
 
   public Course create(Course course) {
     return courseRepository.save(course);
@@ -74,6 +80,19 @@ public class CourseService {
       existingCourse.setTeacherAssistantIds(updated.getTeacherAssistantIds());
     }
     if (updated.getStudentIds() != null) {
+      for (String studentId : updated.getStudentIds()) {
+        if (!existingCourse.getStudentIds().contains(studentId)) {
+          try {
+            notificationService.createNotification(Notification.builder()
+                .courseId(id)
+                .isRead(false)
+                .userId(studentId)
+                .type(NotificationType.STUDENT_ADDED_TO_COURSE));
+          } catch (Exception e) {
+            System.out.println("Create notification failed for student: " + studentId + " . Class: " + id);
+          }
+        }
+      }
       existingCourse.setStudentIds(updated.getStudentIds());
     }
     if (updated.getChapterIds() != null) {
@@ -289,47 +308,108 @@ public class CourseService {
   }
 
   public Course requestJoinCourse(String courseId, String studentId) {
-    Course course = getById(courseId).orElseThrow(() -> new RuntimeException("Course not found"));
+    Course course = courseRepository.findById(courseId)
+        .orElseThrow(() -> new RuntimeException("Course not found: " + courseId));
 
     if (course.getStudentIds() != null && course.getStudentIds().contains(studentId)) {
-      throw new RuntimeException("already_requested");
-    }
-
-    if (course.getPendingStudentIds() != null && course.getPendingStudentIds().contains(studentId)) {
       throw new RuntimeException("already_enrolled");
     }
 
     if (course.getPendingStudentIds() == null) {
       course.setPendingStudentIds(new ArrayList<>());
     }
-    course.getPendingStudentIds().add(studentId);
 
-    return courseRepository.save(course);
-  }
-
-  public Course approveJoinRequest(String courseId, String studentId) {
-    Course course = getById(courseId).orElseThrow(() -> new RuntimeException("Course not found"));
-
-    if (course.getPendingStudentIds() == null || !course.getPendingStudentIds().remove(studentId)) {
-      throw new RuntimeException("No pending request found for this student");
+    if (course.getPendingStudentIds().contains(studentId)) {
+      throw new RuntimeException("already_requested");
     }
 
+    course.getPendingStudentIds().add(studentId);
+    Course savedCourse = courseRepository.save(course);
+
+    // Notify teacher and TAs
+    List<String> recipients = new ArrayList<>();
+    if (savedCourse.getTeacherId() != null) {
+      recipients.add(savedCourse.getTeacherId());
+    }
+    if (savedCourse.getTeacherAssistantIds() != null) {
+      recipients.addAll(savedCourse.getTeacherAssistantIds());
+    }
+
+    // Create notifications asynchronously
+    for (String recipientId : recipients) {
+      if (recipientId != null && !recipientId.equals(studentId)) {
+        try {
+          notificationService.createNotification(Notification.builder()
+              .userId(recipientId)
+              .type(NotificationType.NEW_JOIN_REQUEST_FOR_TEACHER)
+              .actorId(studentId)
+              .courseId(courseId));
+        } catch (Exception e) {
+          // Log error but don't block the main flow
+          System.err.println("Failed to create notification for user " + recipientId + ": " + e.getMessage());
+        }
+      }
+    }
+    return savedCourse;
+  }
+
+  public Course approveJoinRequest(String courseId, String studentId, String actorId) {
+    Course course = getById(courseId)
+        .orElseThrow(() -> new RuntimeException("Course not found: " + courseId));
+
+    if (course.getPendingStudentIds() == null || !course.getPendingStudentIds().contains(studentId)) {
+      throw new RuntimeException("Student not in pending list for this course.");
+    }
+
+    course.getPendingStudentIds().remove(studentId);
     if (course.getStudentIds() == null) {
       course.setStudentIds(new ArrayList<>());
     }
-    course.getStudentIds().add(studentId);
-
-    return courseRepository.save(course);
-  }
-
-  public Course rejectJoinRequest(String courseId, String studentId) {
-    Course course = getById(courseId).orElseThrow(() -> new RuntimeException("Course not found"));
-
-    if (course.getPendingStudentIds() == null || !course.getPendingStudentIds().remove(studentId)) {
-      throw new RuntimeException("No pending request found for this student");
+    if (!course.getStudentIds().contains(studentId)) {
+      course.getStudentIds().add(studentId);
     }
 
-    return courseRepository.save(course);
+    Course savedCourse = courseRepository.save(course);
+
+    try {
+      notificationService.createNotification(Notification.builder()
+          .userId(studentId)
+          .type(NotificationType.JOIN_REQUEST_ACCEPTED)
+          .actorId(actorId)
+          .courseId(courseId));
+    } catch (ExecutionException | InterruptedException e) {
+      System.err
+          .println("Failed to create JOIN_REQUEST_ACCEPTED notification for user " + studentId + ": " + e.getMessage());
+      Thread.currentThread().interrupt();
+    }
+
+    return savedCourse;
+  }
+
+  public Course rejectJoinRequest(String courseId, String studentId, String actorId) {
+    Course course = courseRepository.findById(courseId)
+        .orElseThrow(() -> new RuntimeException("Course not found: " + courseId));
+
+    if (course.getPendingStudentIds() == null || !course.getPendingStudentIds().contains(studentId)) {
+      throw new RuntimeException("Student not found in pending list for course: " + courseId);
+    }
+
+    course.getPendingStudentIds().remove(studentId);
+    Course savedCourse = courseRepository.save(course);
+
+    try {
+      notificationService.createNotification(Notification.builder()
+          .userId(studentId)
+          .type(NotificationType.JOIN_REQUEST_REJECTED)
+          .actorId(actorId)
+          .courseId(courseId));
+    } catch (ExecutionException | InterruptedException e) {
+      System.err
+          .println("Failed to create JOIN_REQUEST_REJECTED notification for user " + studentId + ": " + e.getMessage());
+      Thread.currentThread().interrupt();
+    }
+
+    return savedCourse;
   }
 
   public List<CourseResponse> getHighlightCourses(String userId, Integer userRole, Integer total) {

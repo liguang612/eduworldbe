@@ -62,8 +62,7 @@ public class PostController {
       throw new RuntimeException("Unauthorized");
     }
 
-    String userId = currentUser.getId();
-    return ResponseEntity.ok(postService.approvePost(postId, request, userId));
+    return ResponseEntity.ok(postService.approvePost(postId, request, currentUser.getId()));
   }
 
   @GetMapping("/course/{courseId}")

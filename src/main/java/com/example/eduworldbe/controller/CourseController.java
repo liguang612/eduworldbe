@@ -188,7 +188,7 @@ public class CourseController {
       throw new RuntimeException("Unauthorized to approve join requests");
     }
 
-    Course updatedCourse = courseService.approveJoinRequest(id, studentId);
+    Course updatedCourse = courseService.approveJoinRequest(id, studentId, currentUser.getId());
     return ResponseEntity.ok(courseService.toCourseResponse(updatedCourse));
   }
 
@@ -210,7 +210,7 @@ public class CourseController {
       throw new RuntimeException("Unauthorized to reject join requests");
     }
 
-    Course updatedCourse = courseService.rejectJoinRequest(id, studentId);
+    Course updatedCourse = courseService.rejectJoinRequest(id, studentId, currentUser.getId());
     return ResponseEntity.ok(courseService.toCourseResponse(updatedCourse));
   }
 
