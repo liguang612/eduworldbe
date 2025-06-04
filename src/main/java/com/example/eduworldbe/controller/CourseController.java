@@ -2,6 +2,7 @@ package com.example.eduworldbe.controller;
 
 import com.example.eduworldbe.model.Course;
 import com.example.eduworldbe.service.CourseService;
+import com.example.eduworldbe.service.FavouriteService;
 import com.example.eduworldbe.service.FileUploadService;
 import com.example.eduworldbe.dto.CourseResponse;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,13 +21,16 @@ import java.util.Optional;
 @RequestMapping("/api/courses")
 public class CourseController {
   @Autowired
+  private AuthUtil authUtil;
+
+  @Autowired
   private CourseService courseService;
 
   @Autowired
   private FileUploadService fileUploadService;
 
   @Autowired
-  private AuthUtil authUtil;
+  private FavouriteService favouriteService;
 
   @PostMapping
   public Course create(@RequestBody Course course, HttpServletRequest request) {
@@ -63,10 +67,20 @@ public class CourseController {
   }
 
   @GetMapping("/{id}")
-  public ResponseEntity<CourseResponse> getById(@PathVariable String id) {
+  public ResponseEntity<CourseResponse> getById(@PathVariable String id, HttpServletRequest request) {
+    User currentUser = authUtil.getCurrentUser(request);
+    if (currentUser == null) {
+      throw new RuntimeException("Unauthorized");
+    }
+
     Optional<Course> course = courseService.getById(id);
     if (course.isPresent()) {
-      return ResponseEntity.ok(courseService.toCourseResponse(course.get()));
+      CourseResponse courseResponse = courseService.toCourseResponse(course.get());
+
+      if (currentUser.getRole() == 0) {
+        courseResponse.setFavourite(favouriteService.isFavourited(1, id, currentUser.getId()));
+      }
+      return ResponseEntity.ok(courseResponse);
     }
     return ResponseEntity.notFound().build();
   }
@@ -174,7 +188,7 @@ public class CourseController {
       throw new RuntimeException("Unauthorized to approve join requests");
     }
 
-    Course updatedCourse = courseService.approveJoinRequest(id, studentId);
+    Course updatedCourse = courseService.approveJoinRequest(id, studentId, currentUser.getId());
     return ResponseEntity.ok(courseService.toCourseResponse(updatedCourse));
   }
 
@@ -196,7 +210,7 @@ public class CourseController {
       throw new RuntimeException("Unauthorized to reject join requests");
     }
 
-    Course updatedCourse = courseService.rejectJoinRequest(id, studentId);
+    Course updatedCourse = courseService.rejectJoinRequest(id, studentId, currentUser.getId());
     return ResponseEntity.ok(courseService.toCourseResponse(updatedCourse));
   }
 

@@ -1,6 +1,9 @@
 package com.example.eduworldbe.service;
 
 import com.example.eduworldbe.model.Chapter;
+import com.example.eduworldbe.model.Course;
+import com.example.eduworldbe.model.Notification;
+import com.example.eduworldbe.model.NotificationType;
 import com.example.eduworldbe.repository.ChapterRepository;
 import com.example.eduworldbe.repository.CourseRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -9,6 +12,7 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.Optional;
 import java.util.ArrayList;
+import java.util.concurrent.ExecutionException;
 
 @Service
 public class ChapterService {
@@ -17,6 +21,9 @@ public class ChapterService {
 
   @Autowired
   private CourseRepository courseRepository;
+
+  @Autowired
+  private NotificationService notificationService;
 
   public Chapter create(Chapter chapter) {
     Chapter createdChapter = chapterRepository.save(chapter);
@@ -72,6 +79,24 @@ public class ChapterService {
       }
       chapter.getLectureIds().add(lectureId);
       update(chapterId, chapter);
+
+      Course course = courseRepository.findById(chapter.getCourseId()).orElse(null);
+      if (course != null && course.getStudentIds() != null) {
+        for (String studentId : course.getStudentIds()) {
+          try {
+            notificationService.createNotification(Notification.builder()
+                .userId(studentId)
+                .type(NotificationType.NEW_LECTURE_IN_COURSE)
+                .actorId(course.getTeacherId())
+                .lectureId(lectureId)
+                .courseId(course.getId()));
+          } catch (ExecutionException | InterruptedException e) {
+            System.err.println(
+                "Failed to create NEW_LECTURE_IN_COURSE notification for user " + studentId + ": " + e.getMessage());
+            Thread.currentThread().interrupt();
+          }
+        }
+      }
     }
   }
 

@@ -11,8 +11,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-
 @RestController
 @RequestMapping("/api/posts")
 public class PostController {
@@ -64,8 +62,7 @@ public class PostController {
       throw new RuntimeException("Unauthorized");
     }
 
-    String userId = currentUser.getId();
-    return ResponseEntity.ok(postService.approvePost(postId, request, userId));
+    return ResponseEntity.ok(postService.approvePost(postId, request, currentUser.getId()));
   }
 
   @GetMapping("/course/{courseId}")

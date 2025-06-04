@@ -4,6 +4,7 @@ import com.example.eduworldbe.model.Lecture;
 import com.example.eduworldbe.repository.LectureRepository;
 import com.example.eduworldbe.repository.UserRepository;
 import com.example.eduworldbe.dto.LectureResponse;
+import com.example.eduworldbe.util.StringUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -23,7 +24,6 @@ public class LectureService {
   private UserRepository userRepository;
 
   public Lecture create(Lecture lecture) {
-    // Không xử lý courseId nữa - giờ là subjectId
     return lectureRepository.save(lecture);
   }
 
@@ -105,29 +105,6 @@ public class LectureService {
     return dto;
   }
 
-  private int calculateLevenshteinDistance(String s1, String s2) {
-    int[][] dp = new int[s1.length() + 1][s2.length() + 1];
-
-    for (int i = 0; i <= s1.length(); i++) {
-      dp[i][0] = i;
-    }
-    for (int j = 0; j <= s2.length(); j++) {
-      dp[0][j] = j;
-    }
-
-    for (int i = 1; i <= s1.length(); i++) {
-      for (int j = 1; j <= s2.length(); j++) {
-        if (s1.charAt(i - 1) == s2.charAt(j - 1)) {
-          dp[i][j] = dp[i - 1][j - 1];
-        } else {
-          dp[i][j] = 1 + Math.min(dp[i - 1][j - 1], Math.min(dp[i - 1][j], dp[i][j - 1]));
-        }
-      }
-    }
-
-    return dp[s1.length()][s2.length()];
-  }
-
   public List<Lecture> searchLecturesByName(List<Lecture> lectures, String keyword) {
     if (keyword == null || keyword.trim().isEmpty()) {
       return lectures;
@@ -178,7 +155,7 @@ public class LectureService {
             }
 
             // Levenshtein distance cho tên
-            int distance = calculateLevenshteinDistance(lectureName, term);
+            int distance = StringUtil.calculateLevenshteinDistance(lectureName, term);
             if (distance <= 3) {
               termScore += Math.max(0, 30.0 * (1 - distance / 3.0));
             }
@@ -186,7 +163,7 @@ public class LectureService {
             // Kiểm tra Levenshtein distance cho từng từ trong tên
             String[] lectureWords = lectureName.split("\\s+");
             for (String word : lectureWords) {
-              distance = calculateLevenshteinDistance(word, term);
+              distance = StringUtil.calculateLevenshteinDistance(word, term);
               if (distance <= 2) {
                 termScore += Math.max(0, 20.0 * (1 - distance / 2.0));
               }

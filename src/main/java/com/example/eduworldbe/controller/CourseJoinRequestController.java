@@ -37,14 +37,22 @@ public class CourseJoinRequestController {
 
   // Giáo viên phê duyệt yêu cầu
   @PutMapping("/{requestId}/approve")
-  public CourseJoinRequest approve(@PathVariable String courseId, @PathVariable String requestId) {
-    return service.approve(requestId);
+  public CourseJoinRequest approve(@PathVariable String courseId, @PathVariable String requestId,
+      HttpServletRequest request) {
+    User user = authUtil.getCurrentUser(request);
+    if (user == null)
+      throw new RuntimeException("Unauthorized");
+    return service.approve(requestId, user.getId());
   }
 
   // Giáo viên từ chối yêu cầu
   @PutMapping("/{requestId}/reject")
-  public CourseJoinRequest reject(@PathVariable String courseId, @PathVariable String requestId) {
-    return service.reject(requestId);
+  public CourseJoinRequest reject(@PathVariable String courseId, @PathVariable String requestId,
+      HttpServletRequest request) {
+    User user = authUtil.getCurrentUser(request);
+    if (user == null)
+      throw new RuntimeException("Unauthorized");
+    return service.reject(requestId, user.getId());
   }
 }
 

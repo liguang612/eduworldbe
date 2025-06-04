@@ -10,9 +10,13 @@ import com.example.eduworldbe.repository.PostRepository;
 import com.example.eduworldbe.repository.CommentRepository;
 import com.example.eduworldbe.repository.ReviewRepository;
 import com.example.eduworldbe.dto.CourseResponse;
+import com.example.eduworldbe.util.StringUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import com.example.eduworldbe.model.NotificationType;
+import com.example.eduworldbe.model.Notification;
+import java.util.concurrent.ExecutionException;
 
 import java.util.List;
 import java.util.Optional;
@@ -41,6 +45,9 @@ public class CourseService {
 
   @Autowired
   private ReviewRepository reviewRepository;
+
+  @Autowired
+  private NotificationService notificationService;
 
   public Course create(Course course) {
     return courseRepository.save(course);
@@ -73,6 +80,19 @@ public class CourseService {
       existingCourse.setTeacherAssistantIds(updated.getTeacherAssistantIds());
     }
     if (updated.getStudentIds() != null) {
+      for (String studentId : updated.getStudentIds()) {
+        if (!existingCourse.getStudentIds().contains(studentId)) {
+          try {
+            notificationService.createNotification(Notification.builder()
+                .courseId(id)
+                .isRead(false)
+                .userId(studentId)
+                .type(NotificationType.STUDENT_ADDED_TO_COURSE));
+          } catch (Exception e) {
+            System.out.println("Create notification failed for student: " + studentId + " . Class: " + id);
+          }
+        }
+      }
       existingCourse.setStudentIds(updated.getStudentIds());
     }
     if (updated.getChapterIds() != null) {
@@ -219,29 +239,6 @@ public class CourseService {
     return courseRepository.findEnrolledCourses(studentId, subjectId);
   }
 
-  private int calculateLevenshteinDistance(String s1, String s2) {
-    int[][] dp = new int[s1.length() + 1][s2.length() + 1];
-
-    for (int i = 0; i <= s1.length(); i++) {
-      dp[i][0] = i;
-    }
-    for (int j = 0; j <= s2.length(); j++) {
-      dp[0][j] = j;
-    }
-
-    for (int i = 1; i <= s1.length(); i++) {
-      for (int j = 1; j <= s2.length(); j++) {
-        if (s1.charAt(i - 1) == s2.charAt(j - 1)) {
-          dp[i][j] = dp[i - 1][j - 1];
-        } else {
-          dp[i][j] = 1 + Math.min(dp[i - 1][j - 1], Math.min(dp[i - 1][j], dp[i][j - 1]));
-        }
-      }
-    }
-
-    return dp[s1.length()][s2.length()];
-  }
-
   public List<Course> searchCoursesByName(List<Course> courses, String keyword) {
     if (keyword == null || keyword.trim().isEmpty()) {
       return courses;
@@ -283,7 +280,7 @@ public class CourseService {
             }
 
             // Levenshtein distance
-            int distance = calculateLevenshteinDistance(courseName, term);
+            int distance = StringUtil.calculateLevenshteinDistance(courseName, term);
             if (distance <= 3) {
               termScore += Math.max(0, 30.0 * (1 - distance / 3.0));
             }
@@ -291,7 +288,7 @@ public class CourseService {
             // Kiểm tra Levenshtein distance cho từng từ trong tên
             String[] courseWords = courseName.split("\\s+");
             for (String word : courseWords) {
-              distance = calculateLevenshteinDistance(word, term);
+              distance = StringUtil.calculateLevenshteinDistance(word, term);
               if (distance <= 2) {
                 termScore += Math.max(0, 20.0 * (1 - distance / 2.0));
               }
@@ -311,47 +308,108 @@ public class CourseService {
   }
 
   public Course requestJoinCourse(String courseId, String studentId) {
-    Course course = getById(courseId).orElseThrow(() -> new RuntimeException("Course not found"));
+    Course course = courseRepository.findById(courseId)
+        .orElseThrow(() -> new RuntimeException("Course not found: " + courseId));
 
     if (course.getStudentIds() != null && course.getStudentIds().contains(studentId)) {
-      throw new RuntimeException("already_requested");
-    }
-
-    if (course.getPendingStudentIds() != null && course.getPendingStudentIds().contains(studentId)) {
       throw new RuntimeException("already_enrolled");
     }
 
     if (course.getPendingStudentIds() == null) {
       course.setPendingStudentIds(new ArrayList<>());
     }
-    course.getPendingStudentIds().add(studentId);
 
-    return courseRepository.save(course);
-  }
-
-  public Course approveJoinRequest(String courseId, String studentId) {
-    Course course = getById(courseId).orElseThrow(() -> new RuntimeException("Course not found"));
-
-    if (course.getPendingStudentIds() == null || !course.getPendingStudentIds().remove(studentId)) {
-      throw new RuntimeException("No pending request found for this student");
+    if (course.getPendingStudentIds().contains(studentId)) {
+      throw new RuntimeException("already_requested");
     }
 
+    course.getPendingStudentIds().add(studentId);
+    Course savedCourse = courseRepository.save(course);
+
+    // Notify teacher and TAs
+    List<String> recipients = new ArrayList<>();
+    if (savedCourse.getTeacherId() != null) {
+      recipients.add(savedCourse.getTeacherId());
+    }
+    if (savedCourse.getTeacherAssistantIds() != null) {
+      recipients.addAll(savedCourse.getTeacherAssistantIds());
+    }
+
+    // Create notifications asynchronously
+    for (String recipientId : recipients) {
+      if (recipientId != null && !recipientId.equals(studentId)) {
+        try {
+          notificationService.createNotification(Notification.builder()
+              .userId(recipientId)
+              .type(NotificationType.NEW_JOIN_REQUEST_FOR_TEACHER)
+              .actorId(studentId)
+              .courseId(courseId));
+        } catch (Exception e) {
+          // Log error but don't block the main flow
+          System.err.println("Failed to create notification for user " + recipientId + ": " + e.getMessage());
+        }
+      }
+    }
+    return savedCourse;
+  }
+
+  public Course approveJoinRequest(String courseId, String studentId, String actorId) {
+    Course course = getById(courseId)
+        .orElseThrow(() -> new RuntimeException("Course not found: " + courseId));
+
+    if (course.getPendingStudentIds() == null || !course.getPendingStudentIds().contains(studentId)) {
+      throw new RuntimeException("Student not in pending list for this course.");
+    }
+
+    course.getPendingStudentIds().remove(studentId);
     if (course.getStudentIds() == null) {
       course.setStudentIds(new ArrayList<>());
     }
-    course.getStudentIds().add(studentId);
-
-    return courseRepository.save(course);
-  }
-
-  public Course rejectJoinRequest(String courseId, String studentId) {
-    Course course = getById(courseId).orElseThrow(() -> new RuntimeException("Course not found"));
-
-    if (course.getPendingStudentIds() == null || !course.getPendingStudentIds().remove(studentId)) {
-      throw new RuntimeException("No pending request found for this student");
+    if (!course.getStudentIds().contains(studentId)) {
+      course.getStudentIds().add(studentId);
     }
 
-    return courseRepository.save(course);
+    Course savedCourse = courseRepository.save(course);
+
+    try {
+      notificationService.createNotification(Notification.builder()
+          .userId(studentId)
+          .type(NotificationType.JOIN_REQUEST_ACCEPTED)
+          .actorId(actorId)
+          .courseId(courseId));
+    } catch (ExecutionException | InterruptedException e) {
+      System.err
+          .println("Failed to create JOIN_REQUEST_ACCEPTED notification for user " + studentId + ": " + e.getMessage());
+      Thread.currentThread().interrupt();
+    }
+
+    return savedCourse;
+  }
+
+  public Course rejectJoinRequest(String courseId, String studentId, String actorId) {
+    Course course = courseRepository.findById(courseId)
+        .orElseThrow(() -> new RuntimeException("Course not found: " + courseId));
+
+    if (course.getPendingStudentIds() == null || !course.getPendingStudentIds().contains(studentId)) {
+      throw new RuntimeException("Student not found in pending list for course: " + courseId);
+    }
+
+    course.getPendingStudentIds().remove(studentId);
+    Course savedCourse = courseRepository.save(course);
+
+    try {
+      notificationService.createNotification(Notification.builder()
+          .userId(studentId)
+          .type(NotificationType.JOIN_REQUEST_REJECTED)
+          .actorId(actorId)
+          .courseId(courseId));
+    } catch (ExecutionException | InterruptedException e) {
+      System.err
+          .println("Failed to create JOIN_REQUEST_REJECTED notification for user " + studentId + ": " + e.getMessage());
+      Thread.currentThread().interrupt();
+    }
+
+    return savedCourse;
   }
 
   public List<CourseResponse> getHighlightCourses(String userId, Integer userRole, Integer total) {
@@ -367,5 +425,9 @@ public class CourseService {
         .map(this::toCourseResponse)
         .limit(total)
         .toList();
+  }
+
+  public List<Course> getCoursesContainingLecture(String lectureId) {
+    return courseRepository.findCoursesContainingLecture(lectureId);
   }
 }

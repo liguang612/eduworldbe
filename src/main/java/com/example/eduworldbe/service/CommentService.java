@@ -15,6 +15,10 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.stream.Collectors;
 
+import com.example.eduworldbe.model.Notification;
+import com.example.eduworldbe.model.NotificationType;
+import java.util.concurrent.ExecutionException;
+
 @Service
 public class CommentService {
   @Autowired
@@ -25,6 +29,9 @@ public class CommentService {
 
   @Autowired
   private UserService userService;
+
+  @Autowired
+  private NotificationService notificationService;
 
   @Transactional
   public CommentDTO createComment(CreateCommentRequest request, String userId) {
@@ -42,6 +49,24 @@ public class CommentService {
     comment.setContent(request.getContent());
 
     Comment savedComment = commentRepository.save(comment);
+
+    String postOwnerId = post.getUserId();
+    if (postOwnerId != null && !postOwnerId.equals(userId)) {
+      try {
+        notificationService.createNotification(Notification.builder()
+            .userId(postOwnerId)
+            .type(NotificationType.COMMENT_ON_OWN_POST)
+            .actorId(userId)
+            .postId(post.getId())
+            .commentId(savedComment.getId())
+            .courseId(post.getCourseId()));
+      } catch (ExecutionException | InterruptedException e) {
+        System.err.println(
+            "Failed to create COMMENT_ON_OWN_POST notification for user " + postOwnerId + ": " + e.getMessage());
+        Thread.currentThread().interrupt();
+      }
+    }
+
     return convertToDTO(savedComment);
   }
 

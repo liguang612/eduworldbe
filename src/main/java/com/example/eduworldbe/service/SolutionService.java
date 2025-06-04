@@ -1,11 +1,14 @@
 package com.example.eduworldbe.service;
 
 import com.example.eduworldbe.model.Solution;
-import com.example.eduworldbe.model.Question;
-import com.example.eduworldbe.repository.SolutionRepository;
 import com.example.eduworldbe.repository.QuestionRepository;
+import com.example.eduworldbe.repository.SolutionRepository;
 import com.example.eduworldbe.model.User;
 import com.example.eduworldbe.dto.SolutionResponse;
+import com.example.eduworldbe.model.Notification;
+import com.example.eduworldbe.model.NotificationType;
+import com.example.eduworldbe.model.Question;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -18,6 +21,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import java.util.concurrent.ExecutionException;
 
 @Service
 public class SolutionService {
@@ -25,28 +29,42 @@ public class SolutionService {
   private SolutionRepository solutionRepository;
 
   @Autowired
-  private QuestionRepository questionRepository;
+  private UserService userService;
 
   @Autowired
-  private UserService userService;
+  private NotificationService notificationService;
+
+  @Autowired
+  private QuestionRepository questionRepository;
 
   @Transactional
   public SolutionResponse create(Solution solution, User currentUser) {
-    // Verify question exists
-    Optional<Question> question = questionRepository.findById(solution.getQuestionId());
-    if (question.isEmpty()) {
-      throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Question not found");
-    }
-
     solution.setCreatedBy(currentUser.getId());
 
-    if (currentUser.getRole() == 1) {
-      solution.setStatus(1);
-    } else {
+    Solution savedSolution = solutionRepository.save(solution);
+
+    Question question = questionRepository.findById(savedSolution.getQuestionId())
+        .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Question not found"));
+
+    if (currentUser.getRole() != null && currentUser.getRole() == 0) {
       solution.setStatus(0);
+
+      try {
+        notificationService.createNotification(Notification.builder()
+            .userId(question.getCreatedBy())
+            .type(NotificationType.NEW_SOLUTION_FOR_TEACHER_APPROVAL)
+            .actorId(savedSolution.getCreatedBy())
+            .questionId(savedSolution.getQuestionId())
+            .solutionId(savedSolution.getId())
+            .courseId(null));
+      } catch (ExecutionException | InterruptedException e) {
+        System.err.println("Failed to create NEW_SOLUTION_FOR_TEACHER_APPROVAL notification: " + e.getMessage());
+        Thread.currentThread().interrupt();
+      }
+    } else {
+      solution.setStatus(1);
     }
 
-    Solution savedSolution = solutionRepository.save(solution);
     return convertToResponse(savedSolution);
   }
 
@@ -69,17 +87,38 @@ public class SolutionService {
 
   @Transactional
   public SolutionResponse reviewSolution(String id, Integer status, String reviewComment, User reviewer) {
-    Optional<Solution> solutionOpt = solutionRepository.findById(id);
-    if (solutionOpt.isEmpty()) {
-      throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Solution not found");
-    }
+    Solution solution = solutionRepository.findById(id)
+        .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Solution not found"));
 
-    Solution solution = solutionOpt.get();
     solution.setStatus(status);
     solution.setReviewedBy(reviewer.getId());
     solution.setReviewedAt(new Date());
 
     Solution savedSolution = solutionRepository.save(solution);
+
+    if (savedSolution.getCreatedBy() != null && !savedSolution.getCreatedBy().equals(reviewer.getId())) {
+      NotificationType notificationType = null;
+      if (status == 1) {
+        notificationType = NotificationType.SOLUTION_ACCEPTED;
+      } else if (status == 2) {
+        notificationType = NotificationType.SOLUTION_REJECTED;
+      }
+
+      if (notificationType != null) {
+        try {
+          notificationService.createNotification(Notification.builder()
+              .userId(savedSolution.getCreatedBy())
+              .type(notificationType)
+              .actorId(reviewer.getId())
+              .questionId(savedSolution.getQuestionId())
+              .solutionId(savedSolution.getId()));
+        } catch (ExecutionException | InterruptedException e) {
+          System.err.println("Failed to create SOLUTION_REVIEW notification for user " + savedSolution.getCreatedBy()
+              + ": " + e.getMessage());
+          Thread.currentThread().interrupt();
+        }
+      }
+    }
     return convertToResponse(savedSolution);
   }
 

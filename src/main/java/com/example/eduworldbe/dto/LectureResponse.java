@@ -16,4 +16,5 @@ public class LectureResponse {
   private String subjectId;
   private User teacher;
   private Integer duration;
+  private boolean favourite;
 }

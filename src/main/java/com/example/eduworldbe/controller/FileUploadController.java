@@ -7,8 +7,6 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
 
 @RestController
 @RequestMapping("/api/files")
@@ -22,6 +20,12 @@ public class FileUploadController {
       @RequestParam("type") String type) throws IOException {
     String url = fileUploadService.uploadFile(file, type);
     return ResponseEntity.ok().body(new FileUploadResponse(url));
+  }
+
+  @DeleteMapping("/delete")
+  public ResponseEntity<?> deleteFile(@RequestParam("url") String url) {
+    fileUploadService.deleteFile(url);
+    return ResponseEntity.ok().build();
   }
 }
 
