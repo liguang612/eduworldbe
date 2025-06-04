@@ -24,4 +24,5 @@ public class CourseResponse {
   private boolean hidden;
   private boolean allowStudentPost;
   private boolean requirePostApproval;
+  private boolean favourite;
 }

@@ -1,9 +1,11 @@
 package com.example.eduworldbe.controller;
 
 import com.example.eduworldbe.model.Exam;
+import com.example.eduworldbe.model.Favourite;
 import com.example.eduworldbe.model.Question;
 import com.example.eduworldbe.model.User;
 import com.example.eduworldbe.service.ExamService;
+import com.example.eduworldbe.service.FavouriteService;
 import com.example.eduworldbe.service.QuestionService;
 import com.example.eduworldbe.dto.ExamResponse;
 import com.example.eduworldbe.dto.QuestionDetailResponse;
@@ -22,6 +24,8 @@ import java.util.stream.Collectors;
 import java.util.ArrayList;
 import java.util.Map;
 import java.util.HashMap;
+import java.util.Set;
+import java.util.HashSet;
 
 @RestController
 @RequestMapping("/api/exams")
@@ -34,6 +38,9 @@ public class ExamController {
 
   @Autowired
   private QuestionService questionService;
+
+  @Autowired
+  private FavouriteService favouriteService;
 
   @PostMapping
   public ResponseEntity<Exam> createExam(@RequestBody Exam exam, HttpServletRequest request) {
@@ -50,10 +57,18 @@ public class ExamController {
   }
 
   @GetMapping("/{id}")
-  public ResponseEntity<ExamResponse> getExamById(@PathVariable String id) {
+  public ResponseEntity<ExamResponse> getExamById(@PathVariable String id, HttpServletRequest request) {
+    User currentUser = authUtil.getCurrentUser(request);
+    if (currentUser == null) {
+      throw new AccessDeniedException("User not authenticated");
+    }
+
     Optional<Exam> examOpt = examService.getById(id);
     if (examOpt.isPresent()) {
       ExamResponse response = examService.toExamResponse(examOpt.get());
+      if (currentUser.getRole() == 0) {
+        response.setFavourite(favouriteService.isFavourited(4, id, currentUser.getId()));
+      }
       return ResponseEntity.ok(response);
     } else {
       return ResponseEntity.notFound().build();
@@ -61,10 +76,30 @@ public class ExamController {
   }
 
   @GetMapping("/class/{classId}")
-  public ResponseEntity<List<ExamResponse>> getExamsByClassId(@PathVariable String classId) {
+  public ResponseEntity<List<ExamResponse>> getExamsByClassId(
+      @PathVariable String classId,
+      @RequestParam(required = false) String status, // active, past, upcoming
+      @RequestParam(required = false) Boolean favourite,
+      HttpServletRequest request) {
+    User currentUser = authUtil.getCurrentUser(request);
+    if (currentUser == null) {
+      throw new AccessDeniedException("User not authenticated");
+    }
+
     List<Exam> exams = examService.getByClassId(classId);
+
+    final Set<String> favouritedExamIds = currentUser.getRole() == 0
+        ? favouriteService.getFavouritedTargetIds(4, currentUser.getId())
+        : new HashSet<>();
+
     List<ExamResponse> responses = exams.stream()
-        .map(exam -> examService.toExamResponse(exam))
+        .map(exam -> {
+          ExamResponse response = examService.toExamResponse(exam);
+          if (currentUser.getRole() == 0) {
+            response.setFavourite(favouritedExamIds.contains(exam.getId()));
+          }
+          return response;
+        })
         .collect(Collectors.toList());
     return ResponseEntity.ok(responses);
   }
@@ -95,7 +130,6 @@ public class ExamController {
     if (existingExamOpt.isPresent()) {
       Exam existingExam = existingExamOpt.get();
 
-      // Check if the current user is the creator of the exam
       if (!existingExam.getCreatedBy().equals(currentUser.getId())) {
         throw new AccessDeniedException("You are not authorized to update this exam");
       }
@@ -255,6 +289,15 @@ public class ExamController {
     if (currentUser == null) {
       throw new RuntimeException("Unauthorized");
     }
-    return examService.getUpcomingExams(currentUser.getId(), currentUser.getRole(), total);
+
+    List<Favourite> favourites = favouriteService.getFavouritesByType(4, currentUser.getId());
+    List<ExamResponse> exams = examService.getUpcomingExams(currentUser.getId(), currentUser.getRole(), total);
+
+    return exams.stream()
+        .map(exam -> {
+          exam.setFavourite(favourites.stream().anyMatch(f -> f.getTargetId().equals(exam.getId())));
+          return exam;
+        })
+        .collect(Collectors.toList());
   }
 }

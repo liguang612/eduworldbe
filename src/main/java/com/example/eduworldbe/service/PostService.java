@@ -14,6 +14,12 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.stream.Collectors;
+import java.util.ArrayList;
+import java.util.List;
+
+import com.example.eduworldbe.model.Notification;
+import com.example.eduworldbe.model.NotificationType;
+import java.util.concurrent.ExecutionException;
 
 @Service
 public class PostService {
@@ -29,14 +35,18 @@ public class PostService {
   @Autowired
   private FileUploadService fileUploadService;
 
+  @Autowired
+  private NotificationService notificationService;
+
   @Transactional
   public PostDTO createPost(CreatePostRequest request, String userId) {
     Course course = courseRepository.findById(request.getCourseId())
         .orElseThrow(() -> new RuntimeException("Course not found"));
 
     boolean isTeacher = userId.equals(course.getTeacherId());
-    boolean isTeacherAssistant = course.getTeacherAssistantIds().contains(userId);
-    boolean isStudent = course.getStudentIds().contains(userId);
+    boolean isTeacherAssistant = course.getTeacherAssistantIds() != null
+        && course.getTeacherAssistantIds().contains(userId);
+    boolean isStudent = course.getStudentIds() != null && course.getStudentIds().contains(userId);
 
     if (!isTeacher && !isTeacherAssistant && !isStudent) {
       throw new RuntimeException("Not authorized to post in this course");
@@ -57,6 +67,32 @@ public class PostService {
     post.setApproved(autoApprove);
 
     Post savedPost = postRepository.save(post);
+
+    if (!autoApprove) {
+      List<String> recipients = new ArrayList<>();
+      if (course.getTeacherId() != null) {
+        recipients.add(course.getTeacherId());
+      }
+      if (course.getTeacherAssistantIds() != null) {
+        recipients.addAll(course.getTeacherAssistantIds());
+      }
+
+      recipients.stream().distinct().filter(id -> !id.equals(userId)).forEach(recipientId -> {
+        try {
+          notificationService.createNotification(Notification.builder()
+              .userId(recipientId)
+              .type(NotificationType.NEW_POST_FOR_TEACHER_APPROVAL)
+              .actorId(userId)
+              .postId(savedPost.getId())
+              .courseId(savedPost.getCourseId()));
+        } catch (ExecutionException | InterruptedException e) {
+          System.err.println("Failed to create NEW_POST_FOR_TEACHER_APPROVAL notification for user " + recipientId
+              + ": " + e.getMessage());
+          Thread.currentThread().interrupt();
+        }
+      });
+    }
+
     return convertToDTO(savedPost);
   }
 
@@ -106,24 +142,40 @@ public class PostService {
     Post post = postRepository.findById(postId)
         .orElseThrow(() -> new RuntimeException("Post not found"));
 
-    Course course = courseRepository.findById(post.getCourseId())
-        .orElseThrow(() -> new RuntimeException("Course not found"));
+    if (request.isApproved()) {
+      post.setApproved(true);
+      Post updatedPost = postRepository.save(post);
 
-    boolean isTeacher = userId.equals(course.getTeacherId());
-    boolean isTeacherAssistant = course.getTeacherAssistantIds().contains(userId);
+      try {
+        notificationService.createNotification(Notification.builder()
+            .userId(post.getUserId())
+            .type(NotificationType.POST_APPROVED)
+            .actorId(userId)
+            .postId(postId)
+            .courseId(post.getCourseId()));
+      } catch (ExecutionException | InterruptedException e) {
+        System.err.println(
+            "Failed to create POST_APPROVED notification for user " + post.getUserId() + ": " + e.getMessage());
+        Thread.currentThread().interrupt();
+      }
 
-    if (!isTeacher && !isTeacherAssistant) {
-      throw new RuntimeException("Not authorized to approve posts");
-    }
-
-    if (!request.isApproved()) {
+      return convertToDTO(updatedPost);
+    } else {
+      try {
+        notificationService.createNotification(Notification.builder()
+            .userId(post.getUserId())
+            .type(NotificationType.POST_REJECTED)
+            .actorId(userId)
+            .postId(postId)
+            .courseId(post.getCourseId()));
+      } catch (ExecutionException | InterruptedException e) {
+        System.err.println(
+            "Failed to create POST_REJECTED notification for user " + post.getUserId() + ": " + e.getMessage());
+        Thread.currentThread().interrupt();
+      }
       deletePost(postId, userId);
       return null;
     }
-
-    post.setApproved(request.isApproved());
-    Post updatedPost = postRepository.save(post);
-    return convertToDTO(updatedPost);
   }
 
   public PostPageResponse getPostsByCourse(String courseId, int page, int size) {
