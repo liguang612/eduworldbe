@@ -21,7 +21,6 @@ public class Course {
   private String avatar;
   private String description;
 
-  // Tham chiếu đến id của subject
   private String subjectId;
 
   private String teacherId;

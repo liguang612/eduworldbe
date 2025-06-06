@@ -37,6 +37,7 @@ public class ExamResponse {
   private String className;
   private String subjectName;
   private Integer grade;
+  private boolean favourite;
 
   public ExamResponse() {
   }

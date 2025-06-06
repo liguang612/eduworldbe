@@ -1,15 +1,19 @@
 package com.example.eduworldbe.controller;
 
+import com.example.eduworldbe.model.Course;
 import com.example.eduworldbe.model.Lecture;
 import com.example.eduworldbe.service.LectureService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+
 import jakarta.servlet.http.HttpServletRequest;
 import com.example.eduworldbe.util.AuthUtil;
 import com.example.eduworldbe.model.User;
 import com.example.eduworldbe.dto.LectureResponse;
+import com.example.eduworldbe.service.CourseService;
+import com.example.eduworldbe.service.FavouriteService;
 
 @RestController
 @RequestMapping("/api/lectures")
@@ -18,7 +22,13 @@ public class LectureController {
   private LectureService lectureService;
 
   @Autowired
+  private CourseService courseService;
+
+  @Autowired
   private AuthUtil authUtil;
+
+  @Autowired
+  private FavouriteService favouriteService;
 
   @PostMapping
   public Lecture create(@RequestBody Lecture lecture, HttpServletRequest request) {
@@ -31,16 +41,47 @@ public class LectureController {
   }
 
   @GetMapping("/{id}")
-  public LectureResponse getById(@PathVariable String id, HttpServletRequest request) {
+  public LectureResponse getById(@PathVariable String id, @RequestParam(required = false) String courseId,
+      HttpServletRequest request) {
     User currentUser = authUtil.getCurrentUser(request);
     if (currentUser == null) {
       throw new RuntimeException("Unauthorized");
     }
 
-    return lectureService.getById(id)
-        .filter(lecture -> (currentUser.getRole() == 0 || currentUser.getId().equals(lecture.getTeacherId())))
+    Course course;
+    if (courseId != null) {
+      course = courseService.getById(courseId).orElseThrow(() -> new RuntimeException("Course not found"));
+    } else {
+      course = null;
+    }
+
+    final String userId = currentUser.getId();
+
+    // filter: là giáo viên (== teacherId ) hoặc là học sinh (== studentId) hoặc là
+    // trợ giảng (== teacherAssistantId)
+    LectureResponse lectureResponse = lectureService.getById(id)
+        .filter(lecture -> {
+          if (userId.equals(lecture.getTeacherId())) {
+            return true;
+          }
+
+          if (course != null) {
+            return course.getStudentIds().contains(userId)
+                || course.getTeacherAssistantIds().contains(userId);
+          }
+
+          List<Course> coursesContainingLecture = courseService.getCoursesContainingLecture(id);
+          return coursesContainingLecture.stream()
+              .anyMatch(c -> c.getStudentIds().contains(userId)
+                  || c.getTeacherAssistantIds().contains(userId));
+        })
         .map(lectureService::toLectureResponse)
         .orElseThrow(() -> new RuntimeException("Lecture not found or you do not have permission to view it"));
+
+    if (currentUser.getRole() == 0) {
+      lectureResponse.setFavourite(favouriteService.isFavourited(2, id, currentUser.getId()));
+    }
+    return lectureResponse;
   }
 
   @GetMapping("/subject/{subjectId}")
