@@ -4,6 +4,7 @@ import com.example.eduworldbe.model.Course;
 import com.example.eduworldbe.service.CourseService;
 import com.example.eduworldbe.service.FavouriteService;
 import com.example.eduworldbe.service.FileUploadService;
+import com.example.eduworldbe.dto.AddMemberRequest;
 import com.example.eduworldbe.dto.CourseResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -256,27 +257,3 @@ public class CourseController {
         .toList();
   }
 }
-
-// DTO cho add/remove member
-class AddMemberRequest {
-  private String userId;
-  private Integer role;
-
-  public String getUserId() {
-    return userId;
-  }
-
-  public void setUserId(String userId) {
-    this.userId = userId;
-  }
-
-  public Integer getRole() {
-    return role;
-  }
-
-  public void setRole(Integer role) {
-    this.role = role;
-  }
-}
-
-// DTO cho add/remove lecture

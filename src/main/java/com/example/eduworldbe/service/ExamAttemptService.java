@@ -109,10 +109,11 @@ public class ExamAttemptService {
         attempt.setStatus("submitted");
         attempt.setEndTime(now);
         attempt.setScore(calculateScore(attempt.getId()));
+
         attempt = examAttemptRepository.save(attempt);
+
         return attempt;
       }
-
       return attempt;
     }
 
