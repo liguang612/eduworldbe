@@ -48,6 +48,7 @@ public class ExamAttemptController {
     ExamAttempt attempt = examAttemptService.startAttempt(user.getId(), examId);
 
     ExamAttemptResponse response = new ExamAttemptResponse();
+
     // Copy tất cả các trường từ attempt sang response
     response.setId(attempt.getId());
     response.setExamId(attempt.getExamId());

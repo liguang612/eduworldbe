@@ -30,44 +30,6 @@ public class AttemptController {
   @Autowired
   private AuthUtil authUtil;
 
-  @PostMapping("/exam/{examId}")
-  public ResponseEntity<?> startExam(@PathVariable String examId, HttpServletRequest request) {
-    User currentUser = authUtil.getCurrentUser(request);
-    if (currentUser == null) {
-      throw new AccessDeniedException("User not authenticated");
-    }
-
-    // Check if the exam exists
-    Optional<Exam> examOpt = examService.getById(examId);
-    if (examOpt.isEmpty()) {
-      return ResponseEntity.notFound().build();
-    }
-
-    Exam exam = examOpt.get();
-    Date now = new Date();
-
-    // Check if the exam is open
-    if (exam.getOpenTime().after(now) || exam.getCloseTime().before(now)) {
-      return ResponseEntity
-          .status(HttpStatus.BAD_REQUEST)
-          .body("Exam is not currently open");
-    }
-
-    // Check if user already has an active attempt
-    Optional<Attempt> activeAttemptOpt = attemptService.getActiveAttempt(currentUser.getId(), examId);
-    if (activeAttemptOpt.isPresent()) {
-      return ResponseEntity.ok(activeAttemptOpt.get());
-    }
-
-    // Create a new attempt
-    Attempt attempt = new Attempt();
-    attempt.setUserId(currentUser.getId());
-    attempt.setExamId(examId);
-
-    Attempt createdAttempt = attemptService.create(attempt);
-    return ResponseEntity.status(HttpStatus.CREATED).body(createdAttempt);
-  }
-
   @GetMapping("/{id}")
   public ResponseEntity<Attempt> getAttempt(@PathVariable String id, HttpServletRequest request) {
     User currentUser = authUtil.getCurrentUser(request);
