@@ -3,6 +3,7 @@ package com.example.eduworldbe.service;
 import com.example.eduworldbe.model.Course;
 import com.example.eduworldbe.model.Post;
 import com.example.eduworldbe.model.Review;
+import com.example.eduworldbe.model.Subject;
 import com.example.eduworldbe.repository.CourseRepository;
 import com.example.eduworldbe.repository.ChapterRepository;
 import com.example.eduworldbe.repository.UserRepository;
@@ -22,6 +23,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.AbstractMap;
 import java.util.ArrayList;
+import java.util.stream.Collectors;
 
 @Service
 public class CourseService {
@@ -48,6 +50,9 @@ public class CourseService {
 
   @Autowired
   private NotificationService notificationService;
+
+  @Autowired
+  private SubjectService subjectService;
 
   public Course create(Course course) {
     return courseRepository.save(course);
@@ -149,6 +154,11 @@ public class CourseService {
     dto.setAvatar(course.getAvatar());
     dto.setDescription(course.getDescription());
     dto.setSubjectId(course.getSubjectId());
+    if (course.getSubjectId() != null) {
+      Subject subject = subjectService.getById(course.getSubjectId());
+      dto.setSubjectName(subject.getName());
+      dto.setGrade(subject.getGrade());
+    }
     dto.setAllCategories(course.getAllCategories());
     dto.setChapters(course.getChapterIds() != null ? course.getChapterIds().stream()
         .map(id -> chapterRepository.findById(id).orElse(null))
@@ -429,5 +439,55 @@ public class CourseService {
 
   public List<Course> getCoursesContainingLecture(String lectureId) {
     return courseRepository.findCoursesContainingLecture(lectureId);
+  }
+
+  public List<CourseResponse> searchCourses(
+      String userId,
+      Integer userRole,
+      String subjectId,
+      String grade,
+      String sortBy,
+      String sortOrder,
+      String keyword) {
+
+    List<Course> courses = getCoursesOptimized(userId, userRole, subjectId, null, keyword);
+
+    // Filter by grade if provided
+    if (grade != null && !grade.isEmpty()) {
+      courses = courses.stream()
+          .filter(course -> {
+            try {
+              Subject subject = subjectService.getById(course.getSubjectId());
+              return subject != null && grade.equals(String.valueOf(subject.getGrade()));
+            } catch (Exception e) {
+              return false;
+            }
+          })
+          .collect(Collectors.toList());
+    }
+
+    courses = new ArrayList<>(courses);
+
+    // Sort the courses
+    courses.sort((c1, c2) -> {
+      int comparison = 0;
+      switch (sortBy.toLowerCase()) {
+        case "name":
+          comparison = c1.getName().compareToIgnoreCase(c2.getName());
+          break;
+        case "rating":
+          double rating1 = reviewService.getAverageScore(1, c1.getId());
+          double rating2 = reviewService.getAverageScore(1, c2.getId());
+          comparison = Double.compare(rating1, rating2);
+          break;
+        default:
+          comparison = c1.getName().compareToIgnoreCase(c2.getName());
+      }
+      return sortOrder.equalsIgnoreCase("desc") ? -comparison : comparison;
+    });
+
+    return courses.stream()
+        .map(this::toCourseResponse)
+        .collect(Collectors.toList());
   }
 }

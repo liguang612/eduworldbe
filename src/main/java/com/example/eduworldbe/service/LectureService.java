@@ -1,6 +1,7 @@
 package com.example.eduworldbe.service;
 
 import com.example.eduworldbe.model.Lecture;
+import com.example.eduworldbe.model.Subject;
 import com.example.eduworldbe.repository.LectureRepository;
 import com.example.eduworldbe.repository.UserRepository;
 import com.example.eduworldbe.dto.LectureResponse;
@@ -11,6 +12,7 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.Optional;
 import java.util.AbstractMap;
+import java.util.ArrayList;
 import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.Objects;
@@ -22,6 +24,12 @@ public class LectureService {
 
   @Autowired
   private UserRepository userRepository;
+
+  @Autowired
+  private SubjectService subjectService;
+
+  @Autowired
+  private ReviewService reviewService;
 
   public Lecture create(Lecture lecture) {
     return lectureRepository.save(lecture);
@@ -99,9 +107,15 @@ public class LectureService {
     dto.setEndQuestions(lecture.getEndQuestions());
     dto.setCategories(lecture.getCategories());
     dto.setSubjectId(lecture.getSubjectId());
+    if (lecture.getSubjectId() != null) {
+      Subject subject = subjectService.getById(lecture.getSubjectId());
+      dto.setSubjectName(subject.getName());
+      dto.setGrade(subject.getGrade());
+    }
     dto.setTeacher(
         lecture.getTeacherId() != null ? userRepository.findById(lecture.getTeacherId()).orElse(null) : null);
     dto.setDuration(lecture.getDuration());
+    dto.setAverageRating(reviewService.getAverageScore(2, lecture.getId()));
     return dto;
   }
 
@@ -193,5 +207,77 @@ public class LectureService {
         .map(lectureMap::get)
         .filter(Objects::nonNull)
         .toList();
+  }
+
+  public List<LectureResponse> searchLectures(
+      String userId,
+      Integer userRole,
+      String subjectId,
+      String grade,
+      String sortBy,
+      String sortOrder,
+      String keyword) {
+
+    List<Lecture> lectures;
+
+    // Giáo viên
+    if (userRole != null && userRole == 1) {
+      if (subjectId != null && !subjectId.isEmpty()) {
+        lectures = lectureRepository.findBySubjectId(subjectId).stream()
+            .filter(lecture -> userId.equals(lecture.getTeacherId()))
+            .collect(Collectors.toList());
+      } else {
+        lectures = lectureRepository.findAll().stream()
+            .filter(lecture -> userId.equals(lecture.getTeacherId()))
+            .collect(Collectors.toList());
+      }
+    }
+    // Học sinh
+    else {
+      if (subjectId != null && !subjectId.isEmpty()) {
+        lectures = lectureRepository.findLecturesFromEnrolledCoursesWithSubject(userId, subjectId);
+      } else {
+        lectures = lectureRepository.findLecturesFromEnrolledCourses(userId);
+
+        if (grade != null && !grade.isEmpty()) {
+          lectures = lectures.stream()
+              .filter(lecture -> {
+                try {
+                  Subject subject = subjectService.getById(lecture.getSubjectId());
+                  return subject != null && grade.equals(String.valueOf(subject.getGrade()));
+                } catch (Exception e) {
+                  return false;
+                }
+              })
+              .collect(Collectors.toList());
+        }
+      }
+    }
+
+    // Filter by keyword if provided
+    if (keyword != null && !keyword.trim().isEmpty()) {
+      lectures = searchLecturesByName(lectures, keyword);
+    }
+
+    // Convert to mutable list if it's immutable (from searchLecturesByName)
+    lectures = new ArrayList<>(lectures);
+
+    lectures.sort((l1, l2) -> {
+      int comparison = 0;
+      switch (sortBy.toLowerCase()) {
+        case "rating":
+          double rating1 = reviewService.getAverageScore(2, l1.getId());
+          double rating2 = reviewService.getAverageScore(2, l2.getId());
+          comparison = Double.compare(rating1, rating2);
+          break;
+        default:
+          comparison = l1.getName().compareToIgnoreCase(l2.getName());
+      }
+      return sortOrder.equalsIgnoreCase("desc") ? -comparison : comparison;
+    });
+
+    return lectures.stream()
+        .map(this::toLectureResponse)
+        .collect(Collectors.toList());
   }
 }

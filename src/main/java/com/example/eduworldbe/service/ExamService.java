@@ -2,13 +2,14 @@ package com.example.eduworldbe.service;
 
 import com.example.eduworldbe.model.Exam;
 import com.example.eduworldbe.model.Question;
+import com.example.eduworldbe.model.Subject;
 import com.example.eduworldbe.repository.ExamRepository;
 import com.example.eduworldbe.repository.QuestionRepository;
 import com.example.eduworldbe.dto.ExamResponse;
 import com.example.eduworldbe.model.Attempt;
 import com.example.eduworldbe.repository.AttemptRepository;
 import com.example.eduworldbe.model.Course;
-import com.example.eduworldbe.model.Subject;
+import com.example.eduworldbe.util.StringUtil;
 
 import com.example.eduworldbe.model.Notification;
 import com.example.eduworldbe.model.NotificationType;
@@ -25,6 +26,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.Random;
 import java.util.concurrent.ExecutionException;
+import java.util.AbstractMap;
 
 @Service
 public class ExamService {
@@ -442,6 +444,155 @@ public class ExamService {
           return toExamResponse(exam, course);
         })
         .limit(total)
+        .toList();
+  }
+
+  public List<ExamResponse> searchExams(
+      String userId,
+      Integer userRole,
+      String subjectId,
+      String grade,
+      String sortBy,
+      String sortOrder,
+      String keyword) {
+
+    List<Exam> exams;
+
+    // Giáo viên
+    if (userRole != null && userRole == 1) {
+      if (subjectId != null && !subjectId.isEmpty()) {
+        exams = examRepository.findByCreatedBy(userId).stream()
+            .filter(exam -> {
+              Course course = courseService.getById(exam.getClassId()).orElse(null);
+              return course != null && subjectId.equals(course.getSubjectId());
+            })
+            .collect(Collectors.toList());
+      } else {
+        exams = examRepository.findByCreatedBy(userId);
+      }
+    }
+    // Học sinh
+    else {
+      if (subjectId != null && !subjectId.isEmpty()) {
+        exams = examRepository.findExamsFromEnrolledCoursesWithSubject(userId, subjectId);
+      } else {
+        exams = examRepository.findExamsFromEnrolledCourses(userId);
+      }
+
+      if (grade != null && !grade.isEmpty()) {
+        exams = exams.stream()
+            .filter(exam -> {
+              Course course = courseService.getById(exam.getClassId()).orElse(null);
+              if (course != null) {
+                try {
+                  Subject subject = subjectService.getById(course.getSubjectId());
+                  return subject != null && grade.equals(String.valueOf(subject.getGrade()));
+                } catch (Exception e) {
+                  return false;
+                }
+              }
+              return false;
+            })
+            .collect(Collectors.toList());
+      }
+    }
+
+    // Filter by keyword if provided
+    if (keyword != null && !keyword.trim().isEmpty()) {
+      exams = searchExamsByName(exams, keyword);
+    }
+
+    // Convert to mutable list if it's immutable (from searchExamsByName)
+    exams = new ArrayList<>(exams);
+
+    // Sort the exams
+    exams.sort((e1, e2) -> {
+      int comparison = 0;
+      switch (sortBy.toLowerCase()) {
+        case "name":
+          comparison = e1.getTitle().compareToIgnoreCase(e2.getTitle());
+          break;
+        case "time":
+          comparison = e1.getCreatedAt().compareTo(e2.getCreatedAt());
+          break;
+        default:
+          comparison = e1.getTitle().compareToIgnoreCase(e2.getTitle());
+      }
+      return sortOrder.equalsIgnoreCase("desc") ? -comparison : comparison;
+    });
+
+    return exams.stream()
+        .map(this::toExamResponse)
+        .collect(Collectors.toList());
+  }
+
+  public List<Exam> searchExamsByName(List<Exam> exams, String keyword) {
+    if (keyword == null || keyword.trim().isEmpty()) {
+      return exams;
+    }
+
+    String[] searchTerms = keyword.toLowerCase().split("\\s+");
+
+    return exams.stream()
+        .map(exam -> {
+          String examTitle = exam.getTitle().toLowerCase();
+          List<String> categories = exam.getCategories() != null
+              ? exam.getCategories().stream()
+                  .map(String::toLowerCase)
+                  .toList()
+              : List.of();
+
+          double score = 0.0;
+
+          // Tính điểm cho mỗi từ khóa
+          for (String term : searchTerms) {
+            double termScore = 0.0;
+
+            // Khớp chính xác với title
+            if (examTitle.equals(term)) {
+              termScore += 100.0;
+            }
+            // Khớp một phần với title
+            else if (examTitle.contains(term)) {
+              double lengthRatio = (double) term.length() / examTitle.length();
+              termScore += 80.0 * lengthRatio;
+            }
+
+            // Khớp với categories
+            for (String category : categories) {
+              if (category.equals(term)) {
+                termScore += 40.0;
+              } else if (category.contains(term)) {
+                double lengthRatio = (double) term.length() / category.length();
+                termScore += 20.0 * lengthRatio;
+              }
+            }
+
+            // Levenshtein distance cho title
+            int distance = StringUtil.calculateLevenshteinDistance(examTitle, term);
+            if (distance <= 3) {
+              termScore += Math.max(0, 30.0 * (1 - distance / 3.0));
+            }
+
+            // Kiểm tra Levenshtein distance cho từng từ trong title
+            String[] examWords = examTitle.split("\\s+");
+            for (String word : examWords) {
+              distance = StringUtil.calculateLevenshteinDistance(word, term);
+              if (distance <= 2) {
+                termScore += Math.max(0, 20.0 * (1 - distance / 2.0));
+              }
+            }
+
+            score += termScore;
+          }
+
+          score = score / searchTerms.length;
+
+          return new AbstractMap.SimpleEntry<>(exam, score);
+        })
+        .filter(entry -> entry.getValue() > 0)
+        .sorted((e1, e2) -> Double.compare(e2.getValue(), e1.getValue())) // Sắp xếp theo điểm giảm dần
+        .map(AbstractMap.SimpleEntry::getKey)
         .toList();
   }
 }

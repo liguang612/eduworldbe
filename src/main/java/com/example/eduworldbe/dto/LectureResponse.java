@@ -1,6 +1,7 @@
 package com.example.eduworldbe.dto;
 
 import com.example.eduworldbe.model.User;
+
 import lombok.Data;
 import java.util.List;
 
@@ -14,7 +15,10 @@ public class LectureResponse {
   private List<String> categories;
   private String pdfUrl;
   private String subjectId;
+  private String subjectName;
+  private Integer grade;
   private User teacher;
   private Integer duration;
   private boolean favourite;
+  private double averageRating;
 }
