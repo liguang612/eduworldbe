@@ -6,26 +6,35 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class SubjectService {
   @Autowired
   private SubjectRepository subjectRepository;
 
+  @Autowired
+  private SubjectCache subjectCache;
+
   public Subject create(Subject subject) {
     return subjectRepository.save(subject);
   }
 
   public List<Subject> getAll() {
-    return subjectRepository.findAll();
+    return List.copyOf(subjectCache.getAll());
   }
 
   public List<Subject> getByGrade(Integer grade) {
-    return subjectRepository.findByGrade(grade);
+    return subjectCache.getAll().stream()
+        .filter(subject -> grade.equals(subject.getGrade()))
+        .collect(Collectors.toList());
   }
 
   public Subject getById(String id) {
-    return subjectRepository.findById(id)
-        .orElseThrow(() -> new RuntimeException("Subject not found with id: " + id));
+    Subject subject = subjectCache.getById(id);
+    if (subject == null) {
+      throw new RuntimeException("Subject not found from cache with id: " + id);
+    }
+    return subject;
   }
 }

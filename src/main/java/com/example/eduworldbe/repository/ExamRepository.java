@@ -27,4 +27,17 @@ public interface ExamRepository extends JpaRepository<Exam, String> {
 
   @Query("SELECT e FROM Exam e WHERE e.closeTime > :currentTime ORDER BY e.openTime ASC")
   List<Exam> findAllUpcomingExams(@Param("currentTime") Date currentTime);
+
+  @Query("SELECT e FROM Exam e " +
+      "INNER JOIN Course c ON e.classId = c.id " +
+      "WHERE :userId MEMBER OF c.studentIds")
+  List<Exam> findExamsFromEnrolledCourses(@Param("userId") String userId);
+
+  @Query("SELECT e FROM Exam e " +
+      "INNER JOIN Course c ON e.classId = c.id " +
+      "WHERE :userId MEMBER OF c.studentIds " +
+      "AND (:subjectId IS NULL OR c.subjectId = :subjectId)")
+  List<Exam> findExamsFromEnrolledCoursesWithSubject(
+      @Param("userId") String userId,
+      @Param("subjectId") String subjectId);
 }
