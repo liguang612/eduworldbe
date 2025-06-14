@@ -1,5 +1,6 @@
 package com.example.eduworldbe.service;
 
+import com.example.eduworldbe.dto.response.CourseResponse;
 import com.example.eduworldbe.model.Course;
 import com.example.eduworldbe.model.Post;
 import com.example.eduworldbe.model.Review;
@@ -10,7 +11,6 @@ import com.example.eduworldbe.repository.UserRepository;
 import com.example.eduworldbe.repository.PostRepository;
 import com.example.eduworldbe.repository.CommentRepository;
 import com.example.eduworldbe.repository.ReviewRepository;
-import com.example.eduworldbe.dto.CourseResponse;
 import com.example.eduworldbe.util.StringUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;

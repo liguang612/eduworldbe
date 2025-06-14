@@ -1,5 +1,6 @@
 package com.example.eduworldbe.controller;
 
+import com.example.eduworldbe.dto.response.LectureResponse;
 import com.example.eduworldbe.model.Course;
 import com.example.eduworldbe.model.Lecture;
 import com.example.eduworldbe.service.LectureService;
@@ -11,7 +12,6 @@ import java.util.List;
 import jakarta.servlet.http.HttpServletRequest;
 import com.example.eduworldbe.util.AuthUtil;
 import com.example.eduworldbe.model.User;
-import com.example.eduworldbe.dto.LectureResponse;
 import com.example.eduworldbe.service.CourseService;
 import com.example.eduworldbe.service.FavouriteService;
 

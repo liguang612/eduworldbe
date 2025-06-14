@@ -1,7 +1,7 @@
 package com.example.eduworldbe.service;
 
-import com.example.eduworldbe.dto.NotificationResponse;
 import com.example.eduworldbe.dto.NotificationPageWithCursor;
+import com.example.eduworldbe.dto.response.NotificationResponse;
 import com.example.eduworldbe.model.*;
 import com.example.eduworldbe.repository.*;
 import com.google.api.core.ApiFuture;

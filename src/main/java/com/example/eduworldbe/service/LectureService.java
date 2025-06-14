@@ -1,10 +1,10 @@
 package com.example.eduworldbe.service;
 
+import com.example.eduworldbe.dto.response.LectureResponse;
 import com.example.eduworldbe.model.Lecture;
 import com.example.eduworldbe.model.Subject;
 import com.example.eduworldbe.repository.LectureRepository;
 import com.example.eduworldbe.repository.UserRepository;
-import com.example.eduworldbe.dto.LectureResponse;
 import com.example.eduworldbe.util.StringUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;

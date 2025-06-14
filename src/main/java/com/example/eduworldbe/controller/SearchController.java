@@ -1,12 +1,12 @@
 package com.example.eduworldbe.controller;
 
-import com.example.eduworldbe.dto.CourseResponse;
-import com.example.eduworldbe.dto.LectureResponse;
-import com.example.eduworldbe.dto.ExamResponse;
 import com.example.eduworldbe.service.CourseService;
 import com.example.eduworldbe.service.LectureService;
 import com.example.eduworldbe.service.ExamService;
 import com.example.eduworldbe.util.AuthUtil;
+import com.example.eduworldbe.dto.response.CourseResponse;
+import com.example.eduworldbe.dto.response.ExamResponse;
+import com.example.eduworldbe.dto.response.LectureResponse;
 import com.example.eduworldbe.model.User;
 
 import java.util.List;

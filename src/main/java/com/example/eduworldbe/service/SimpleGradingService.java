@@ -1,8 +1,9 @@
 package com.example.eduworldbe.service;
 
-import com.example.eduworldbe.dto.SimpleGradeRequest;
-import com.example.eduworldbe.dto.SimpleGradeResponse;
-import com.example.eduworldbe.dto.QuestionDetailResponse;
+import com.example.eduworldbe.dto.request.SimpleGradeRequest;
+import com.example.eduworldbe.dto.response.QuestionDetailResponse;
+import com.example.eduworldbe.dto.response.SimpleGradeResponse;
+
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;

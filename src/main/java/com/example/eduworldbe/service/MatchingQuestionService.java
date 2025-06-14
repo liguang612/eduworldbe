@@ -2,10 +2,11 @@ package com.example.eduworldbe.service;
 
 import com.example.eduworldbe.model.MatchingColumn;
 import com.example.eduworldbe.model.MatchingPair;
-import com.example.eduworldbe.dto.MatchingQuestionRequest;
-import com.example.eduworldbe.dto.MatchingColumnBatchRequest;
-import com.example.eduworldbe.dto.MatchingPairBatchRequest;
-import com.example.eduworldbe.dto.UpdateQuestionRequest;
+import com.example.eduworldbe.dto.request.MatchingColumnBatchRequest;
+import com.example.eduworldbe.dto.request.MatchingPairBatchRequest;
+import com.example.eduworldbe.dto.request.MatchingQuestionRequest;
+import com.example.eduworldbe.dto.request.UpdateQuestionRequest;
+
 import lombok.Data;
 import lombok.AllArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;

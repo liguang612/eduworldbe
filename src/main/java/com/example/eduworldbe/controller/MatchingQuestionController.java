@@ -1,6 +1,6 @@
 package com.example.eduworldbe.controller;
 
-import com.example.eduworldbe.dto.MatchingQuestionRequest;
+import com.example.eduworldbe.dto.request.MatchingQuestionRequest;
 import com.example.eduworldbe.service.MatchingQuestionService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;

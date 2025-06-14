@@ -4,7 +4,7 @@ import com.example.eduworldbe.model.Solution;
 import com.example.eduworldbe.repository.QuestionRepository;
 import com.example.eduworldbe.repository.SolutionRepository;
 import com.example.eduworldbe.model.User;
-import com.example.eduworldbe.dto.SolutionResponse;
+import com.example.eduworldbe.dto.response.SolutionResponse;
 import com.example.eduworldbe.model.Notification;
 import com.example.eduworldbe.model.NotificationType;
 import com.example.eduworldbe.model.Question;

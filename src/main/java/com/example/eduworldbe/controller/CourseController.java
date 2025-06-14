@@ -4,8 +4,9 @@ import com.example.eduworldbe.model.Course;
 import com.example.eduworldbe.service.CourseService;
 import com.example.eduworldbe.service.FavouriteService;
 import com.example.eduworldbe.service.FileUploadService;
-import com.example.eduworldbe.dto.AddMemberRequest;
-import com.example.eduworldbe.dto.CourseResponse;
+import com.example.eduworldbe.dto.request.AddMemberRequest;
+import com.example.eduworldbe.dto.response.CourseResponse;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;

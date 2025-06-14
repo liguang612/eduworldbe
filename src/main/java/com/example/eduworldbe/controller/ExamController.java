@@ -1,5 +1,7 @@
 package com.example.eduworldbe.controller;
 
+import com.example.eduworldbe.dto.response.ExamResponse;
+import com.example.eduworldbe.dto.response.QuestionDetailResponse;
 import com.example.eduworldbe.model.Exam;
 import com.example.eduworldbe.model.Favourite;
 import com.example.eduworldbe.model.Question;
@@ -7,8 +9,6 @@ import com.example.eduworldbe.model.User;
 import com.example.eduworldbe.service.ExamService;
 import com.example.eduworldbe.service.FavouriteService;
 import com.example.eduworldbe.service.QuestionService;
-import com.example.eduworldbe.dto.ExamResponse;
-import com.example.eduworldbe.dto.QuestionDetailResponse;
 import com.example.eduworldbe.util.AuthUtil;
 
 import org.springframework.beans.factory.annotation.Autowired;

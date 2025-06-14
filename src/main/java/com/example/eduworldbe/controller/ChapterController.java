@@ -1,5 +1,6 @@
 package com.example.eduworldbe.controller;
 
+import com.example.eduworldbe.dto.request.AddLectureRequest;
 import com.example.eduworldbe.model.Chapter;
 import com.example.eduworldbe.service.ChapterService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -7,7 +8,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import jakarta.servlet.http.HttpServletRequest;
 import com.example.eduworldbe.util.AuthUtil;
-import com.example.eduworldbe.dto.AddLectureRequest;
+
 import java.util.List;
 import java.util.Optional;
 
