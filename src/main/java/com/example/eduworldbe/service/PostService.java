@@ -1,10 +1,19 @@
 package com.example.eduworldbe.service;
 
 import com.example.eduworldbe.dto.*;
+import com.example.eduworldbe.dto.request.ApprovePostRequest;
+import com.example.eduworldbe.dto.request.CreateCommentRequest;
+import com.example.eduworldbe.dto.request.CreatePostRequest;
+import com.example.eduworldbe.dto.request.UpdateCommentRequest;
+import com.example.eduworldbe.dto.request.UpdatePostRequest;
+import com.example.eduworldbe.dto.response.CommentPageResponse;
+import com.example.eduworldbe.dto.response.PostPageResponse;
 import com.example.eduworldbe.model.Course;
 import com.example.eduworldbe.model.Post;
+import com.example.eduworldbe.model.Comment;
 import com.example.eduworldbe.repository.CourseRepository;
 import com.example.eduworldbe.repository.PostRepository;
+import com.example.eduworldbe.repository.CommentRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -28,6 +37,9 @@ public class PostService {
 
   @Autowired
   private CourseRepository courseRepository;
+
+  @Autowired
+  private CommentRepository commentRepository;
 
   @Autowired
   private UserService userService;
@@ -210,6 +222,86 @@ public class PostService {
     return response;
   }
 
+  // Comment methods
+  @Transactional
+  public CommentDTO createComment(CreateCommentRequest request, String userId) {
+    Post post = postRepository.findById(request.getPostId())
+        .orElseThrow(() -> new RuntimeException("Post not found"));
+
+    if (!post.isApproved()) {
+      throw new RuntimeException("Cannot comment on unapproved post");
+    }
+
+    Comment comment = new Comment();
+    comment.setPostId(request.getPostId());
+    comment.setUserId(userId);
+    comment.setCreatedAt(LocalDateTime.now());
+    comment.setContent(request.getContent());
+
+    Comment savedComment = commentRepository.save(comment);
+
+    String postOwnerId = post.getUserId();
+    if (postOwnerId != null && !postOwnerId.equals(userId)) {
+      try {
+        notificationService.createNotification(Notification.builder()
+            .userId(postOwnerId)
+            .type(NotificationType.COMMENT_ON_OWN_POST)
+            .actorId(userId)
+            .postId(post.getId())
+            .commentId(savedComment.getId())
+            .courseId(post.getCourseId()));
+      } catch (ExecutionException | InterruptedException e) {
+        System.err.println(
+            "Failed to create COMMENT_ON_OWN_POST notification for user " + postOwnerId + ": " + e.getMessage());
+        Thread.currentThread().interrupt();
+      }
+    }
+
+    return convertCommentToDTO(savedComment);
+  }
+
+  @Transactional
+  public CommentDTO updateComment(String commentId, UpdateCommentRequest request, String userId) {
+    Comment comment = commentRepository.findById(commentId)
+        .orElseThrow(() -> new RuntimeException("Comment not found"));
+
+    if (!comment.getUserId().equals(userId)) {
+      throw new RuntimeException("Not authorized to update this comment");
+    }
+
+    comment.setContent(request.getContent());
+    Comment updatedComment = commentRepository.save(comment);
+    return convertCommentToDTO(updatedComment);
+  }
+
+  @Transactional
+  public void deleteComment(String commentId, String userId) {
+    Comment comment = commentRepository.findById(commentId)
+        .orElseThrow(() -> new RuntimeException("Comment not found"));
+
+    if (!comment.getUserId().equals(userId)) {
+      throw new RuntimeException("Not authorized to delete this comment");
+    }
+
+    commentRepository.delete(comment);
+  }
+
+  public CommentPageResponse getCommentsByPost(String postId, int page, int size) {
+    Pageable pageable = PageRequest.of(page, size);
+    Page<Comment> commentPage = commentRepository.findByPostIdOrderByCreatedAtDesc(postId, pageable);
+
+    CommentPageResponse response = new CommentPageResponse();
+    response.setComments(commentPage.getContent().stream()
+        .map(this::convertCommentToDTO)
+        .collect(Collectors.toList()));
+    response.setCurrentPage(commentPage.getNumber());
+    response.setTotalPages(commentPage.getTotalPages());
+    response.setTotalElements(commentPage.getTotalElements());
+    response.setPageSize(commentPage.getSize());
+
+    return response;
+  }
+
   private PostDTO convertToDTO(Post post) {
     PostDTO dto = new PostDTO();
     dto.setId(post.getId());
@@ -219,6 +311,16 @@ public class PostService {
     dto.setUser(userService.getUserInfo(post.getUserId()));
     dto.setCourseId(post.getCourseId());
     dto.setApproved(post.isApproved());
+    return dto;
+  }
+
+  private CommentDTO convertCommentToDTO(Comment comment) {
+    CommentDTO dto = new CommentDTO();
+    dto.setId(comment.getId());
+    dto.setPostId(comment.getPostId());
+    dto.setUser(userService.getUserInfo(comment.getUserId()));
+    dto.setCreatedAt(comment.getCreatedAt());
+    dto.setContent(comment.getContent());
     return dto;
   }
 }

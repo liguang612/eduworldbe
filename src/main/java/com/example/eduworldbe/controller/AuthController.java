@@ -1,11 +1,11 @@
 package com.example.eduworldbe.controller;
 
-import com.example.eduworldbe.dto.AuthRequest;
-import com.example.eduworldbe.dto.AuthResponse;
-import com.example.eduworldbe.dto.ChangePasswordRequest;
-import com.example.eduworldbe.dto.UpdateUserRequest;
-import com.example.eduworldbe.dto.UserResponse;
-import com.example.eduworldbe.dto.UserSearchResponse;
+import com.example.eduworldbe.dto.request.AuthRequest;
+import com.example.eduworldbe.dto.request.ChangePasswordRequest;
+import com.example.eduworldbe.dto.request.UpdateUserRequest;
+import com.example.eduworldbe.dto.response.AuthResponse;
+import com.example.eduworldbe.dto.response.UserResponse;
+import com.example.eduworldbe.dto.response.UserSearchResponse;
 import com.example.eduworldbe.model.User;
 import com.example.eduworldbe.service.UserService;
 import com.example.eduworldbe.service.FileUploadService;

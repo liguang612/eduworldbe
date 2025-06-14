@@ -1,10 +1,11 @@
 package com.example.eduworldbe.service;
 
+import com.example.eduworldbe.dto.request.ChoiceBatchRequest;
 import com.example.eduworldbe.model.Choice;
 import com.example.eduworldbe.model.Question;
 import com.example.eduworldbe.repository.ChoiceRepository;
 import com.example.eduworldbe.repository.QuestionRepository;
-import com.example.eduworldbe.dto.ChoiceBatchRequest;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

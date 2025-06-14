@@ -1,15 +1,15 @@
 package com.example.eduworldbe.service;
 
 import com.example.eduworldbe.model.Review;
+import com.example.eduworldbe.dto.response.ReviewCommentResponse;
+import com.example.eduworldbe.dto.response.ReviewPageResponse;
+import com.example.eduworldbe.dto.response.ReviewResponse;
+import com.example.eduworldbe.dto.response.ReviewStatisticsResponse;
 import com.example.eduworldbe.model.Course;
 import com.example.eduworldbe.model.Exam;
 import com.example.eduworldbe.model.Lecture;
 import com.example.eduworldbe.model.User;
 import com.example.eduworldbe.model.ReviewComment;
-import com.example.eduworldbe.dto.ReviewResponse;
-import com.example.eduworldbe.dto.ReviewCommentResponse;
-import com.example.eduworldbe.dto.ReviewPageResponse;
-import com.example.eduworldbe.dto.ReviewStatisticsResponse;
 import com.example.eduworldbe.repository.ReviewRepository;
 import com.example.eduworldbe.repository.CourseRepository;
 import com.example.eduworldbe.repository.ExamRepository;

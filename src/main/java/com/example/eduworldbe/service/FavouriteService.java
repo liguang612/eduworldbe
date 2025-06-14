@@ -7,10 +7,10 @@ import com.example.eduworldbe.model.Lecture;
 import com.example.eduworldbe.model.User;
 import com.example.eduworldbe.repository.FavouriteRepository;
 import com.example.eduworldbe.repository.UserRepository;
-import com.example.eduworldbe.dto.ExamResponse;
 import com.example.eduworldbe.dto.FavouriteDetailDTO;
-import com.example.eduworldbe.dto.CourseResponse;
-import com.example.eduworldbe.dto.LectureResponse;
+import com.example.eduworldbe.dto.response.CourseResponse;
+import com.example.eduworldbe.dto.response.ExamResponse;
+import com.example.eduworldbe.dto.response.LectureResponse;
 import com.example.eduworldbe.util.StringUtil;
 
 import lombok.RequiredArgsConstructor;

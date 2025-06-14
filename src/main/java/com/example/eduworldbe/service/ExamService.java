@@ -5,7 +5,7 @@ import com.example.eduworldbe.model.Question;
 import com.example.eduworldbe.model.Subject;
 import com.example.eduworldbe.repository.ExamRepository;
 import com.example.eduworldbe.repository.QuestionRepository;
-import com.example.eduworldbe.dto.ExamResponse;
+import com.example.eduworldbe.dto.response.ExamResponse;
 import com.example.eduworldbe.model.Attempt;
 import com.example.eduworldbe.repository.AttemptRepository;
 import com.example.eduworldbe.model.Course;

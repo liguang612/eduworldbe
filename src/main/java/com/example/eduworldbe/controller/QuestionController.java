@@ -2,10 +2,11 @@ package com.example.eduworldbe.controller;
 
 import com.example.eduworldbe.model.Question;
 import com.example.eduworldbe.service.QuestionService;
-import com.example.eduworldbe.dto.CreateQuestionRequest;
-import com.example.eduworldbe.dto.QuestionDetailResponse;
-import com.example.eduworldbe.dto.QuestionListResponseItem;
-import com.example.eduworldbe.dto.UpdateQuestionRequest;
+import com.example.eduworldbe.dto.request.CreateQuestionRequest;
+import com.example.eduworldbe.dto.request.UpdateQuestionRequest;
+import com.example.eduworldbe.dto.response.QuestionDetailResponse;
+import com.example.eduworldbe.dto.response.QuestionListResponseItem;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;

@@ -13,6 +13,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import com.example.eduworldbe.dto.response.ExamAttemptDetailResponse;
+import com.example.eduworldbe.dto.response.ExamAttemptListResponse;
+import com.example.eduworldbe.dto.response.QuestionDetailResponse;
 import com.example.eduworldbe.exception.ResourceNotFoundException;
 import com.example.eduworldbe.model.AttemptChoice;
 import com.example.eduworldbe.model.AttemptMatchingColumn;
@@ -36,9 +39,6 @@ import com.example.eduworldbe.repository.MatchingColumnRepository;
 import com.example.eduworldbe.repository.MatchingPairRepository;
 import com.example.eduworldbe.repository.QuestionRepository;
 import com.example.eduworldbe.repository.UserRepository;
-import com.example.eduworldbe.dto.QuestionDetailResponse;
-import com.example.eduworldbe.dto.ExamAttemptListResponse;
-import com.example.eduworldbe.dto.ExamAttemptDetailResponse;
 
 import lombok.extern.slf4j.Slf4j;
 import com.fasterxml.jackson.databind.ObjectMapper;

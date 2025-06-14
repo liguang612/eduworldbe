@@ -1,11 +1,12 @@
 package com.example.eduworldbe.service;
 
-import com.example.eduworldbe.dto.GradeExamRequest;
-import com.example.eduworldbe.dto.GradeExamResponse;
 import com.example.eduworldbe.model.Attempt;
 import com.example.eduworldbe.model.Exam;
 import com.example.eduworldbe.model.Question;
-import com.example.eduworldbe.dto.QuestionDetailResponse;
+import com.example.eduworldbe.dto.request.GradeExamRequest;
+import com.example.eduworldbe.dto.response.GradeExamResponse;
+import com.example.eduworldbe.dto.response.QuestionDetailResponse;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

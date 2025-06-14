@@ -1,7 +1,7 @@
 package com.example.eduworldbe.controller;
 
-import com.example.eduworldbe.dto.SimpleGradeRequest;
-import com.example.eduworldbe.dto.SimpleGradeResponse;
+import com.example.eduworldbe.dto.request.SimpleGradeRequest;
+import com.example.eduworldbe.dto.response.SimpleGradeResponse;
 import com.example.eduworldbe.service.SimpleGradingService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;

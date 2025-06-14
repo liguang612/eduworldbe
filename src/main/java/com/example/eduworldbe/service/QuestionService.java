@@ -9,10 +9,10 @@ import com.example.eduworldbe.model.SharedMedia;
 import com.example.eduworldbe.repository.ChoiceRepository;
 import com.example.eduworldbe.repository.QuestionRepository;
 import com.example.eduworldbe.util.AuthUtil;
-import com.example.eduworldbe.dto.QuestionDetailResponse;
-import com.example.eduworldbe.dto.CreateQuestionRequest;
-import com.example.eduworldbe.dto.QuestionListResponseItem;
-import com.example.eduworldbe.dto.UpdateQuestionRequest;
+import com.example.eduworldbe.dto.request.CreateQuestionRequest;
+import com.example.eduworldbe.dto.request.UpdateQuestionRequest;
+import com.example.eduworldbe.dto.response.QuestionDetailResponse;
+import com.example.eduworldbe.dto.response.QuestionListResponseItem;
 
 import jakarta.servlet.http.HttpServletRequest;
 

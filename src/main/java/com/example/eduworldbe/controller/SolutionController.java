@@ -4,8 +4,9 @@ import com.example.eduworldbe.model.Solution;
 import com.example.eduworldbe.model.User;
 import com.example.eduworldbe.service.SolutionService;
 import com.example.eduworldbe.util.AuthUtil;
-import com.example.eduworldbe.dto.SolutionRequest;
-import com.example.eduworldbe.dto.SolutionResponse;
+import com.example.eduworldbe.dto.request.SolutionRequest;
+import com.example.eduworldbe.dto.response.SolutionResponse;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
