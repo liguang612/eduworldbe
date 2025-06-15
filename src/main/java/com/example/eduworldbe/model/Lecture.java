@@ -18,6 +18,8 @@ public class Lecture {
   private String id;
 
   private String name;
+
+  @Column(columnDefinition = "TEXT")
   private String description;
 
   @Column(columnDefinition = "MEDIUMTEXT")

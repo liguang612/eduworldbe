@@ -19,6 +19,8 @@ public class Course {
 
   private String name;
   private String avatar;
+
+  @Column(columnDefinition = "TEXT")
   private String description;
 
   private String subjectId;
