@@ -19,7 +19,7 @@ public class Review {
   private String id;
 
   private String userId;
-  private Integer targetType; // 1: course, 2: lecture, 3: question, 4: exam
+  private Integer targetType; // 1: course, 2: lecture
   private String targetId;
   private int score; // 1-5
   private String comment;
