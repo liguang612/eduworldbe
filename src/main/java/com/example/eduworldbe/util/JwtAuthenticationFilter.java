@@ -26,13 +26,27 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
   @Override
   protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
       throws ServletException, IOException {
+
+    // Bỏ qua các endpoint Google auth
+    String requestPath = request.getRequestURI();
+    if (requestPath.startsWith("/api/auth/google/")) {
+      filterChain.doFilter(request, response);
+      return;
+    }
+
     String authHeader = request.getHeader("Authorization");
     String email = null;
     String jwt = null;
 
     if (authHeader != null && authHeader.startsWith("Bearer ")) {
       jwt = authHeader.substring(7);
-      email = jwtUtil.extractEmail(jwt);
+      try {
+        email = jwtUtil.extractEmail(jwt);
+      } catch (Exception e) {
+        // Token không hợp lệ hoặc không phải JWT của hệ thống, bỏ qua
+        filterChain.doFilter(request, response);
+        return;
+      }
     }
 
     if (email != null && SecurityContextHolder.getContext().getAuthentication() == null) {

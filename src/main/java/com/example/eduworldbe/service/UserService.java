@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 import com.example.eduworldbe.dto.UserInfoDTO;
 import com.example.eduworldbe.dto.response.UserSearchResponse;
+import com.google.firebase.auth.FirebaseToken;
 
 @Service
 public class UserService {
@@ -128,5 +129,19 @@ public class UserService {
     userInfo.setUserSchool(user.getSchool());
 
     return userInfo;
+  }
+
+  public boolean existsByEmail(String email) {
+    return userRepository.existsByEmail(email);
+  }
+
+  public User createUserFromGoogle(FirebaseToken decodedToken) {
+    User user = new User();
+    user.setEmail(decodedToken.getEmail());
+    user.setName(decodedToken.getName());
+    user.setAvatar(decodedToken.getPicture());
+
+    return user;
+    // return userRepository.save(user);
   }
 }
