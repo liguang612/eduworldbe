@@ -4,6 +4,7 @@ import com.google.cloud.storage.Blob;
 import com.google.cloud.storage.BlobInfo;
 import com.google.cloud.storage.Storage;
 import com.google.firebase.cloud.StorageClient;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -83,11 +84,11 @@ public class FileUploadService {
   /**
    * Xóa nhiều file cùng lúc
    */
+  @Async
   public void deleteFiles(List<String> fileUrls) {
     if (fileUrls == null) {
       return;
     }
-
     fileUrls.forEach(this::deleteFile);
   }
 

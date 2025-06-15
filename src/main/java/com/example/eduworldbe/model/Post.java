@@ -18,10 +18,11 @@ public class Post {
   @GeneratedValue(strategy = GenerationType.UUID)
   private String id;
 
-  @Column(columnDefinition = "TEXT")
+  @Column(columnDefinition = "MEDIUMTEXT")
   private String content;
 
   @ElementCollection
+  @Column(columnDefinition = "TEXT")
   private List<String> imageUrls;
 
   private LocalDateTime createdAt;
