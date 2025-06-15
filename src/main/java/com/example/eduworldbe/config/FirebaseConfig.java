@@ -21,7 +21,6 @@ public class FirebaseConfig {
   @Bean
   public FirebaseApp firebaseApp() throws IOException {
     if (FirebaseApp.getApps().isEmpty()) {
-      // Decode base64 credentials
       byte[] decodedCredentials = Base64.getDecoder().decode(firebaseCredentials);
 
       GoogleCredentials credentials = GoogleCredentials.fromStream(
