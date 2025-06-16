@@ -3,7 +3,6 @@ package com.example.eduworldbe.service;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.HashMap;
 import java.util.ArrayList;
@@ -93,21 +92,32 @@ public class ExamAttemptService {
   }
 
   public ExamAttempt startAttempt(String userId, String examId) {
-    // Kiểm tra xem user đã có attempt đang in_progress chưa
-    Optional<ExamAttempt> existingAttempt = examAttemptRepository.findByUserIdAndExamIdAndStatus(userId, examId,
+    // Kiểm tra xem user đã có attempt đang làm dở chưa (in_progress)
+    List<ExamAttempt> existingAttempts = examAttemptRepository.findByUserIdAndExamIdAndStatus(userId, examId,
         "in_progress");
-    if (existingAttempt.isPresent()) {
-      ExamAttempt attempt = existingAttempt.get();
+    if (!existingAttempts.isEmpty()) {
+      if (existingAttempts.size() > 1) {
+        List<String> attemptIdsToDelete = existingAttempts.stream()
+            .skip(1)
+            .map(ExamAttempt::getId)
+            .collect(Collectors.toList());
 
-      // Kiểm tra thời gian làm bài
+        log.warn("Tìm thấy {} bản ghi trùng lặp cho userId: {}, examId: {}. Đang xóa {} bản ghi thừa.",
+            existingAttempts.size(), userId, examId, attemptIdsToDelete.size());
+
+        deleteAttempts(attemptIdsToDelete);
+      }
+
+      ExamAttempt attempt = existingAttempts.get(0);
+
+      // Kiểm tra thời gian để tự động nộp bài
       Date now = new Date();
-      long timeElapsed = now.getTime() - attempt.getStartTime().getTime(); // đơn vị: ms
+      long timeElapsed = now.getTime() - attempt.getStartTime().getTime();
       long timeElapsedMinutes = timeElapsed / (60 * 1000);
 
-      // Nếu thời gian làm bài vượt quá duration, tự động nộp bài
       if (timeElapsedMinutes >= attempt.getDuration()) {
         attempt.setStatus("submitted");
-        attempt.setEndTime(now);
+        attempt.setEndTime(new Date(attempt.getStartTime().getTime() + (long) attempt.getDuration() * 60 * 1000));
         attempt.setScore(calculateScore(attempt.getId()));
 
         attempt = examAttemptRepository.save(attempt);
@@ -291,16 +301,16 @@ public class ExamAttemptService {
       boolean isCorrect = checkAnswer(question, userAnswer);
       if (isCorrect) {
         switch (question.getLevel()) {
-          case 1: // Easy
+          case 1:
             totalScore += attempt.getEasyScore();
             break;
-          case 2: // Medium
+          case 2:
             totalScore += attempt.getMediumScore();
             break;
-          case 3: // Hard
+          case 3:
             totalScore += attempt.getHardScore();
             break;
-          case 4: // Very Hard
+          case 4:
             totalScore += attempt.getVeryHardScore();
             break;
         }
@@ -384,7 +394,27 @@ public class ExamAttemptService {
       attempts = examAttemptRepository.findByUserId(userId);
     }
 
-    return attempts.stream().map(attempt -> {
+    return attempts.stream().filter(attempt -> {
+      if (attempt.getStatus().equals("in_progress")) {
+        // Kiểm tra thời gian để tự động nộp bài
+        Date now = new Date();
+        long timeElapsed = now.getTime() - attempt.getStartTime().getTime();
+        long timeElapsedMinutes = timeElapsed / (60 * 1000);
+
+        if (timeElapsedMinutes >= attempt.getDuration()) {
+          attempt.setStatus("submitted");
+          attempt.setEndTime(new Date(attempt.getStartTime().getTime() + (long) attempt.getDuration() * 60 * 1000));
+          attempt.setScore(calculateScore(attempt.getId()));
+          examAttemptRepository.save(attempt);
+          return true;
+        } else {
+          // Chưa vượt quá thời gian, loại bỏ khỏi kết quả
+          return false;
+        }
+      }
+
+      return "submitted".equals(attempt.getStatus());
+    }).map(attempt -> {
       ExamAttemptListResponse response = new ExamAttemptListResponse();
       response.setId(attempt.getId());
       response.setTitle(attempt.getTitle());
@@ -401,9 +431,39 @@ public class ExamAttemptService {
     }).collect(Collectors.toList());
   }
 
-  public ExamAttemptDetailResponse getAttemptDetail(String attemptId) {
+  public ExamAttemptDetailResponse getAttemptDetail(String attemptId, User user) {
     ExamAttempt attempt = examAttemptRepository.findById(attemptId)
         .orElseThrow(() -> new ResourceNotFoundException("Attempt not found"));
+
+    // Kiểm tra thời gian để tự động nộp bài
+    if (attempt.getStatus().equals("in_progress")) {
+      Date now = new Date();
+      long timeElapsed = now.getTime() - attempt.getStartTime().getTime();
+      long timeElapsedMinutes = timeElapsed / (60 * 1000);
+
+      if (timeElapsedMinutes >= attempt.getDuration()) {
+        attempt.setStatus("submitted");
+        attempt.setEndTime(new Date(attempt.getStartTime().getTime() + (long) attempt.getDuration() * 60 * 1000));
+        attempt.setScore(calculateScore(attempt.getId()));
+        examAttemptRepository.save(attempt);
+      }
+    }
+
+    boolean allowReview = true;
+    boolean showRightAnswer = true;
+
+    try {
+      Exam exam = examRepository.findById(attempt.getExamId())
+          .orElseThrow(() -> new ResourceNotFoundException("Exam not found"));
+
+      if (user.getRole() == 0) {
+        allowReview = (exam.getAllowReview() == true);
+        showRightAnswer = (exam.getAllowViewAnswer() == true);
+      }
+    } catch (Exception e) {
+      System.out.println("Exam not found!!!");
+      e.printStackTrace();
+    }
 
     ExamAttemptDetailResponse response = new ExamAttemptDetailResponse();
     response.setId(attempt.getId());
@@ -416,6 +476,12 @@ public class ExamAttemptService {
     response.setClassId(attempt.getClassId());
     response.setClassName(courseService.getById(attempt.getClassId()).get().getName());
     response.setDuration(attempt.getDuration());
+
+    if (allowReview == false && response.getStatus().equals("submitted")) {
+      ExamAttemptDetailResponse _response = new ExamAttemptDetailResponse();
+      _response.setId("-1");
+      return _response;
+    }
 
     // Lấy thông tin học sinh
     User student = userRepository.findById(attempt.getUserId())
@@ -490,11 +556,7 @@ public class ExamAttemptService {
     response.setAnswers(answers);
     response.setQuestions(questions);
 
-    // Kiểm tra xem exam có cho phép xem đáp án không
-    Exam exam = examRepository.findById(attempt.getExamId())
-        .orElseThrow(() -> new ResourceNotFoundException("Exam not found"));
-
-    if (exam.getAllowViewAnswer() == true) {
+    if (showRightAnswer) {
       Map<String, Object> correctAnswers = new HashMap<>();
       for (QuestionDetailResponse question : questions) {
         Object correctAnswer = questionService.getCorrectAnswerFormatted(question);
@@ -506,10 +568,37 @@ public class ExamAttemptService {
     return response;
   }
 
-  public List<ExamAttemptListResponse> getAttemptsByExamId(String examId) {
-    List<ExamAttempt> attempts = examAttemptRepository.findByExamId(examId);
+  public List<ExamAttemptListResponse> getAttemptsByExamId(String examId, User user) {
+    List<ExamAttempt> attempts;
+    if (user.getRole() == 1) {
+      attempts = examAttemptRepository.findByExamId(examId);
+    } else {
+      attempts = examAttemptRepository.findByExamIdAndUserId(examId, user.getId());
+    }
 
-    return attempts.stream().map(attempt -> {
+    return attempts.stream().filter(attempt -> {
+      if (attempt.getStatus().equals("in_progress")) {
+        // Kiểm tra thời gian để tự động nộp bài
+        Date now = new Date();
+        long timeElapsed = now.getTime() - attempt.getStartTime().getTime();
+        long timeElapsedMinutes = timeElapsed / (60 * 1000);
+
+        if (timeElapsedMinutes >= attempt.getDuration()) {
+          attempt.setStatus("submitted");
+          attempt.setEndTime(new Date(attempt.getStartTime().getTime() + (long) attempt.getDuration() * 60 * 1000));
+          attempt.setScore(calculateScore(attempt.getId()));
+
+          examAttemptRepository.save(attempt);
+
+          return true;
+        } else {
+          // Chưa vượt quá thời gian, loại bỏ khỏi kết quả
+          return false;
+        }
+      }
+
+      return "submitted".equals(attempt.getStatus());
+    }).map(attempt -> {
       ExamAttemptListResponse response = new ExamAttemptListResponse();
       response.setId(attempt.getId());
       response.setTitle(attempt.getTitle());
@@ -522,13 +611,22 @@ public class ExamAttemptService {
       response.setClassName(courseService.getById(attempt.getClassId()).get().getName());
       response.setUserId(attempt.getUserId());
 
-      // Lấy thông tin học sinh
-      User student = userRepository.findById(attempt.getUserId())
-          .orElseThrow(() -> new ResourceNotFoundException("User not found"));
-      response.setStudentName(student.getName());
-      response.setStudentAvatar(student.getAvatar());
-      response.setStudentSchool(student.getSchool());
-      response.setStudentGrade(student.getGrade());
+      // Nếu đây là 1 request từ học sinh, thì vì học sinh đó chỉ xem được kết quả của
+      // mình nên tận dụng biến User luôn.
+      if (user.getRole() == 0) {
+        response.setStudentName(user.getName());
+        response.setStudentAvatar(user.getAvatar());
+        response.setStudentSchool(user.getSchool());
+        response.setStudentGrade(user.getGrade());
+      } else {
+        // Lấy thông tin học sinh
+        User student = userRepository.findById(attempt.getUserId())
+            .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+        response.setStudentName(student.getName());
+        response.setStudentAvatar(student.getAvatar());
+        response.setStudentSchool(student.getSchool());
+        response.setStudentGrade(student.getGrade());
+      }
 
       return response;
     }).collect(Collectors.toList());

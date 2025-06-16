@@ -127,7 +127,7 @@ public class ExamAttemptController {
       throw new AccessDeniedException("User not authenticated");
     }
 
-    ExamAttemptDetailResponse attempt = examAttemptService.getAttemptDetail(attemptId);
+    ExamAttemptDetailResponse attempt = examAttemptService.getAttemptDetail(attemptId, user);
     return ResponseEntity.ok(attempt);
   }
 
@@ -140,7 +140,7 @@ public class ExamAttemptController {
       throw new AccessDeniedException("User not authenticated");
     }
 
-    List<ExamAttemptListResponse> attempts = examAttemptService.getAttemptsByExamId(examId);
+    List<ExamAttemptListResponse> attempts = examAttemptService.getAttemptsByExamId(examId, user);
     return ResponseEntity.ok(attempts);
   }
 }

@@ -57,13 +57,15 @@ public class ChapterController {
       HttpServletRequest request) {
     Optional<Chapter> existingChapter = chapterService.getById(id);
     if (existingChapter.isPresent()) {
+      Chapter _chapter = existingChapter.get();
+
       // Kiểm tra quyền truy cập
-      if (!authUtil.hasAccessToCourse(request, existingChapter.get().getCourseId())) {
+      if (!authUtil.hasAccessToCourse(request, _chapter.getCourseId())) {
         throw new RuntimeException("Unauthorized");
       }
-      chapter.setId(id);
-      chapter.setCourseId(existingChapter.get().getCourseId());
-      return ResponseEntity.ok(chapterService.update(id, chapter));
+
+      _chapter.setName(chapter.getName());
+      return ResponseEntity.ok(chapterService.update(id, _chapter));
     }
     return ResponseEntity.notFound().build();
   }

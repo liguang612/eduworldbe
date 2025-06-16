@@ -18,6 +18,9 @@ public class FirebaseConfig {
   @Value("${firebase.credentials}")
   private String firebaseCredentials;
 
+  @Value("${firebase.storage.bucket-name}")
+  private String storageBucket;
+
   @Bean
   public FirebaseApp firebaseApp() throws IOException {
     if (FirebaseApp.getApps().isEmpty()) {
@@ -28,6 +31,7 @@ public class FirebaseConfig {
 
       FirebaseOptions options = FirebaseOptions.builder()
           .setCredentials(credentials)
+          .setStorageBucket(storageBucket)
           .build();
 
       return FirebaseApp.initializeApp(options);

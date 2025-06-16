@@ -35,3 +35,5 @@ build/
 
 tmp.json
 firebase-service-account.json
+
+.DS_Store

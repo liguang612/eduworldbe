@@ -82,7 +82,8 @@ public class CourseService {
       existingCourse.setAllCategories(updated.getAllCategories());
     }
     if (updated.getTeacherAssistantIds() != null) {
-      existingCourse.setTeacherAssistantIds(updated.getTeacherAssistantIds());
+      existingCourse.setTeacherAssistantIds(
+          updated.getTeacherAssistantIds().stream().filter(taId -> taId != existingCourse.getTeacherId()).toList());
     }
     if (updated.getStudentIds() != null) {
       for (String studentId : updated.getStudentIds()) {
