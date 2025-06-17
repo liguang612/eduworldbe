@@ -103,14 +103,14 @@ public class QuestionService {
 
     // Get current user from token
     User currentUser = authUtil.getCurrentUser(request);
-    boolean isCreator = currentUser != null && currentUser.getId().equals(question.getCreatedBy());
+    boolean isTeacher = currentUser != null && currentUser.getRole() == 1;
 
     switch (question.getType()) {
       case "radio":
       case "checkbox":
       case "ranking":
         List<Choice> fetchedChoices = choiceService.getByQuestionId(id);
-        if (!isCreator) {
+        if (!isTeacher) {
           // Case study: Tại sao lại phải tạo dãy đối tượng mới như này? -> Tránh cache
           // của hibernate.
           List<Choice> choicesForResponse = new ArrayList<>();
@@ -121,7 +121,7 @@ public class QuestionService {
             responseChoice.setQuestionId(fetchedChoice.getQuestionId());
             responseChoice.setText(fetchedChoice.getText());
             responseChoice.setValue(fetchedChoice.getValue());
-            responseChoice.setIsCorrect(null);
+            responseChoice.setIsCorrect(fetchedChoice.getIsCorrect());
             responseChoice.setOrderIndex(null);
 
             choicesForResponse.add(responseChoice);
@@ -133,7 +133,7 @@ public class QuestionService {
         break;
       case "itemConnector":
         List<MatchingColumn> matchingColumns = matchingColumnService.getByQuestionId(id);
-        if (isCreator) {
+        if (isTeacher) {
           List<MatchingPair> matchingPairs = matchingPairService.getByQuestionId(id);
           detailResponse.setMatchingPairs(matchingPairs);
         } else {
@@ -153,7 +153,7 @@ public class QuestionService {
         break;
       case "shortAnswer":
         List<Choice> shortAnswerChoicesFetched = choiceService.getByQuestionId(id);
-        if (!isCreator) {
+        if (!isTeacher) {
           List<Choice> choicesForResponse = new ArrayList<>();
           for (Choice fetchedChoice : shortAnswerChoicesFetched) {
             Choice responseChoice = new Choice();

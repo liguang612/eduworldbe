@@ -50,7 +50,8 @@ public class AuthController {
       @RequestParam(value = "address", required = false) String address,
       @RequestParam(value = "role", required = false) Integer role,
       @RequestParam(value = "birthday", required = false) String birthday,
-      @RequestParam(value = "avatar", required = false) MultipartFile avatar) throws IOException {
+      @RequestParam(value = "avatar", required = false) MultipartFile avatar,
+      @RequestParam(value = "googleAvatar", required = false) String googleAvatar) throws IOException {
 
     User user = new User();
     user.setEmail(email);
@@ -74,6 +75,8 @@ public class AuthController {
     if (avatar != null && !avatar.isEmpty()) {
       String avatarUrl = fileUploadService.uploadFile(avatar, "user");
       user.setAvatar(avatarUrl);
+    } else if (googleAvatar != null && !googleAvatar.isEmpty()) {
+      user.setAvatar(googleAvatar);
     }
 
     return userService.register(user);
