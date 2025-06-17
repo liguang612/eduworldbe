@@ -83,7 +83,9 @@ public class CourseService {
     }
     if (updated.getTeacherAssistantIds() != null) {
       existingCourse.setTeacherAssistantIds(
-          updated.getTeacherAssistantIds().stream().filter(taId -> taId != existingCourse.getTeacherId()).toList());
+          updated.getTeacherAssistantIds().stream()
+              .filter(taId -> taId != existingCourse.getTeacherId())
+              .collect(Collectors.toCollection(ArrayList::new)));
     }
     if (updated.getStudentIds() != null) {
       for (String studentId : updated.getStudentIds()) {
@@ -99,7 +101,7 @@ public class CourseService {
           }
         }
       }
-      existingCourse.setStudentIds(updated.getStudentIds());
+      existingCourse.setStudentIds(new ArrayList<>(updated.getStudentIds()));
     }
     if (updated.getChapterIds() != null) {
       existingCourse.setChapterIds(updated.getChapterIds());
