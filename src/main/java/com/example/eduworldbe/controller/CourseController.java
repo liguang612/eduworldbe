@@ -55,7 +55,6 @@ public class CourseController {
       throw new RuntimeException("Unauthorized");
     }
 
-    // Use optimized method that performs filtering at database level
     List<Course> filteredCourses = courseService.getCoursesOptimized(
         currentUser.getId(),
         currentUser.getRole(),

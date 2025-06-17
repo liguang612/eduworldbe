@@ -23,7 +23,6 @@ public class ChapterController {
 
   @PostMapping
   public Chapter create(@RequestBody Chapter chapter, HttpServletRequest request) {
-    // Kiểm tra quyền truy cập
     if (!authUtil.hasAccessToCourse(request, chapter.getCourseId())) {
       throw new RuntimeException("Unauthorized");
     }
@@ -32,7 +31,6 @@ public class ChapterController {
 
   @GetMapping("/course/{courseId}")
   public List<Chapter> getByCourseId(@PathVariable String courseId, HttpServletRequest request) {
-    // Kiểm tra quyền truy cập
     if (!authUtil.hasAccessToCourse(request, courseId)) {
       throw new RuntimeException("Unauthorized");
     }
@@ -43,7 +41,6 @@ public class ChapterController {
   public ResponseEntity<Chapter> getById(@PathVariable String id, HttpServletRequest request) {
     Optional<Chapter> chapter = chapterService.getById(id);
     if (chapter.isPresent()) {
-      // Kiểm tra quyền truy cập
       if (!authUtil.hasAccessToCourse(request, chapter.get().getCourseId())) {
         throw new RuntimeException("Unauthorized");
       }
@@ -59,7 +56,6 @@ public class ChapterController {
     if (existingChapter.isPresent()) {
       Chapter _chapter = existingChapter.get();
 
-      // Kiểm tra quyền truy cập
       if (!authUtil.hasAccessToCourse(request, _chapter.getCourseId())) {
         throw new RuntimeException("Unauthorized");
       }
@@ -74,7 +70,6 @@ public class ChapterController {
   public ResponseEntity<Void> delete(@PathVariable String id, HttpServletRequest request) {
     Optional<Chapter> chapter = chapterService.getById(id);
     if (chapter.isPresent()) {
-      // Kiểm tra quyền truy cập
       if (!authUtil.hasAccessToCourse(request, chapter.get().getCourseId())) {
         throw new RuntimeException("Unauthorized");
       }
@@ -91,7 +86,6 @@ public class ChapterController {
       HttpServletRequest request) {
     Optional<Chapter> chapter = chapterService.getById(id);
     if (chapter.isPresent()) {
-      // Kiểm tra quyền truy cập
       if (!authUtil.hasAccessToCourse(request, chapter.get().getCourseId())) {
         throw new RuntimeException("Unauthorized");
       }
@@ -108,7 +102,6 @@ public class ChapterController {
       HttpServletRequest request) {
     Optional<Chapter> chapter = chapterService.getById(id);
     if (chapter.isPresent()) {
-      // Kiểm tra quyền truy cập
       if (!authUtil.hasAccessToCourse(request, chapter.get().getCourseId())) {
         throw new RuntimeException("Unauthorized");
       }

@@ -84,7 +84,6 @@ public class FavouriteService {
     return favouriteRepository.findByTypeAndTargetIdAndUser(type, targetId, user).isPresent();
   }
 
-  // New method for efficient bulk checking
   public Set<String> getFavouritedTargetIds(Integer type, String userId) {
     User user = userRepository.findById(userId)
         .orElseThrow(() -> new RuntimeException("User not found"));
@@ -92,7 +91,6 @@ public class FavouriteService {
     return favouriteRepository.findTargetIdsByTypeAndUser(type, user);
   }
 
-  // New methods to get detailed information
   public List<FavouriteDetailDTO> getDetailedFavouritesByType(Integer type, String userId, String keyword) {
     List<Favourite> favourites = getFavouritesByType(type, userId);
     List<FavouriteDetailDTO> detailedFavourites = favourites.stream()

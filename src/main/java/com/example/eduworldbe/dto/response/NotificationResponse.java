@@ -14,26 +14,25 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 public class NotificationResponse {
   private String id;
-  private String message; // Human-readable message
+  private String message;
   private NotificationType type;
   private boolean isRead;
   private LocalDateTime createdAt;
 
-  // Actor (user who triggered the notification)
+  // Actor (người có sự kiện gây ra thông báo)
   private String actorId;
-  private String actorName; // e.g., "John Doe commented..."
-  private String actorAvatarUrl; // Optional: URL for actor's avatar
+  private String actorName;
+  private String actorAvatarUrl;
 
-  // Related entity information
   private String courseId;
   private String courseName;
-  private String courseAvatarUrl; // Optional: URL for course avatar
+  private String courseAvatarUrl;
 
   private String lectureId;
   private String lectureTitle;
 
   private String questionId;
-  private String questionTitle; // Or a snippet of question content
+  private String questionTitle;
 
   private String solutionId;
 
@@ -41,10 +40,10 @@ public class NotificationResponse {
   private String examTitle;
 
   private String postId;
-  private String postTitle; // Or a snippet of post content
+  private String postTitle;
 
   private String commentId;
-  private String commentContentSnippet; // Snippet of the comment
+  private String commentContentSnippet;
 
   private String joinRequestId;
 }

@@ -28,7 +28,6 @@ public class ChapterService {
   public Chapter create(Chapter chapter) {
     Chapter createdChapter = chapterRepository.save(chapter);
 
-    // Add chapterId to the corresponding Course's chapterIds list
     courseRepository.findById(chapter.getCourseId()).ifPresent(course -> {
       if (course.getChapterIds() == null) {
         course.setChapterIds(new ArrayList<>());
@@ -61,7 +60,6 @@ public class ChapterService {
 
       chapterRepository.deleteById(id);
 
-      // Remove the chapterId from the corresponding Course's chapterIds list
       courseRepository.findById(courseId).ifPresent(course -> {
         if (course.getChapterIds() != null) {
           course.getChapterIds().remove(id);

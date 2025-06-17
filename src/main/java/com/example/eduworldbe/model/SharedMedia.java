@@ -19,10 +19,10 @@ public class SharedMedia {
   private Integer mediaType; // 0: image, 1: audio, 2: video, 3: pdf, 4: text
 
   @Column(columnDefinition = "TEXT")
-  private String text; // For shared text content (e.g., reading comprehension passages)
+  private String text;
 
   private String title;
 
   @Column(nullable = false)
-  private Integer usageCount = 0; // Track number of questions using this shared media
+  private Integer usageCount = 0;
 }

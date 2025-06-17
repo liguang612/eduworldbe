@@ -25,7 +25,6 @@ public class ChoiceService {
   private QuestionRepository questionRepository;
 
   public Choice create(Choice choice) {
-    // Check if the question exists
     Optional<Question> question = questionRepository.findById(choice.getQuestionId());
     if (question.isEmpty()) {
       throw new ResponseStatusException(HttpStatus.NOT_FOUND,
@@ -44,14 +43,12 @@ public class ChoiceService {
 
   @Transactional
   public List<Choice> createBatch(ChoiceBatchRequest request) {
-    // Check if the question exists
     Optional<Question> question = questionRepository.findById(request.getQuestionId());
     if (question.isEmpty()) {
       throw new ResponseStatusException(HttpStatus.NOT_FOUND,
           "Question with ID " + request.getQuestionId() + " not found.");
     }
 
-    // Convert request items to Choice entities
     List<Choice> choices = request.getChoices().stream()
         .map(item -> {
           Choice choice = new Choice();
@@ -90,7 +87,6 @@ public class ChoiceService {
   }
 
   public Choice update(String id, Choice updated) {
-    // Check if the question exists for the updated choice
     if (updated.getQuestionId() != null) {
       Optional<Question> question = questionRepository.findById(updated.getQuestionId());
       if (question.isEmpty()) {
@@ -103,8 +99,6 @@ public class ChoiceService {
     if (updated.getText() != null)
       existing.setText(updated.getText());
     if (updated.getValue() != null) {
-      // Check for duplicate value for the same questionId during update, excluding
-      // the current choice
       Optional<Choice> existingChoice = choiceRepository.findByQuestionIdAndValue(
           updated.getQuestionId() != null ? updated.getQuestionId() : existing.getQuestionId(),
           updated.getValue());

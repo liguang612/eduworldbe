@@ -14,7 +14,7 @@ import java.time.LocalDateTime;
 public class Notification {
   private String id;
 
-  private String userId; // ID of the user who receives the notification
+  private String userId;
 
   private NotificationType type;
 
@@ -22,10 +22,8 @@ public class Notification {
 
   private LocalDateTime createdAt;
 
-  // ID of the user who performed the action that triggered the notification
   private String actorId;
 
-  // Related entity IDs - all are Strings and can be null
   private String courseId;
   private String lectureId;
   private String questionId;
@@ -33,5 +31,5 @@ public class Notification {
   private String examId;
   private String postId;
   private String commentId;
-  private String joinRequestId; // For join course request
+  private String joinRequestId;
 }

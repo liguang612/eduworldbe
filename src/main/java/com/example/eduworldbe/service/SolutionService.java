@@ -131,11 +131,9 @@ public class SolutionService {
     solutionRepository.delete(solutionOpt.get());
   }
 
-  // Helper method to convert Solution to SolutionResponse
   private SolutionResponse convertToResponse(Solution solution) {
     User creator = userService.findById(solution.getCreatedBy());
     if (creator == null) {
-      // Handle case where creator is not found
       return SolutionResponse.fromSolution(solution, "Unknown", null, null, null, null);
     }
     return SolutionResponse.fromSolution(

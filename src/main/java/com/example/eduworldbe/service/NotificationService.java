@@ -41,14 +41,12 @@ public class NotificationService {
 
     Notification notification = builder.build();
 
-    // Convert LocalDateTime to Timestamp for Firestore
     LocalDateTime createdAt = notification.getCreatedAt();
     Timestamp timestamp = Timestamp.of(java.sql.Timestamp.valueOf(createdAt));
 
     DocumentReference docRef = db.collection(COLLECTION_NAME).document();
     notification.setId(docRef.getId());
 
-    // Create a map of the notification data
     var data = new java.util.HashMap<String, Object>();
     data.put("id", notification.getId());
     data.put("userId", notification.getUserId());

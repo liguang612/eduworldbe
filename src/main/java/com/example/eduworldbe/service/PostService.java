@@ -50,6 +50,8 @@ public class PostService {
   @Autowired
   private NotificationService notificationService;
 
+  // POST
+
   @Transactional
   public PostDTO createPost(CreatePostRequest request, String userId) {
     Course course = courseRepository.findById(request.getCourseId())
@@ -222,7 +224,7 @@ public class PostService {
     return response;
   }
 
-  // Comment methods
+  // COMMENT
   @Transactional
   public CommentDTO createComment(CreateCommentRequest request, String userId) {
     Post post = postRepository.findById(request.getPostId())

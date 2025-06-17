@@ -23,6 +23,6 @@ public class MatchingColumn {
   private String label;
 
   private String questionId;
-  private String side; // left, right
+  private String side;
   private Integer orderIndex;
 }

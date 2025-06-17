@@ -46,7 +46,6 @@ public class LectureService {
   public Lecture update(String id, Lecture updated) {
     Lecture existingLecture = getById(id).orElseThrow(() -> new RuntimeException("Lecture not found"));
 
-    // Chỉ cập nhật các trường được truyền lên (không null)
     if (updated.getName() != null) {
       existingLecture.setName(updated.getName());
     }
@@ -197,12 +196,10 @@ public class LectureService {
   }
 
   public List<Lecture> getByIdsInOrder(List<String> ids) {
-    // Lấy tất cả lectures theo ids
     Map<String, Lecture> lectureMap = lectureRepository.findAllById(ids)
         .stream()
         .collect(Collectors.toMap(Lecture::getId, lecture -> lecture));
 
-    // Trả về danh sách theo thứ tự ids được truyền vào
     return ids.stream()
         .map(lectureMap::get)
         .filter(Objects::nonNull)
@@ -254,7 +251,6 @@ public class LectureService {
       }
     }
 
-    // Filter by keyword if provided
     if (keyword != null && !keyword.trim().isEmpty()) {
       lectures = searchLecturesByName(lectures, keyword);
     }

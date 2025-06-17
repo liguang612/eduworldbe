@@ -21,7 +21,7 @@ public class Review {
   private String userId;
   private Integer targetType; // 1: course, 2: lecture
   private String targetId;
-  private int score; // 1-5
+  private int score;
   private String comment;
 
   @Temporal(TemporalType.TIMESTAMP)

@@ -29,28 +29,21 @@ public class MatchingQuestionService {
 
   @Transactional
   public MatchingQuestionResult createMatchingQuestion(MatchingQuestionRequest request) {
-    // Update question with sharedMediaId if provided
     if (request.getSharedMediaId() != null) {
       UpdateQuestionRequest updateRequest = new UpdateQuestionRequest();
       updateRequest.setSharedMediaId(request.getSharedMediaId());
       questionService.update(request.getQuestionId(), updateRequest);
     }
 
-    // Delete existing columns and pairs for this question
     List<MatchingColumn> existingColumns = matchingColumnService.getByQuestionId(request.getQuestionId());
     List<MatchingPair> existingPairs = matchingPairService.getByQuestionId(request.getQuestionId());
-
-    // Delete existing pairs first (due to foreign key constraints)
     existingPairs.forEach(pair -> matchingPairService.delete(pair.getId()));
-
-    // Delete existing columns
     existingColumns.forEach(column -> matchingColumnService.delete(column.getId()));
 
     // Create columns
     MatchingColumnBatchRequest columnRequest = new MatchingColumnBatchRequest();
     columnRequest.setQuestionId(request.getQuestionId());
 
-    // Convert left items
     columnRequest.setLeft(request.getLeft().stream()
         .map(item -> {
           MatchingColumnBatchRequest.MatchingColumnItem newItem = new MatchingColumnBatchRequest.MatchingColumnItem();
@@ -60,7 +53,6 @@ public class MatchingQuestionService {
         })
         .collect(Collectors.toList()));
 
-    // Convert right items
     columnRequest.setRight(request.getRight().stream()
         .map(item -> {
           MatchingColumnBatchRequest.MatchingColumnItem newItem = new MatchingColumnBatchRequest.MatchingColumnItem();
@@ -86,7 +78,6 @@ public class MatchingQuestionService {
             item.setFrom(columns.get(pair.getLeftIndex()).getId());
             item.setTo(columns.get(pair.getRightIndex() + request.getLeft().size()).getId());
           } else {
-            // Set to null for invalid indices
             item.setFrom(null);
             item.setTo(null);
           }

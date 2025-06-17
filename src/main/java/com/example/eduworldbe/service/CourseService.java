@@ -121,29 +121,23 @@ public class CourseService {
     if (courseOptional.isPresent()) {
       Course courseToDelete = courseOptional.get();
 
-      // 1. Delete all chapters and their lectures
       if (courseToDelete.getChapterIds() != null) {
         for (String chapterId : courseToDelete.getChapterIds()) {
           chapterRepository.deleteById(chapterId);
         }
       }
 
-      // 2. Delete all posts and their comments
       List<Post> posts = postRepository.findByCourseId(courseToDelete.getId());
       for (Post post : posts) {
-        // Delete all comments of the post
         if (post.getComments() != null) {
           commentRepository.deleteAll(post.getComments());
         }
-        // Delete the post
         postRepository.delete(post);
       }
 
-      // 3. Delete all reviews
       List<Review> reviews = reviewRepository.findByTargetTypeAndTargetId(1, courseToDelete.getId());
       reviewRepository.deleteAll(reviews);
 
-      // 4. Finally delete the course
       courseRepository.deleteById(id);
     }
   }
@@ -230,10 +224,8 @@ public class CourseService {
     } else {
       // Student role
       if (Boolean.TRUE.equals(enrolled)) {
-        // Get enrolled courses only
         filteredCourses = courseRepository.findEnrolledCoursesWithFilters(userId, normalizedSubjectId);
       } else {
-        // Get available courses (not hidden OR enrolled)
         filteredCourses = courseRepository.findAvailableCoursesWithFilters(userId, normalizedSubjectId);
       }
     }
@@ -313,7 +305,7 @@ public class CourseService {
           return new AbstractMap.SimpleEntry<>(course, score);
         })
         .filter(entry -> entry.getValue() > 0)
-        .sorted((e1, e2) -> Double.compare(e2.getValue(), e1.getValue())) // Sắp xếp theo điểm giảm dần
+        .sorted((e1, e2) -> Double.compare(e2.getValue(), e1.getValue()))
         .map(AbstractMap.SimpleEntry::getKey)
         .toList();
   }
@@ -337,7 +329,6 @@ public class CourseService {
     course.getPendingStudentIds().add(studentId);
     Course savedCourse = courseRepository.save(course);
 
-    // Notify teacher and TAs
     List<String> recipients = new ArrayList<>();
     if (savedCourse.getTeacherId() != null) {
       recipients.add(savedCourse.getTeacherId());
@@ -346,7 +337,6 @@ public class CourseService {
       recipients.addAll(savedCourse.getTeacherAssistantIds());
     }
 
-    // Create notifications asynchronously
     for (String recipientId : recipients) {
       if (recipientId != null && !recipientId.equals(studentId)) {
         try {
@@ -356,7 +346,6 @@ public class CourseService {
               .actorId(studentId)
               .courseId(courseId));
         } catch (Exception e) {
-          // Log error but don't block the main flow
           System.err.println("Failed to create notification for user " + recipientId + ": " + e.getMessage());
         }
       }
@@ -453,7 +442,6 @@ public class CourseService {
 
     List<Course> courses = getCoursesOptimized(userId, userRole, subjectId, null, keyword);
 
-    // Filter by grade if provided
     if (grade != null && !grade.isEmpty()) {
       courses = courses.stream()
           .filter(course -> {

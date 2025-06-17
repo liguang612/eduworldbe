@@ -15,7 +15,6 @@ public class GlobalExceptionHandler {
         .body(ex.getReason());
   }
 
-  // Optional: Handle other types of RuntimeException
   @ExceptionHandler(RuntimeException.class)
   public ResponseEntity<String> handleRuntimeException(RuntimeException ex) {
     // Log the exception for debugging
@@ -23,6 +22,4 @@ public class GlobalExceptionHandler {
     return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
         .body("An unexpected error occurred: " + ex.getMessage());
   }
-
-  // Add more @ExceptionHandler methods for other specific exceptions as needed
 }

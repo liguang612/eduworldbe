@@ -26,10 +26,8 @@ public class SharedMediaService {
 
   public SharedMedia createWithFile(MultipartFile file, String title, Integer mediaType, String text)
       throws IOException {
-    // Upload file using FileUploadService
     String mediaUrl = fileUploadService.uploadFile(file, "shared-media");
 
-    // Create and save shared media
     SharedMedia sharedMedia = new SharedMedia();
     sharedMedia.setTitle(title);
     sharedMedia.setMediaType(mediaType);

@@ -9,6 +9,7 @@ import com.example.eduworldbe.model.SharedMedia;
 import com.example.eduworldbe.repository.ChoiceRepository;
 import com.example.eduworldbe.repository.QuestionRepository;
 import com.example.eduworldbe.util.AuthUtil;
+import com.example.eduworldbe.util.StringUtil;
 import com.example.eduworldbe.dto.request.CreateQuestionRequest;
 import com.example.eduworldbe.dto.request.UpdateQuestionRequest;
 import com.example.eduworldbe.dto.response.QuestionDetailResponse;
@@ -73,7 +74,6 @@ public class QuestionService {
     question.setLevel(request.getLevel());
     question.setCategories(request.getCategories());
 
-    // Xử lý SharedMedia
     if (request.getSharedMediaId() != null) {
       SharedMedia sharedMedia = sharedMediaService.getById(request.getSharedMediaId())
           .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "SharedMedia not found"));
@@ -101,7 +101,6 @@ public class QuestionService {
     Question question = questionOptional.get();
     QuestionDetailResponse detailResponse = new QuestionDetailResponse(question);
 
-    // Get current user from token
     User currentUser = authUtil.getCurrentUser(request);
     boolean isTeacher = currentUser != null && currentUser.getRole() == 1;
 
@@ -222,7 +221,6 @@ public class QuestionService {
             item.setChoices(choices);
           }
 
-          // Get matching columns and pairs for itemConnector type
           if ("itemConnector".equals(question.getType())) {
             List<MatchingColumn> matchingColumns = matchingColumnService.getByQuestionId(question.getId());
             List<MatchingPair> matchingPairs = matchingPairService.getByQuestionId(question.getId());
@@ -232,7 +230,8 @@ public class QuestionService {
                 column.setOrderIndex(null);
               });
               matchingPairs.forEach(pair -> {
-                // You might need to add fields to MatchingPair to hide here if needed
+                // pair.setFrom(null);
+                // pair.setTo(null);
               });
             }
 
@@ -262,7 +261,6 @@ public class QuestionService {
     Question existing = questionRepository.findById(id)
         .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Question not found"));
 
-    // Update basic fields
     if (request.getTitle() != null)
       existing.setTitle(request.getTitle());
     if (request.getType() != null)
@@ -280,7 +278,6 @@ public class QuestionService {
       SharedMedia sharedMedia = sharedMediaService.getById(request.getSharedMediaId())
           .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "SharedMedia not found"));
 
-      // Decrement usage count of old shared media if exists
       if (existing.getSharedMedia() != null) {
         sharedMediaService.decrementUsageCount(existing.getSharedMedia().getId());
       }
@@ -289,10 +286,8 @@ public class QuestionService {
       sharedMediaService.incrementUsageCount(sharedMedia.getId());
     }
 
-    // Delete all existing choices
     choiceService.deleteByQuestionId(id);
 
-    // Delete all existing matching columns and pairs
     matchingColumnService.deleteByQuestionId(id);
     matchingPairService.deleteByQuestionId(id);
 
@@ -334,29 +329,6 @@ public class QuestionService {
         .collect(Collectors.toList());
   }
 
-  private int calculateLevenshteinDistance(String s1, String s2) {
-    int[][] dp = new int[s1.length() + 1][s2.length() + 1];
-
-    for (int i = 0; i <= s1.length(); i++) {
-      dp[i][0] = i;
-    }
-    for (int j = 0; j <= s2.length(); j++) {
-      dp[0][j] = j;
-    }
-
-    for (int i = 1; i <= s1.length(); i++) {
-      for (int j = 1; j <= s2.length(); j++) {
-        if (s1.charAt(i - 1) == s2.charAt(j - 1)) {
-          dp[i][j] = dp[i - 1][j - 1];
-        } else {
-          dp[i][j] = 1 + Math.min(dp[i - 1][j - 1], Math.min(dp[i - 1][j], dp[i][j - 1]));
-        }
-      }
-    }
-
-    return dp[s1.length()][s2.length()];
-  }
-
   public List<Question> searchQuestions(List<Question> questions, String keyword) {
     if (keyword == null || keyword.trim().isEmpty()) {
       return questions;
@@ -394,7 +366,7 @@ public class QuestionService {
                 }
 
                 // Levenshtein distance
-                int distance = calculateLevenshteinDistance(category, searchTerm);
+                int distance = StringUtil.calculateLevenshteinDistance(category, searchTerm);
                 if (distance <= 4) {
                   termScore += Math.max(0, 30.0 * (1 - distance / 3.0));
                 }
@@ -411,7 +383,7 @@ public class QuestionService {
               }
 
               // Levenshtein distance
-              int distance = calculateLevenshteinDistance(questionTitle, searchTerm);
+              int distance = StringUtil.calculateLevenshteinDistance(questionTitle, searchTerm);
               if (distance <= 3) {
                 termScore += Math.max(0, 30.0 * (1 - distance / 3.0));
               }
@@ -419,7 +391,7 @@ public class QuestionService {
               // Kiểm tra Levenshtein distance cho từng từ trong title
               String[] titleWords = questionTitle.split("\\s+");
               for (String word : titleWords) {
-                distance = calculateLevenshteinDistance(word, searchTerm);
+                distance = StringUtil.calculateLevenshteinDistance(word, searchTerm);
                 if (distance <= 2) {
                   termScore += Math.max(0, 20.0 * (1 - distance / 2.0));
                 }
@@ -434,7 +406,7 @@ public class QuestionService {
           return new AbstractMap.SimpleEntry<>(question, score);
         })
         .filter(entry -> entry.getValue() > 0)
-        .sorted((e1, e2) -> Double.compare(e2.getValue(), e1.getValue())) // Sắp xếp theo điểm giảm dần
+        .sorted((e1, e2) -> Double.compare(e2.getValue(), e1.getValue()))
         .map(AbstractMap.SimpleEntry::getKey)
         .toList();
   }

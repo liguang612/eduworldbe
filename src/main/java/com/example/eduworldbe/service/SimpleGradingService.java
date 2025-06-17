@@ -35,14 +35,12 @@ public class SimpleGradingService {
       String questionId = question.getId();
       Object userAnswer = request.getAnswers().get(questionId);
 
-      // Chấm điểm
       boolean isCorrect = questionService.checkAnswer(question, userAnswer);
       results.put(questionId, isCorrect);
       if (isCorrect) {
         correctCount++;
       }
 
-      // Lấy đáp án đúng
       Object correctAnswer = questionService.getCorrectAnswerFormatted(question);
       correctAnswers.put(questionId, correctAnswer);
     }

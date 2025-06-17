@@ -27,12 +27,10 @@ public class QuestionListResponseItem {
   private Date createdAt;
   private Date updatedAt;
 
-  // Additional fields for question details
   private List<Choice> choices;
   private List<MatchingColumn> matchingColumns;
   private List<MatchingPair> matchingPairs;
 
-  // Constructor to build from Question model
   public QuestionListResponseItem(Question question) {
     this.id = question.getId();
     this.title = question.getTitle();

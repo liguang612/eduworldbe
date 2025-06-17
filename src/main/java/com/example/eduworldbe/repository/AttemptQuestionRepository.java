@@ -8,7 +8,6 @@ import org.springframework.stereotype.Repository;
 
 import com.example.eduworldbe.model.AttemptQuestion;
 
-// AttemptQuestionRepository.java
 @Repository
 public interface AttemptQuestionRepository extends JpaRepository<AttemptQuestion, String> {
   List<AttemptQuestion> findByAttemptId(String attemptId);

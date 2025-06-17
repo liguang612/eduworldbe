@@ -33,6 +33,6 @@ public class User {
   private String school;
   private Integer grade;
   private String address;
-  private Integer role; // 0: student, 1: teacher, 2: assistant, 3: admin
-  private String avatar; // url đến ảnh đại diện của user
+  private Integer role; // 0: student, 1: teacher
+  private String avatar;
 }

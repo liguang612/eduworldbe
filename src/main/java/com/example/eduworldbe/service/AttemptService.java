@@ -32,7 +32,6 @@ public class AttemptService {
 
       List<Question> generatedQuestions = examService.generateExamQuestions(attempt.getExamId());
 
-      // Extract just the question IDs
       List<String> questionIds = generatedQuestions.stream()
           .map(Question::getId)
           .toList();
@@ -70,12 +69,10 @@ public class AttemptService {
     if (attemptOpt.isPresent()) {
       Attempt attempt = attemptOpt.get();
 
-      // Check if the attempt is already submitted
       if (attempt.getSubmitted()) {
         throw new RuntimeException("Attempt already submitted");
       }
 
-      // Mark as submitted
       attempt.setSubmitted(true);
       attempt.setEndTime(new Date());
 

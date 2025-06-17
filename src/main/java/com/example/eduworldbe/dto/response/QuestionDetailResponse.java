@@ -28,9 +28,9 @@ public class QuestionDetailResponse {
   private List<String> reviewIds;
   private Date createdAt;
   private Date updatedAt;
-  private List<Choice> choices; // List of choices for radio/checkbox types
-  private List<MatchingColumn> matchingColumns; // List of columns for matching type
-  private List<MatchingPair> matchingPairs; // List of pairs for matching type
+  private List<Choice> choices;
+  private List<MatchingColumn> matchingColumns;
+  private List<MatchingPair> matchingPairs;
 
   // Constructor to build from Question model
   public QuestionDetailResponse(Question question) {

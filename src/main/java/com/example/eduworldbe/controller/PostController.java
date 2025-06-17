@@ -27,6 +27,7 @@ public class PostController {
   @Autowired
   private AuthUtil authUtil;
 
+  // POST
   @PostMapping("/posts")
   public ResponseEntity<PostDTO> createPost(@RequestBody CreatePostRequest request, HttpServletRequest servletRequest) {
     User currentUser = authUtil.getCurrentUser(servletRequest);
@@ -88,7 +89,7 @@ public class PostController {
     return ResponseEntity.ok(postService.getPendingPosts(courseId, page, size));
   }
 
-  // Comment methods
+  // COMMENT
   @PostMapping("/comments")
   public ResponseEntity<CommentDTO> createComment(@RequestBody CreateCommentRequest request,
       HttpServletRequest servletRequest) {

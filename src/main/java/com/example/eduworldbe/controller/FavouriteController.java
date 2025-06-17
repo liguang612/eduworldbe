@@ -91,7 +91,6 @@ public class FavouriteController {
     return ResponseEntity.ok(favouriteService.isFavourited(type, targetId, currentUser.getId()));
   }
 
-  // New endpoints for detailed information
   @GetMapping("/detailed/{type}")
   public ResponseEntity<List<FavouriteDetailDTO>> getDetailedFavouritesByType(
       @PathVariable Integer type,

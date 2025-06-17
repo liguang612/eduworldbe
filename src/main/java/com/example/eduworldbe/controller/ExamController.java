@@ -49,7 +49,6 @@ public class ExamController {
       throw new AccessDeniedException("User not authenticated");
     }
 
-    // Set the creator of the exam
     exam.setCreatedBy(currentUser.getId());
 
     Exam createdExam = examService.create(exam);
@@ -134,7 +133,6 @@ public class ExamController {
         throw new AccessDeniedException("You are not authorized to update this exam");
       }
 
-      // Update the exam
       Exam updatedExam = examService.update(id, exam);
       return ResponseEntity.ok(updatedExam);
     } else {
@@ -153,12 +151,10 @@ public class ExamController {
     if (existingExamOpt.isPresent()) {
       Exam existingExam = existingExamOpt.get();
 
-      // Check if the current user is the creator of the exam
       if (!existingExam.getCreatedBy().equals(currentUser.getId())) {
         throw new AccessDeniedException("You are not authorized to delete this exam");
       }
 
-      // Delete the exam
       examService.delete(id);
       return ResponseEntity.noContent().build();
     } else {
@@ -179,12 +175,10 @@ public class ExamController {
     if (existingExamOpt.isPresent()) {
       Exam existingExam = existingExamOpt.get();
 
-      // Check if the current user is the creator of the exam
       if (!existingExam.getCreatedBy().equals(currentUser.getId())) {
         throw new AccessDeniedException("You are not authorized to modify this exam");
       }
 
-      // Add the question to the exam
       Exam updatedExam = examService.addQuestionToExam(examId, questionId);
       return ResponseEntity.ok(updatedExam);
     } else {
@@ -205,12 +199,10 @@ public class ExamController {
     if (existingExamOpt.isPresent()) {
       Exam existingExam = existingExamOpt.get();
 
-      // Check if the current user is the creator of the exam
       if (!existingExam.getCreatedBy().equals(currentUser.getId())) {
         throw new AccessDeniedException("You are not authorized to modify this exam");
       }
 
-      // Remove the question from the exam
       Exam updatedExam = examService.removeQuestionFromExam(examId, questionId);
       return ResponseEntity.ok(updatedExam);
     } else {
@@ -231,12 +223,10 @@ public class ExamController {
     if (existingExamOpt.isPresent()) {
       Exam existingExam = existingExamOpt.get();
 
-      // Check if the current user is the creator of the exam
       if (!existingExam.getCreatedBy().equals(currentUser.getId())) {
         throw new AccessDeniedException("You are not authorized to modify this exam");
       }
 
-      // Add the questions to the exam
       Exam updatedExam = examService.addQuestionsToExam(examId, questionIds);
       return ResponseEntity.ok(updatedExam);
     } else {
@@ -257,10 +247,8 @@ public class ExamController {
       Exam exam = examOpt.get();
       Map<String, Object> response = new HashMap<>();
 
-      // Add exam information
       response.put("exam", examService.toExamResponse(exam));
 
-      // Add list of detailed questions
       if (exam.getQuestionIds() != null && !exam.getQuestionIds().isEmpty()) {
         List<QuestionDetailResponse> questions = questionService.getQuestionDetailsByIds(exam.getQuestionIds(),
             request);

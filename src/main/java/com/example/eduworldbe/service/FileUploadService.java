@@ -46,7 +46,7 @@ public class FileUploadService {
     }
 
     try {
-      // Handle different Firebase Storage URL formats:
+      // URL tải về từ FIrebase có 2 format kiểu như sau:
       // Format 1:
       // https://firebasestorage.googleapis.com/v0/b/[BUCKET]/o/[PATH]?alt=media&token=[TOKEN]
       // Format 2:
@@ -75,15 +75,13 @@ public class FileUploadService {
         System.out.println("File not found in storage: " + path);
       }
     } catch (Exception e) {
-      // Log error but don't throw to maintain compatibility with old FileService
       System.err.println("Error deleting file: " + fileUrl);
       e.printStackTrace();
     }
   }
 
-  /**
-   * Xóa nhiều file cùng lúc
-   */
+  // Xóa nhiều file cùng lúc
+
   @Async
   public void deleteFiles(List<String> fileUrls) {
     if (fileUrls == null) {
@@ -92,9 +90,7 @@ public class FileUploadService {
     fileUrls.forEach(this::deleteFile);
   }
 
-  /**
-   * Xóa những file không còn được sử dụng
-   */
+  // Xóa những file không còn được sử dụng
   public void deleteUnusedFiles(List<String> oldUrls, List<String> newUrls) {
     if (oldUrls == null || newUrls == null) {
       return;

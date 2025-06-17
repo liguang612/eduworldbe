@@ -326,10 +326,8 @@ public class ExamAttemptService {
     }
 
     try {
-      // Chuyển đổi Question thành QuestionDetailResponse
       QuestionDetailResponse questionDetail = new QuestionDetailResponse(question);
 
-      // Parse userAnswer thành Object tương ứng với loại câu hỏi
       Object parsedAnswer;
       switch (question.getType()) {
         case "radio":
@@ -349,7 +347,6 @@ public class ExamAttemptService {
           return false;
       }
 
-      // Sử dụng QuestionService để kiểm tra đáp án
       return questionService.checkAnswer(questionDetail, parsedAnswer);
     } catch (Exception e) {
       log.error("Error checking answer", e);
@@ -483,7 +480,6 @@ public class ExamAttemptService {
       return _response;
     }
 
-    // Lấy thông tin học sinh
     User student = userRepository.findById(attempt.getUserId())
         .orElseThrow(() -> new ResourceNotFoundException("User not found"));
     response.setUserId(student.getId());
@@ -492,7 +488,6 @@ public class ExamAttemptService {
     response.setStudentAvatar(student.getAvatar());
     response.setStudentSchool(student.getSchool());
 
-    // Lấy danh sách câu hỏi và câu trả lời
     List<AttemptQuestion> attemptQuestions = attemptQuestionRepository.findByAttemptId(attemptId);
     Map<String, String> answers = attemptQuestions.stream()
         .collect(Collectors.toMap(
@@ -505,7 +500,6 @@ public class ExamAttemptService {
               .orElseThrow(() -> new ResourceNotFoundException("Question not found"));
           QuestionDetailResponse questionDetail = new QuestionDetailResponse(question);
 
-          // Lấy danh sách lựa chọn từ attempt_choices
           if (!"itemConnector".equals(question.getType())) {
             List<AttemptChoice> attemptChoices = attemptChoiceRepository.findByQuestionId(aq.getId());
             questionDetail.setChoices(attemptChoices.stream()
@@ -592,7 +586,6 @@ public class ExamAttemptService {
 
           return true;
         } else {
-          // Chưa vượt quá thời gian, loại bỏ khỏi kết quả
           return false;
         }
       }

@@ -57,8 +57,6 @@ public class LectureController {
 
     final String userId = currentUser.getId();
 
-    // filter: là giáo viên (== teacherId ) hoặc là học sinh (== studentId) hoặc là
-    // trợ giảng (== teacherAssistantId)
     LectureResponse lectureResponse = lectureService.getById(id)
         .filter(lecture -> {
           if (userId.equals(lecture.getTeacherId())) {

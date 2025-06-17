@@ -59,7 +59,7 @@ public class AuthController {
     user.setSchool(school);
     user.setGrade(grade);
     user.setAddress(address);
-    user.setRole(role != null ? role : 0); // mặc định là student
+    user.setRole(role != null ? role : 0);
 
     if (birthday != null) {
       try {
@@ -71,7 +71,6 @@ public class AuthController {
 
     user.setPasswordHash(password);
 
-    // Upload avatar if provided
     if (avatar != null && !avatar.isEmpty()) {
       String avatarUrl = fileUploadService.uploadFile(avatar, "user");
       user.setAvatar(avatarUrl);
@@ -175,7 +174,6 @@ public class AuthController {
       throw new RuntimeException("Unauthorized");
     }
 
-    // Delete old avatar if exists
     if (currentUser.getAvatar() != null && !currentUser.getAvatar().isEmpty()) {
       fileUploadService.deleteFile(currentUser.getAvatar());
     }

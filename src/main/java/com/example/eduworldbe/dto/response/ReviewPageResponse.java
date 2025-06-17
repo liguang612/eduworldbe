@@ -11,5 +11,5 @@ public class ReviewPageResponse {
   private int totalPages;
   private long totalElements;
   private double averageScore;
-  private Map<Integer, Long> scoreDistribution; // Key: score (1-5), Value: count
+  private Map<Integer, Long> scoreDistribution;
 }
