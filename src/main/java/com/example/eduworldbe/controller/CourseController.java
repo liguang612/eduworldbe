@@ -76,8 +76,28 @@ public class CourseController {
 
     Optional<Course> course = courseService.getById(id);
     if (course.isPresent()) {
-      CourseResponse courseResponse = courseService.toCourseResponse(course.get());
+      Course _course = course.get();
 
+      if (currentUser.getRole() == 0) {
+        // Nếu là học sinh và không phải là học sinh của lớp
+        if (!_course.getStudentIds().contains(currentUser.getId())) {
+          // Nếu lớp ẩn thì trả về 404
+          if (_course.isHidden()) {
+            return ResponseEntity.notFound().build();
+          } else {
+            // Nếu lớp công khai thì trả về 403
+            return ResponseEntity.status(403).body(null);
+          }
+        }
+      } else {
+        // Nếu giáo viên không phải trợ giảng cũng không phải giáo viên tạo lớp luôn.
+        if (!_course.getTeacherAssistantIds().contains(currentUser.getId())
+            && !currentUser.getId().equals(_course.getTeacherId())) {
+          return ResponseEntity.notFound().build();
+        }
+      }
+
+      CourseResponse courseResponse = courseService.toCourseResponse(_course);
       if (currentUser.getRole() == 0) {
         courseResponse.setFavourite(favouriteService.isFavourited(1, id, currentUser.getId()));
       }
