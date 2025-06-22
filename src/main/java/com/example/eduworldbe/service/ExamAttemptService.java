@@ -403,10 +403,10 @@ public class ExamAttemptService {
           attempt.setEndTime(new Date(attempt.getStartTime().getTime() + (long) attempt.getDuration() * 60 * 1000));
           attempt.setScore(calculateScore(attempt.getId()));
           examAttemptRepository.save(attempt);
-          return true;
-        } else {
-          // Chưa vượt quá thời gian, loại bỏ khỏi kết quả
           return false;
+        } else {
+          // Chưa vượt quá thời gian, giữ lại trong kết quả
+          return true;
         }
       }
 

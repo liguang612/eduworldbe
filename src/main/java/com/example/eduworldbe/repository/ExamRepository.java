@@ -25,7 +25,7 @@ public interface ExamRepository extends JpaRepository<Exam, String> {
   @Query("SELECT e FROM Exam e WHERE e.createdBy = :userId AND e.openTime > :currentTime ORDER BY e.openTime ASC")
   List<Exam> findUpcomingExamsByTeacher(@Param("userId") String userId, @Param("currentTime") Date currentTime);
 
-  @Query("SELECT e FROM Exam e WHERE e.closeTime > :currentTime ORDER BY e.openTime ASC")
+  @Query("SELECT e FROM Exam e WHERE e.openTime > :currentTime ORDER BY e.openTime ASC")
   List<Exam> findAllUpcomingExams(@Param("currentTime") Date currentTime);
 
   @Query("SELECT e FROM Exam e " +
