@@ -60,8 +60,8 @@ public class SharedMediaService {
     return sharedMediaRepository.findById(id);
   }
 
-  public List<SharedMedia> getAll() {
-    return sharedMediaRepository.findAll();
+  public List<SharedMedia> getAll(Integer mediaType, String userId) {
+    return sharedMediaRepository.findByMediaTypeAndCreatedBy(mediaType, userId);
   }
 
   public List<SharedMedia> getByMediaType(Integer mediaType) {

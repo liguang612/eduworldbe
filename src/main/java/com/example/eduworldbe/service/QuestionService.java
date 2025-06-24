@@ -284,6 +284,8 @@ public class QuestionService {
 
       existing.setSharedMedia(sharedMedia);
       sharedMediaService.incrementUsageCount(sharedMedia.getId());
+    } else {
+      existing.setSharedMedia(null);
     }
 
     choiceService.deleteByQuestionId(id);

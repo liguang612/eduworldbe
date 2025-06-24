@@ -8,6 +8,8 @@ import java.util.List;
 
 @Repository
 public interface SharedMediaRepository extends JpaRepository<SharedMedia, String> {
+  List<SharedMedia> findByMediaTypeAndCreatedBy(Integer mediaType, String createdBy);
+
   List<SharedMedia> findByMediaType(Integer mediaType);
 
   List<SharedMedia> findByTitleContaining(String title);

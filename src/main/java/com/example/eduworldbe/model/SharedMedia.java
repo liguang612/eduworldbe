@@ -25,4 +25,7 @@ public class SharedMedia {
 
   @Column(nullable = false)
   private Integer usageCount = 0;
+
+  @Column(nullable = false)
+  private String createdBy;
 }

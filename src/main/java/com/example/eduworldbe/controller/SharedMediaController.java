@@ -1,7 +1,12 @@
 package com.example.eduworldbe.controller;
 
 import com.example.eduworldbe.model.SharedMedia;
+import com.example.eduworldbe.model.User;
 import com.example.eduworldbe.service.SharedMediaService;
+import com.example.eduworldbe.util.AuthUtil;
+
+import jakarta.servlet.http.HttpServletRequest;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -15,6 +20,9 @@ import java.util.List;
 public class SharedMediaController {
   @Autowired
   private SharedMediaService sharedMediaService;
+
+  @Autowired
+  private AuthUtil authUtil;
 
   @PostMapping
   public ResponseEntity<SharedMedia> create(@RequestBody SharedMedia sharedMedia) {
@@ -38,8 +46,13 @@ public class SharedMediaController {
   }
 
   @GetMapping
-  public ResponseEntity<List<SharedMedia>> getAll() {
-    return ResponseEntity.ok(sharedMediaService.getAll());
+  public ResponseEntity<List<SharedMedia>> getAll(@RequestParam Integer mediaType, @RequestParam String userId,
+      HttpServletRequest request) {
+    User currentUser = authUtil.getCurrentUser(request);
+    if (currentUser == null || currentUser.getRole() == 0) {
+      return ResponseEntity.badRequest().body(null);
+    }
+    return ResponseEntity.ok(sharedMediaService.getAll(mediaType, currentUser.getId()));
   }
 
   @GetMapping("/type/{mediaType}")
