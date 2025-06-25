@@ -10,6 +10,7 @@ import java.util.stream.Collectors;
 import com.example.eduworldbe.dto.UserInfoDTO;
 import com.example.eduworldbe.dto.response.UserSearchResponse;
 import com.google.firebase.auth.FirebaseToken;
+import java.util.Date;
 
 @Service
 public class UserService {
@@ -21,6 +22,8 @@ public class UserService {
 
   public User register(User user) {
     user.setPasswordHash(passwordEncoder.encode(user.getPasswordHash()));
+    user.setCreatedAt(new Date());
+    user.setIsActive(true);
     return userRepository.save(user);
   }
 
@@ -38,7 +41,6 @@ public class UserService {
       throw new RuntimeException("User not found");
     }
 
-    // Cập nhật các trường thông tin
     if (updatedUser.getName() != null) {
       existingUser.setName(updatedUser.getName());
     }
@@ -140,8 +142,8 @@ public class UserService {
     user.setEmail(decodedToken.getEmail());
     user.setName(decodedToken.getName());
     user.setAvatar(decodedToken.getPicture());
-
+    user.setCreatedAt(new Date());
+    user.setIsActive(true);
     return user;
-    // return userRepository.save(user);
   }
 }

@@ -33,6 +33,12 @@ public class User {
   private String school;
   private Integer grade;
   private String address;
-  private Integer role; // 0: student, 1: teacher
+  private Integer role; // 0: student, 1: teacher, 2: admin
   private String avatar;
+
+  @Column(nullable = false)
+  private Date createdAt;
+
+  @Column(nullable = false)
+  private Boolean isActive = true;
 }

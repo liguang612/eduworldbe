@@ -4,6 +4,7 @@ import com.google.cloud.storage.Blob;
 import com.google.cloud.storage.BlobInfo;
 import com.google.cloud.storage.Storage;
 import com.google.firebase.cloud.StorageClient;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -14,6 +15,10 @@ import java.util.UUID;
 
 @Service
 public class FileUploadService {
+
+  @Autowired
+  private StorageUsageService storageUsageService;
+
   public String uploadFile(MultipartFile file, String type) throws IOException {
     if (file == null || file.isEmpty()) {
       throw new IllegalArgumentException("File cannot be empty");
@@ -38,6 +43,33 @@ public class FileUploadService {
 
     Blob blob = storage.create(blobInfo, file.getBytes());
     return blob.getMediaLink();
+  }
+
+  public String uploadFile(MultipartFile file, String type, String userId) throws IOException {
+    if (file == null || file.isEmpty()) {
+      throw new IllegalArgumentException("File cannot be empty");
+    }
+
+    // Validate file type
+    String contentType = file.getContentType();
+    if (contentType == null) {
+      throw new IllegalArgumentException("File content type cannot be null");
+    }
+
+    String folder = mapTypeToFolder(type);
+    Storage storage = StorageClient.getInstance().bucket().getStorage();
+    String fileName = UUID.randomUUID().toString() + "_" + file.getOriginalFilename();
+    String path = folder + "/" + userId + "/" + fileName;
+
+    BlobInfo blobInfo = BlobInfo.newBuilder(StorageClient.getInstance().bucket(), path)
+        .setContentType(contentType)
+        .build();
+
+    Blob blob = storage.create(blobInfo, file.getBytes());
+    String fileUrl = blob.getMediaLink();
+    String fileType = determineFileType(fileName, contentType);
+    storageUsageService.recordFileUpload(userId, fileName, fileUrl, file.getSize(), fileType);
+    return fileUrl;
   }
 
   public void deleteFile(String fileUrl) {
@@ -123,6 +155,49 @@ public class FileUploadService {
         return "solutions";
       default:
         return "others";
+    }
+  }
+
+  private String determineFileType(String fileName, String contentType) {
+    if (contentType != null) {
+      if (contentType.startsWith("image/"))
+        return "image";
+      if (contentType.startsWith("video/"))
+        return "video";
+      if (contentType.startsWith("audio/"))
+        return "audio";
+      if (contentType.equals("application/pdf"))
+        return "pdf";
+      if (contentType.startsWith("text/"))
+        return "text";
+    }
+
+    // Fallback dựa trên extension
+    String extension = fileName.substring(fileName.lastIndexOf(".") + 1).toLowerCase();
+    switch (extension) {
+      case "jpg":
+      case "jpeg":
+      case "png":
+      case "gif":
+      case "webp":
+        return "image";
+      case "mp4":
+      case "avi":
+      case "mov":
+      case "wmv":
+        return "video";
+      case "mp3":
+      case "wav":
+      case "ogg":
+        return "audio";
+      case "pdf":
+        return "pdf";
+      case "txt":
+      case "doc":
+      case "docx":
+        return "text";
+      default:
+        return "other";
     }
   }
 }

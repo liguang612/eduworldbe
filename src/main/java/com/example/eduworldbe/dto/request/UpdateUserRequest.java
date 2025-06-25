@@ -10,4 +10,5 @@ public class UpdateUserRequest {
   private Integer grade;
   private String address;
   private String birthday;
+  private String createdAt;
 }

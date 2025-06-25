@@ -9,6 +9,7 @@ import com.example.eduworldbe.dto.response.UserSearchResponse;
 import com.example.eduworldbe.model.User;
 import com.example.eduworldbe.service.UserService;
 import com.example.eduworldbe.service.FileUploadService;
+import com.example.eduworldbe.service.LoginActivityService;
 import com.example.eduworldbe.util.AuthUtil;
 import com.example.eduworldbe.util.JwtUtil;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -39,6 +40,9 @@ public class AuthController {
 
   @Autowired
   private FileUploadService fileUploadService;
+
+  @Autowired
+  private LoginActivityService loginActivityService;
 
   @PostMapping("/register")
   public User register(
@@ -71,18 +75,23 @@ public class AuthController {
 
     user.setPasswordHash(password);
 
+    // Lưu user trước để có ID
+    user = userService.register(user);
+
     if (avatar != null && !avatar.isEmpty()) {
-      String avatarUrl = fileUploadService.uploadFile(avatar, "user");
+      String avatarUrl = fileUploadService.uploadFile(avatar, "user", user.getId());
       user.setAvatar(avatarUrl);
+      user = userService.update(user.getId(), user);
     } else if (googleAvatar != null && !googleAvatar.isEmpty()) {
       user.setAvatar(googleAvatar);
+      user = userService.update(user.getId(), user);
     }
 
-    return userService.register(user);
+    return user;
   }
 
   @PostMapping("/login")
-  public AuthResponse login(@RequestBody AuthRequest request) {
+  public AuthResponse login(@RequestBody AuthRequest request, HttpServletRequest httpRequest) {
     User user = userService.findByEmail(request.getEmail());
     if (user == null) {
       throw new RuntimeException("Invalid email or password");
@@ -92,6 +101,10 @@ public class AuthController {
     }
     String token = jwtUtil.generateToken(user.getEmail());
     System.out.println("Login successful for user: " + user.getEmail() + " with token: " + token);
+
+    // Ghi lại hoạt động đăng nhập
+    loginActivityService.recordLoginActivity(user, "email", httpRequest);
+
     return new AuthResponse(token, user.getId(), user.getName(), user.getAvatar(), user.getRole());
   }
 
@@ -110,7 +123,10 @@ public class AuthController {
         user.getGrade(),
         user.getAddress(),
         user.getRole(),
-        user.getBirthday() != null ? user.getBirthday().toString() : null);
+        user.getBirthday() != null ? user.getBirthday().toString() : null,
+        user.getCreatedAt() != null ? user.getCreatedAt().toString() : null,
+        user.getIsActive(),
+        null);
   }
 
   @PutMapping("/users")
@@ -144,7 +160,47 @@ public class AuthController {
         savedUser.getGrade(),
         savedUser.getAddress(),
         savedUser.getRole(),
-        savedUser.getBirthday() != null ? savedUser.getBirthday().toString() : null);
+        savedUser.getBirthday() != null ? savedUser.getBirthday().toString() : null,
+        savedUser.getCreatedAt() != null ? savedUser.getCreatedAt().toString() : null,
+        savedUser.getIsActive(),
+        null);
+  }
+
+  @PutMapping("/users/{id}")
+  public UserResponse updateProfile(@PathVariable String id, @RequestBody UpdateUserRequest request) {
+    User currentUser = userService.findById(id);
+    if (currentUser == null) {
+      throw new RuntimeException("User not found");
+    }
+
+    User updatedUser = new User();
+    updatedUser.setName(request.getName());
+    updatedUser.setAvatar(request.getAvatar());
+    updatedUser.setSchool(request.getSchool());
+    updatedUser.setGrade(request.getGrade());
+    updatedUser.setAddress(request.getAddress());
+    if (request.getBirthday() != null) {
+      try {
+        updatedUser.setBirthday(java.sql.Date.valueOf(request.getBirthday()));
+      } catch (Exception e) {
+        throw new RuntimeException("Invalid birthday format. Use yyyy-MM-dd");
+      }
+    }
+
+    User savedUser = userService.update(currentUser.getId(), updatedUser);
+    return new UserResponse(
+        savedUser.getId(),
+        savedUser.getEmail(),
+        savedUser.getName(),
+        savedUser.getAvatar(),
+        savedUser.getSchool(),
+        savedUser.getGrade(),
+        savedUser.getAddress(),
+        savedUser.getRole(),
+        savedUser.getBirthday() != null ? savedUser.getBirthday().toString() : null,
+        savedUser.getCreatedAt() != null ? savedUser.getCreatedAt().toString() : null,
+        savedUser.getIsActive(),
+        null);
   }
 
   @PutMapping("/users/password")
@@ -178,7 +234,7 @@ public class AuthController {
       fileUploadService.deleteFile(currentUser.getAvatar());
     }
 
-    String avatarUrl = fileUploadService.uploadFile(file, "user");
+    String avatarUrl = fileUploadService.uploadFile(file, "user", currentUser.getId());
     User updatedUser = new User();
     updatedUser.setAvatar(avatarUrl);
 
@@ -193,6 +249,9 @@ public class AuthController {
         savedUser.getGrade(),
         savedUser.getAddress(),
         savedUser.getRole(),
-        savedUser.getBirthday() != null ? savedUser.getBirthday().toString() : null));
+        savedUser.getBirthday() != null ? savedUser.getBirthday().toString() : null,
+        savedUser.getCreatedAt() != null ? savedUser.getCreatedAt().toString() : null,
+        savedUser.getIsActive(),
+        null));
   }
 }

@@ -17,4 +17,7 @@ public class UserResponse {
   private String address;
   private Integer role;
   private String birthday;
+  private String createdAt;
+  private Boolean isActive;
+  private Double searchScore; // Điểm tìm kiếm (cho fuzzy search)
 }
