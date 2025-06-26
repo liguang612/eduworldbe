@@ -30,7 +30,7 @@ public class PostController {
   // POST
   @PostMapping("/posts")
   public ResponseEntity<PostDTO> createPost(@RequestBody CreatePostRequest request, HttpServletRequest servletRequest) {
-    User currentUser = authUtil.getCurrentUser(servletRequest);
+    User currentUser = authUtil.requireActiveUser(servletRequest);
     if (currentUser == null) {
       throw new RuntimeException("Unauthorized");
     }
@@ -42,7 +42,7 @@ public class PostController {
   @PutMapping("/posts/{postId}")
   public ResponseEntity<PostDTO> updatePost(@PathVariable String postId, @RequestBody UpdatePostRequest request,
       HttpServletRequest servletRequest) {
-    User currentUser = authUtil.getCurrentUser(servletRequest);
+    User currentUser = authUtil.requireActiveUser(servletRequest);
     if (currentUser == null) {
       throw new RuntimeException("Unauthorized");
     }
@@ -53,7 +53,7 @@ public class PostController {
 
   @DeleteMapping("/posts/{postId}")
   public ResponseEntity<Void> deletePost(@PathVariable String postId, HttpServletRequest servletRequest) {
-    User currentUser = authUtil.getCurrentUser(servletRequest);
+    User currentUser = authUtil.requireActiveUser(servletRequest);
     if (currentUser == null) {
       throw new RuntimeException("Unauthorized");
     }
@@ -65,7 +65,7 @@ public class PostController {
   @PutMapping("/posts/{postId}/approve")
   public ResponseEntity<PostDTO> approvePost(@PathVariable String postId, @RequestBody ApprovePostRequest request,
       HttpServletRequest servletRequest) {
-    User currentUser = authUtil.getCurrentUser(servletRequest);
+    User currentUser = authUtil.requireActiveUser(servletRequest);
     if (currentUser == null) {
       throw new RuntimeException("Unauthorized");
     }
@@ -93,7 +93,7 @@ public class PostController {
   @PostMapping("/comments")
   public ResponseEntity<CommentDTO> createComment(@RequestBody CreateCommentRequest request,
       HttpServletRequest servletRequest) {
-    User currentUser = authUtil.getCurrentUser(servletRequest);
+    User currentUser = authUtil.requireActiveUser(servletRequest);
     if (currentUser == null) {
       throw new RuntimeException("Unauthorized");
     }
@@ -105,7 +105,7 @@ public class PostController {
   @PutMapping("/comments/{commentId}")
   public ResponseEntity<CommentDTO> updateComment(@PathVariable String commentId,
       @RequestBody UpdateCommentRequest request, HttpServletRequest subRequest) {
-    User currentUser = authUtil.getCurrentUser(subRequest);
+    User currentUser = authUtil.requireActiveUser(subRequest);
     if (currentUser == null) {
       throw new RuntimeException("Unauthorized");
     }
@@ -115,7 +115,7 @@ public class PostController {
 
   @DeleteMapping("/comments/{commentId}")
   public ResponseEntity<Void> deleteComment(@PathVariable String commentId, HttpServletRequest request) {
-    User currentUser = authUtil.getCurrentUser(request);
+    User currentUser = authUtil.requireActiveUser(request);
     if (currentUser == null) {
       throw new RuntimeException("Unauthorized");
     }

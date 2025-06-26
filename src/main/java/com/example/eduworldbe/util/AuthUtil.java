@@ -4,7 +4,10 @@ import com.example.eduworldbe.model.User;
 import com.example.eduworldbe.repository.UserRepository;
 import com.example.eduworldbe.service.CourseService;
 import jakarta.servlet.http.HttpServletRequest;
+
+import org.checkerframework.checker.units.qual.A;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -47,5 +50,15 @@ public class AuthUtil {
     }
 
     return false;
+  }
+
+  public User requireActiveUser(HttpServletRequest request) {
+    User currentUser = getCurrentUser(request);
+    if (currentUser == null) {
+      throw new AccessDeniedException("User not authenticated");
+    } else if (!currentUser.getIsActive()) {
+      throw new RuntimeException("Tài khoản đã bị vô hiệu hóa! Hãy liên hệ với quản trị viên để được hỗ trợ");
+    }
+    return currentUser;
   }
 }

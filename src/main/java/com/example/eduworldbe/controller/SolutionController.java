@@ -28,10 +28,7 @@ public class SolutionController {
 
   @PostMapping
   public ResponseEntity<SolutionResponse> create(@RequestBody SolutionRequest request, HttpServletRequest httpRequest) {
-    User currentUser = authUtil.getCurrentUser(httpRequest);
-    if (currentUser == null) {
-      return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-    }
+    User currentUser = authUtil.requireActiveUser(httpRequest);
 
     Solution solution = new Solution();
     solution.setQuestionId(request.getQuestionId());
@@ -54,10 +51,7 @@ public class SolutionController {
 
   @GetMapping("/pending")
   public ResponseEntity<Page<SolutionResponse>> getPendingSolutions(Pageable pageable, HttpServletRequest httpRequest) {
-    User currentUser = authUtil.getCurrentUser(httpRequest);
-    if (currentUser == null) {
-      return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-    }
+    User currentUser = authUtil.requireActiveUser(httpRequest);
 
     return ResponseEntity.ok(solutionService.getPendingSolutions(pageable));
   }
@@ -68,20 +62,14 @@ public class SolutionController {
       @RequestParam Integer status,
       @RequestParam(required = false) String reviewComment,
       HttpServletRequest httpRequest) {
-    User currentUser = authUtil.getCurrentUser(httpRequest);
-    if (currentUser == null) {
-      return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-    }
+    User currentUser = authUtil.requireActiveUser(httpRequest);
 
     return ResponseEntity.ok(solutionService.reviewSolution(id, status, reviewComment, currentUser));
   }
 
   @DeleteMapping("/{id}")
   public ResponseEntity<Void> delete(@PathVariable String id, HttpServletRequest httpRequest) {
-    User currentUser = authUtil.getCurrentUser(httpRequest);
-    if (currentUser == null) {
-      return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-    }
+    User currentUser = authUtil.requireActiveUser(httpRequest);
     solutionService.delete(id);
     return ResponseEntity.noContent().build();
   }

@@ -11,7 +11,6 @@ import lombok.RequiredArgsConstructor;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -31,10 +30,7 @@ public class FavouriteController {
       @PathVariable Integer type,
       @PathVariable String targetId,
       HttpServletRequest request) {
-    User currentUser = authUtil.getCurrentUser(request);
-    if (currentUser == null) {
-      throw new AccessDeniedException("User not authenticated");
-    }
+    User currentUser = authUtil.requireActiveUser(request);
 
     return ResponseEntity.ok(favouriteService.addToFavourite(type, targetId, currentUser.getId()));
   }
@@ -44,10 +40,7 @@ public class FavouriteController {
       @PathVariable Integer type,
       @PathVariable String targetId,
       HttpServletRequest request) {
-    User currentUser = authUtil.getCurrentUser(request);
-    if (currentUser == null) {
-      throw new AccessDeniedException("User not authenticated");
-    }
+    User currentUser = authUtil.requireActiveUser(request);
 
     favouriteService.removeFromFavourite(type, targetId, currentUser.getId());
     return ResponseEntity.ok().build();
@@ -57,10 +50,7 @@ public class FavouriteController {
   public ResponseEntity<List<Favourite>> getFavouritesByType(
       @PathVariable Integer type,
       HttpServletRequest request) {
-    User currentUser = authUtil.getCurrentUser(request);
-    if (currentUser == null) {
-      throw new AccessDeniedException("User not authenticated");
-    }
+    User currentUser = authUtil.requireActiveUser(request);
 
     return ResponseEntity.ok(favouriteService.getFavouritesByType(type, currentUser.getId()));
   }
@@ -70,10 +60,7 @@ public class FavouriteController {
       @PathVariable Integer type,
       @PathVariable String subjectId,
       HttpServletRequest request) {
-    User currentUser = authUtil.getCurrentUser(request);
-    if (currentUser == null) {
-      throw new AccessDeniedException("User not authenticated");
-    }
+    User currentUser = authUtil.requireActiveUser(request);
 
     return ResponseEntity.ok(favouriteService.getFavouritesByTypeAndSubject(type, currentUser.getId(), subjectId));
   }
@@ -83,10 +70,7 @@ public class FavouriteController {
       @PathVariable Integer type,
       @PathVariable String targetId,
       HttpServletRequest request) {
-    User currentUser = authUtil.getCurrentUser(request);
-    if (currentUser == null) {
-      throw new AccessDeniedException("User not authenticated");
-    }
+    User currentUser = authUtil.requireActiveUser(request);
 
     return ResponseEntity.ok(favouriteService.isFavourited(type, targetId, currentUser.getId()));
   }
@@ -96,10 +80,7 @@ public class FavouriteController {
       @PathVariable Integer type,
       @RequestParam(required = false) String keyword,
       HttpServletRequest request) {
-    User currentUser = authUtil.getCurrentUser(request);
-    if (currentUser == null) {
-      throw new AccessDeniedException("User not authenticated");
-    }
+    User currentUser = authUtil.requireActiveUser(request);
 
     return ResponseEntity.ok(favouriteService.getDetailedFavouritesByType(type, currentUser.getId(), keyword));
   }
@@ -110,10 +91,7 @@ public class FavouriteController {
       @PathVariable String subjectId,
       @RequestParam(required = false) String keyword,
       HttpServletRequest request) {
-    User currentUser = authUtil.getCurrentUser(request);
-    if (currentUser == null) {
-      throw new AccessDeniedException("User not authenticated");
-    }
+    User currentUser = authUtil.requireActiveUser(request);
 
     return ResponseEntity
         .ok(favouriteService.getDetailedFavouritesByTypeAndSubject(type, currentUser.getId(), subjectId, keyword));

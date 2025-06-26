@@ -48,8 +48,8 @@ public class SharedMediaController {
   @GetMapping
   public ResponseEntity<List<SharedMedia>> getAll(@RequestParam Integer mediaType, @RequestParam String userId,
       HttpServletRequest request) {
-    User currentUser = authUtil.getCurrentUser(request);
-    if (currentUser == null || currentUser.getRole() == 0) {
+    User currentUser = authUtil.requireActiveUser(request);
+    if (currentUser.getRole() == 0) {
       return ResponseEntity.badRequest().body(null);
     }
     return ResponseEntity.ok(sharedMediaService.getAll(mediaType, currentUser.getId()));

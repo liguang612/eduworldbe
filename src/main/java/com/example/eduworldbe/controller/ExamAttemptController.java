@@ -39,10 +39,7 @@ public class ExamAttemptController {
 
   @PostMapping("/{examId}/start")
   public ResponseEntity<ExamAttemptResponse> startAttempt(@PathVariable String examId, HttpServletRequest request) {
-    User user = authUtil.getCurrentUser(request);
-    if (user == null) {
-      throw new AccessDeniedException("User not authenticated");
-    }
+    User user = authUtil.requireActiveUser(request);
 
     ExamAttempt attempt = examAttemptService.startAttempt(user.getId(), examId);
 
@@ -108,10 +105,7 @@ public class ExamAttemptController {
   public ResponseEntity<List<ExamAttemptListResponse>> getAttempts(
       @RequestParam(required = false) String status,
       HttpServletRequest request) {
-    User user = authUtil.getCurrentUser(request);
-    if (user == null) {
-      throw new AccessDeniedException("User not authenticated");
-    }
+    User user = authUtil.requireActiveUser(request);
 
     List<ExamAttemptListResponse> attempts = examAttemptService.getAttemptsByUserAndStatus(user.getId(), status);
     return ResponseEntity.ok(attempts);
@@ -121,10 +115,7 @@ public class ExamAttemptController {
   public ResponseEntity<ExamAttemptDetailResponse> getAttemptDetail(
       @PathVariable String attemptId,
       HttpServletRequest request) {
-    User user = authUtil.getCurrentUser(request);
-    if (user == null) {
-      throw new AccessDeniedException("User not authenticated");
-    }
+    User user = authUtil.requireActiveUser(request);
 
     ExamAttemptDetailResponse attempt = examAttemptService.getAttemptDetail(attemptId, user);
     return ResponseEntity.ok(attempt);
@@ -134,10 +125,7 @@ public class ExamAttemptController {
   public ResponseEntity<List<ExamAttemptListResponse>> getAttemptsByExamId(
       @PathVariable String examId,
       HttpServletRequest request) {
-    User user = authUtil.getCurrentUser(request);
-    if (user == null) {
-      throw new AccessDeniedException("User not authenticated");
-    }
+    User user = authUtil.requireActiveUser(request);
 
     List<ExamAttemptListResponse> attempts = examAttemptService.getAttemptsByExamId(examId, user);
     return ResponseEntity.ok(attempts);

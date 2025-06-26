@@ -43,10 +43,7 @@ public class SearchController {
       @RequestParam(required = false, defaultValue = "10") int size,
       HttpServletRequest request) {
 
-    User currentUser = authUtil.getCurrentUser(request);
-    if (currentUser == null) {
-      throw new RuntimeException("Unauthorized");
-    }
+    User currentUser = authUtil.requireActiveUser(request);
 
     switch (type.toLowerCase()) {
       case "course":

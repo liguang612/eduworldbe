@@ -44,10 +44,7 @@ public class ExamController {
 
   @PostMapping
   public ResponseEntity<Exam> createExam(@RequestBody Exam exam, HttpServletRequest request) {
-    User currentUser = authUtil.getCurrentUser(request);
-    if (currentUser == null) {
-      throw new AccessDeniedException("User not authenticated");
-    }
+    User currentUser = authUtil.requireActiveUser(request);
 
     exam.setCreatedBy(currentUser.getId());
 
@@ -57,10 +54,7 @@ public class ExamController {
 
   @GetMapping("/{id}")
   public ResponseEntity<ExamResponse> getExamById(@PathVariable String id, HttpServletRequest request) {
-    User currentUser = authUtil.getCurrentUser(request);
-    if (currentUser == null) {
-      throw new AccessDeniedException("User not authenticated");
-    }
+    User currentUser = authUtil.requireActiveUser(request);
 
     Optional<Exam> examOpt = examService.getById(id);
     if (examOpt.isPresent()) {
@@ -80,10 +74,7 @@ public class ExamController {
       @RequestParam(required = false) String status, // active, past, upcoming
       @RequestParam(required = false) Boolean favourite,
       HttpServletRequest request) {
-    User currentUser = authUtil.getCurrentUser(request);
-    if (currentUser == null) {
-      throw new AccessDeniedException("User not authenticated");
-    }
+    User currentUser = authUtil.requireActiveUser(request);
 
     List<Exam> exams = examService.getByClassId(classId);
 
@@ -105,10 +96,7 @@ public class ExamController {
 
   @GetMapping("/teacher")
   public ResponseEntity<List<ExamResponse>> getExamsByTeacher(HttpServletRequest request) {
-    User currentUser = authUtil.getCurrentUser(request);
-    if (currentUser == null) {
-      throw new AccessDeniedException("User not authenticated");
-    }
+    User currentUser = authUtil.requireActiveUser(request);
 
     List<Exam> exams = examService.getByCreatedBy(currentUser.getId());
     List<ExamResponse> responses = exams.stream()
@@ -120,10 +108,7 @@ public class ExamController {
   @PutMapping("/{id}")
   public ResponseEntity<Exam> updateExam(@PathVariable String id, @RequestBody Exam exam,
       HttpServletRequest request) {
-    User currentUser = authUtil.getCurrentUser(request);
-    if (currentUser == null) {
-      throw new AccessDeniedException("User not authenticated");
-    }
+    User currentUser = authUtil.requireActiveUser(request);
 
     Optional<Exam> existingExamOpt = examService.getById(id);
     if (existingExamOpt.isPresent()) {
@@ -142,10 +127,7 @@ public class ExamController {
 
   @DeleteMapping("/{id}")
   public ResponseEntity<Void> deleteExam(@PathVariable String id, HttpServletRequest request) {
-    User currentUser = authUtil.getCurrentUser(request);
-    if (currentUser == null) {
-      throw new AccessDeniedException("User not authenticated");
-    }
+    User currentUser = authUtil.requireActiveUser(request);
 
     Optional<Exam> existingExamOpt = examService.getById(id);
     if (existingExamOpt.isPresent()) {
@@ -166,10 +148,7 @@ public class ExamController {
   public ResponseEntity<Exam> addQuestionToExam(@PathVariable String examId,
       @PathVariable String questionId,
       HttpServletRequest request) {
-    User currentUser = authUtil.getCurrentUser(request);
-    if (currentUser == null) {
-      throw new AccessDeniedException("User not authenticated");
-    }
+    User currentUser = authUtil.requireActiveUser(request);
 
     Optional<Exam> existingExamOpt = examService.getById(examId);
     if (existingExamOpt.isPresent()) {
@@ -190,10 +169,7 @@ public class ExamController {
   public ResponseEntity<Exam> removeQuestionFromExam(@PathVariable String examId,
       @PathVariable String questionId,
       HttpServletRequest request) {
-    User currentUser = authUtil.getCurrentUser(request);
-    if (currentUser == null) {
-      throw new AccessDeniedException("User not authenticated");
-    }
+    User currentUser = authUtil.requireActiveUser(request);
 
     Optional<Exam> existingExamOpt = examService.getById(examId);
     if (existingExamOpt.isPresent()) {
@@ -214,10 +190,7 @@ public class ExamController {
   public ResponseEntity<Exam> addQuestionsToExam(@PathVariable String examId,
       @RequestBody List<String> questionIds,
       HttpServletRequest request) {
-    User currentUser = authUtil.getCurrentUser(request);
-    if (currentUser == null) {
-      throw new AccessDeniedException("User not authenticated");
-    }
+    User currentUser = authUtil.requireActiveUser(request);
 
     Optional<Exam> existingExamOpt = examService.getById(examId);
     if (existingExamOpt.isPresent()) {
@@ -235,7 +208,9 @@ public class ExamController {
   }
 
   @GetMapping("/{examId}/questions")
-  public ResponseEntity<List<Question>> getExamQuestions(@PathVariable String examId) {
+  public ResponseEntity<List<Question>> getExamQuestions(@PathVariable String examId, HttpServletRequest request) {
+    User currentUser = authUtil.requireActiveUser(request);
+
     List<Question> questions = examService.getExamQuestions(examId);
     return ResponseEntity.ok(questions);
   }
@@ -273,10 +248,7 @@ public class ExamController {
   public List<ExamResponse> getUpcomingExams(
       @RequestParam(required = false, defaultValue = "10") Integer total,
       HttpServletRequest request) {
-    User currentUser = authUtil.getCurrentUser(request);
-    if (currentUser == null) {
-      throw new RuntimeException("Unauthorized");
-    }
+    User currentUser = authUtil.requireActiveUser(request);
 
     List<Favourite> favourites = favouriteService.getFavouritesByType(4, currentUser.getId());
     List<ExamResponse> exams = examService.getUpcomingExams(currentUser.getId(), currentUser.getRole(), total);

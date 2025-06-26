@@ -9,7 +9,6 @@ import com.example.eduworldbe.model.User;
 import com.example.eduworldbe.model.ReviewComment;
 import com.example.eduworldbe.service.ReviewService;
 import com.example.eduworldbe.util.AuthUtil;
-import org.springframework.security.access.AccessDeniedException;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -27,10 +26,7 @@ public class ReviewController {
 
   @PostMapping
   public Review create(@RequestBody Review review, HttpServletRequest request) {
-    User currentUser = authUtil.getCurrentUser(request);
-    if (currentUser == null) {
-      throw new AccessDeniedException("User not authenticated");
-    }
+    User currentUser = authUtil.requireActiveUser(request);
     review.setUserId(currentUser.getId());
     return reviewService.create(review);
   }
@@ -61,33 +57,25 @@ public class ReviewController {
       @PathVariable String reviewId,
       @RequestBody String content,
       HttpServletRequest request) {
-    User currentUser = authUtil.getCurrentUser(request);
-    if (currentUser == null) {
-      throw new AccessDeniedException("User not authenticated");
-    }
+    User currentUser = authUtil.requireActiveUser(request);
     return reviewService.addComment(reviewId, currentUser.getId(), content.substring(1, content.length() - 1));
   }
 
   @GetMapping("/{reviewId}/comments")
-  public List<ReviewCommentResponse> getComments(@PathVariable String reviewId) {
+  public List<ReviewCommentResponse> getComments(@PathVariable String reviewId, HttpServletRequest request) {
+    authUtil.requireActiveUser(request);
     return reviewService.getComments(reviewId);
   }
 
   @DeleteMapping("/comments/{commentId}")
   public void deleteComment(@PathVariable String commentId, HttpServletRequest request) {
-    User currentUser = authUtil.getCurrentUser(request);
-    if (currentUser == null) {
-      throw new AccessDeniedException("User not authenticated");
-    }
+    authUtil.requireActiveUser(request);
     reviewService.deleteComment(commentId);
   }
 
   @PutMapping("/{reviewId}")
   public Review update(@PathVariable String reviewId, @RequestBody Review review, HttpServletRequest request) {
-    User currentUser = authUtil.getCurrentUser(request);
-    if (currentUser == null) {
-      throw new AccessDeniedException("User not authenticated");
-    }
+    authUtil.requireActiveUser(request);
     return reviewService.update(reviewId, review);
   }
 }

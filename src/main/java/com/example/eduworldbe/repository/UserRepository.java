@@ -26,8 +26,9 @@ public interface UserRepository extends JpaRepository<User, String> {
 
   // Query cho tìm kiếm với nhiều tiêu chí
   @Query("SELECT u FROM User u WHERE " +
-      "(:name IS NULL OR LOWER(u.name) LIKE LOWER(CONCAT('%', :name, '%'))) AND " +
-      "(:email IS NULL OR LOWER(u.email) LIKE LOWER(CONCAT('%', :email, '%'))) AND " +
+  // "(:name IS NULL OR LOWER(u.name) LIKE LOWER(CONCAT('%', :name, '%'))) AND " +
+  // "(:email IS NULL OR LOWER(u.email) LIKE LOWER(CONCAT('%', :email, '%'))) AND
+  // " +
       "(:role IS NULL OR u.role = :role) AND " +
       "(:isActive IS NULL OR u.isActive = :isActive)")
   Page<User> findUsersWithFilters(

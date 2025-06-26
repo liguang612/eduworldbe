@@ -94,11 +94,15 @@ public class AuthController {
   public AuthResponse login(@RequestBody AuthRequest request, HttpServletRequest httpRequest) {
     User user = userService.findByEmail(request.getEmail());
     if (user == null) {
-      throw new RuntimeException("Invalid email or password");
+      throw new RuntimeException("Email hoặc mật khẩu không chính xác");
     }
     if (!passwordEncoder.matches(request.getPassword(), user.getPasswordHash())) {
-      throw new RuntimeException("Invalid email or password");
+      throw new RuntimeException("Email hoặc mật khẩu không chính xác");
     }
+    if (!user.getIsActive()) {
+      throw new RuntimeException("Tài khoản đã bị vô hiệu hóa! Hãy liên hệ với quản trị viên để được hỗ trợ");
+    }
+
     String token = jwtUtil.generateToken(user.getEmail());
     System.out.println("Login successful for user: " + user.getEmail() + " with token: " + token);
 
@@ -131,10 +135,7 @@ public class AuthController {
 
   @PutMapping("/users")
   public UserResponse updateProfile(@RequestBody UpdateUserRequest request, HttpServletRequest httpRequest) {
-    User currentUser = authUtil.getCurrentUser(httpRequest);
-    if (currentUser == null) {
-      throw new RuntimeException("Unauthorized");
-    }
+    User currentUser = authUtil.requireActiveUser(httpRequest);
 
     User updatedUser = new User();
     updatedUser.setName(request.getName());
@@ -205,10 +206,7 @@ public class AuthController {
 
   @PutMapping("/users/password")
   public ResponseEntity<?> changePassword(@RequestBody ChangePasswordRequest request, HttpServletRequest httpRequest) {
-    User currentUser = authUtil.getCurrentUser(httpRequest);
-    if (currentUser == null) {
-      throw new RuntimeException("Unauthorized");
-    }
+    User currentUser = authUtil.requireActiveUser(httpRequest);
 
     userService.changePassword(currentUser.getId(), request.getCurrentPassword(), request.getNewPassword());
     return ResponseEntity.ok().body("Password changed successfully");
@@ -225,10 +223,7 @@ public class AuthController {
   public ResponseEntity<UserResponse> uploadAvatar(
       @RequestParam("file") MultipartFile file,
       HttpServletRequest request) throws IOException {
-    User currentUser = authUtil.getCurrentUser(request);
-    if (currentUser == null) {
-      throw new RuntimeException("Unauthorized");
-    }
+    User currentUser = authUtil.requireActiveUser(request);
 
     if (currentUser.getAvatar() != null && !currentUser.getAvatar().isEmpty()) {
       fileUploadService.deleteFile(currentUser.getAvatar());

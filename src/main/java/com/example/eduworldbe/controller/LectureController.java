@@ -32,10 +32,7 @@ public class LectureController {
 
   @PostMapping
   public Lecture create(@RequestBody Lecture lecture, HttpServletRequest request) {
-    User currentUser = authUtil.getCurrentUser(request);
-    if (currentUser == null) {
-      throw new RuntimeException("Unauthorized");
-    }
+    User currentUser = authUtil.requireActiveUser(request);
     lecture.setTeacherId(currentUser.getId());
     return lectureService.create(lecture);
   }
@@ -43,10 +40,7 @@ public class LectureController {
   @GetMapping("/{id}")
   public LectureResponse getById(@PathVariable String id, @RequestParam(required = false) String courseId,
       HttpServletRequest request) {
-    User currentUser = authUtil.getCurrentUser(request);
-    if (currentUser == null) {
-      throw new RuntimeException("Unauthorized");
-    }
+    User currentUser = authUtil.requireActiveUser(request);
 
     Course course;
     if (courseId != null) {
@@ -95,10 +89,7 @@ public class LectureController {
       @RequestParam(required = false) String keyword,
       HttpServletRequest request) {
 
-    User currentUser = authUtil.getCurrentUser(request);
-    if (currentUser == null) {
-      throw new RuntimeException("Unauthorized");
-    }
+    User currentUser = authUtil.requireActiveUser(request);
 
     List<Lecture> allLectures;
 
@@ -123,10 +114,7 @@ public class LectureController {
 
   @PutMapping("/{id}")
   public Lecture update(@PathVariable String id, @RequestBody Lecture lecture, HttpServletRequest request) {
-    User currentUser = authUtil.getCurrentUser(request);
-    if (currentUser == null) {
-      throw new RuntimeException("Unauthorized");
-    }
+    User currentUser = authUtil.requireActiveUser(request);
 
     Lecture existingLecture = lectureService.getById(id)
         .orElseThrow(() -> new RuntimeException("Lecture not found"));
@@ -141,10 +129,7 @@ public class LectureController {
 
   @DeleteMapping("/{id}")
   public void delete(@PathVariable String id, HttpServletRequest request) {
-    User currentUser = authUtil.getCurrentUser(request);
-    if (currentUser == null) {
-      throw new RuntimeException("Unauthorized");
-    }
+    User currentUser = authUtil.requireActiveUser(request);
 
     Lecture existingLecture = lectureService.getById(id)
         .orElseThrow(() -> new RuntimeException("Lecture not found"));
@@ -159,10 +144,7 @@ public class LectureController {
   @PutMapping("/{id}/add-question")
   public Lecture addEndQuestion(@PathVariable String id, @RequestBody AddQuestionRequest req,
       HttpServletRequest request) {
-    User currentUser = authUtil.getCurrentUser(request);
-    if (currentUser == null) {
-      throw new RuntimeException("Unauthorized");
-    }
+    User currentUser = authUtil.requireActiveUser(request);
 
     Lecture existingLecture = lectureService.getById(id)
         .orElseThrow(() -> new RuntimeException("Lecture not found"));
@@ -177,10 +159,7 @@ public class LectureController {
   @PutMapping("/{id}/remove-question")
   public Lecture removeEndQuestion(@PathVariable String id, @RequestBody AddQuestionRequest req,
       HttpServletRequest request) {
-    User currentUser = authUtil.getCurrentUser(request);
-    if (currentUser == null) {
-      throw new RuntimeException("Unauthorized");
-    }
+    User currentUser = authUtil.requireActiveUser(request);
 
     Lecture existingLecture = lectureService.getById(id)
         .orElseThrow(() -> new RuntimeException("Lecture not found"));
@@ -194,10 +173,7 @@ public class LectureController {
 
   @PostMapping("/by-ids")
   public List<LectureResponse> getByIds(@RequestBody List<String> ids, HttpServletRequest request) {
-    User currentUser = authUtil.getCurrentUser(request);
-    if (currentUser == null) {
-      throw new RuntimeException("Unauthorized");
-    }
+    authUtil.requireActiveUser(request);
 
     List<Lecture> ownedLectures = lectureService.getByIdsInOrder(ids);
 

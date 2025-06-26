@@ -36,10 +36,8 @@ public class CourseController {
 
   @PostMapping
   public Course create(@RequestBody Course course, HttpServletRequest request) {
-    User currentUser = authUtil.getCurrentUser(request);
-    if (currentUser == null) {
-      throw new RuntimeException("Unauthorized");
-    }
+    User currentUser = authUtil.requireActiveUser(request);
+
     course.setTeacherId(currentUser.getId());
     return courseService.create(course);
   }
@@ -50,10 +48,7 @@ public class CourseController {
       @RequestParam(required = false) Boolean enrolled,
       @RequestParam(required = false) String keyword,
       HttpServletRequest request) {
-    User currentUser = authUtil.getCurrentUser(request);
-    if (currentUser == null) {
-      throw new RuntimeException("Unauthorized");
-    }
+    User currentUser = authUtil.requireActiveUser(request);
 
     List<Course> filteredCourses = courseService.getCoursesOptimized(
         currentUser.getId(),
@@ -69,10 +64,7 @@ public class CourseController {
 
   @GetMapping("/{id}")
   public ResponseEntity<CourseResponse> getById(@PathVariable String id, HttpServletRequest request) {
-    User currentUser = authUtil.getCurrentUser(request);
-    if (currentUser == null) {
-      throw new RuntimeException("Unauthorized");
-    }
+    User currentUser = authUtil.requireActiveUser(request);
 
     Optional<Course> course = courseService.getById(id);
     if (course.isPresent()) {
@@ -107,7 +99,10 @@ public class CourseController {
   }
 
   @PutMapping("/{id}")
-  public ResponseEntity<Course> update(@PathVariable String id, @RequestBody Course course) {
+  public ResponseEntity<Course> update(@PathVariable String id, @RequestBody Course course,
+      HttpServletRequest request) {
+    authUtil.requireActiveUser(request);
+
     Optional<Course> existingCourse = courseService.getById(id);
     if (existingCourse.isPresent()) {
       course.setId(id);
@@ -117,7 +112,8 @@ public class CourseController {
   }
 
   @DeleteMapping("/{id}")
-  public ResponseEntity<Void> delete(@PathVariable String id) {
+  public ResponseEntity<Void> delete(@PathVariable String id, HttpServletRequest request) {
+    authUtil.requireActiveUser(request);
     Optional<Course> course = courseService.getById(id);
     if (course.isPresent()) {
       courseService.delete(id);
@@ -129,7 +125,10 @@ public class CourseController {
   @PostMapping("/{id}/avatar")
   public ResponseEntity<Course> uploadAvatar(
       @PathVariable String id,
-      @RequestParam("file") MultipartFile file) throws IOException {
+      @RequestParam("file") MultipartFile file,
+      HttpServletRequest request) throws IOException {
+    authUtil.requireActiveUser(request);
+
     Optional<Course> course = courseService.getById(id);
     if (course.isPresent()) {
       // Delete old avatar if exists
@@ -147,7 +146,10 @@ public class CourseController {
   }
 
   @PutMapping("/{id}/add-member")
-  public CourseResponse addMember(@PathVariable String id, @RequestBody AddMemberRequest req) {
+  public CourseResponse addMember(@PathVariable String id, @RequestBody AddMemberRequest req,
+      HttpServletRequest request) {
+    authUtil.requireActiveUser(request);
+
     Course course = courseService.getById(id).orElseThrow();
     if (req.getRole() == 0) {
       course.getStudentIds().add(req.getUserId());
@@ -159,7 +161,10 @@ public class CourseController {
   }
 
   @PutMapping("/{id}/remove-member")
-  public CourseResponse removeMember(@PathVariable String id, @RequestBody AddMemberRequest req) {
+  public CourseResponse removeMember(@PathVariable String id, @RequestBody AddMemberRequest req,
+      HttpServletRequest request) {
+    authUtil.requireActiveUser(request);
+
     Course course = courseService.getById(id).orElseThrow();
     if (req.getRole() == 0) {
       course.getStudentIds().remove(req.getUserId());
@@ -174,10 +179,7 @@ public class CourseController {
   public ResponseEntity<Integer> requestJoinCourse(
       @PathVariable String id,
       HttpServletRequest request) {
-    User currentUser = authUtil.getCurrentUser(request);
-    if (currentUser == null) {
-      throw new RuntimeException("Unauthorized");
-    }
+    User currentUser = authUtil.requireActiveUser(request);
 
     try {
       courseService.requestJoinCourse(id, currentUser.getId());
@@ -197,10 +199,7 @@ public class CourseController {
       @PathVariable String id,
       @PathVariable String studentId,
       HttpServletRequest request) {
-    User currentUser = authUtil.getCurrentUser(request);
-    if (currentUser == null) {
-      throw new RuntimeException("Unauthorized");
-    }
+    User currentUser = authUtil.requireActiveUser(request);
 
     Course course = courseService.getById(id).orElseThrow();
     if (!currentUser.getId().equals(course.getTeacherId()) &&
@@ -218,12 +217,8 @@ public class CourseController {
       @PathVariable String id,
       @PathVariable String studentId,
       HttpServletRequest request) {
-    User currentUser = authUtil.getCurrentUser(request);
-    if (currentUser == null) {
-      throw new RuntimeException("Unauthorized");
-    }
+    User currentUser = authUtil.requireActiveUser(request);
 
-    // Kiểm tra quyền (chỉ giáo viên hoặc trợ giảng mới được từ chối)
     Course course = courseService.getById(id).orElseThrow();
     if (!currentUser.getId().equals(course.getTeacherId()) &&
         (course.getTeacherAssistantIds() == null ||
@@ -246,10 +241,8 @@ public class CourseController {
   public List<CourseResponse> getHighlightCourses(
       @RequestParam(required = false, defaultValue = "10") Integer total,
       HttpServletRequest request) {
-    User currentUser = authUtil.getCurrentUser(request);
-    if (currentUser == null) {
-      throw new RuntimeException("Unauthorized");
-    }
+    User currentUser = authUtil.requireActiveUser(request);
+
     return courseService.getHighlightCourses(currentUser.getId(), currentUser.getRole(), total);
   }
 
@@ -259,10 +252,7 @@ public class CourseController {
       @RequestParam(required = false) Boolean enrolled,
       @RequestParam(required = false) String keyword,
       HttpServletRequest request) {
-    User currentUser = authUtil.getCurrentUser(request);
-    if (currentUser == null) {
-      throw new RuntimeException("Unauthorized");
-    }
+    User currentUser = authUtil.requireActiveUser(request);
 
     // Use the same optimized method as getAll - they have identical logic
     List<Course> filteredCourses = courseService.getCoursesOptimized(

@@ -21,11 +21,8 @@ public class NotificationController {
   private final AuthUtil authUtil;
 
   private String getCurrentUserId(HttpServletRequest request) {
-    User currentUser = authUtil.getCurrentUser(request);
-    if (currentUser != null) {
-      return currentUser.getId();
-    }
-    throw new RuntimeException("User not authenticated");
+    User currentUser = authUtil.requireActiveUser(request);
+    return currentUser.getId();
   }
 
   @GetMapping
