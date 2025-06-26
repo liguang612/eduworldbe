@@ -9,9 +9,11 @@ import com.example.eduworldbe.dto.response.UserSearchResponse;
 import com.example.eduworldbe.model.User;
 import com.example.eduworldbe.service.UserService;
 import com.example.eduworldbe.service.FileUploadService;
+import com.example.eduworldbe.service.FirebaseAuthService;
 import com.example.eduworldbe.service.LoginActivityService;
 import com.example.eduworldbe.util.AuthUtil;
 import com.example.eduworldbe.util.JwtUtil;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -22,10 +24,14 @@ import jakarta.servlet.http.HttpServletRequest;
 import java.util.List;
 import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
+import java.security.SecureRandom;
 
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {
+  @Autowired
+  private FirebaseAuthService firebaseAuthService;
+
   @Autowired
   private UserService userService;
 
@@ -47,17 +53,39 @@ public class AuthController {
   @PostMapping("/register")
   public User register(
       @RequestParam(value = "email") String email,
-      @RequestParam(value = "password") String password,
-      @RequestParam(value = "name") String name,
+      @RequestParam(value = "password", required = false) String password,
+          @RequestParam(value = "name", required = false) String name,
       @RequestParam(value = "school", required = false) String school,
       @RequestParam(value = "grade", required = false) Integer grade,
       @RequestParam(value = "address", required = false) String address,
       @RequestParam(value = "role", required = false) Integer role,
       @RequestParam(value = "birthday", required = false) String birthday,
       @RequestParam(value = "avatar", required = false) MultipartFile avatar,
-      @RequestParam(value = "googleAvatar", required = false) String googleAvatar) throws IOException {
-
+      @RequestParam(value = "googleAvatar", required = false) String googleAvatar, HttpServletRequest request) throws IOException {
     User user = new User();
+
+    if (password == null) {
+      String token = authUtil.getToken(request);
+      if (token != null) {
+        try {
+          firebaseAuthService.verifyToken(token);
+
+          SecureRandom random = new SecureRandom();
+          byte[] bytes = new byte[16];
+          random.nextBytes(bytes);
+          
+          String randomPassword = new String(bytes);
+          user.setPasswordHash(randomPassword);
+        } catch (Exception e) {
+          throw new RuntimeException("Token không hợp lệ");
+        }
+      } else {
+        throw new RuntimeException("Mật khẩu là bắt buộc");
+      }
+    } else {
+      user.setPasswordHash(password);
+    }
+
     user.setEmail(email);
     user.setName(name);
     user.setSchool(school);
@@ -72,8 +100,6 @@ public class AuthController {
         user.setBirthday(null);
       }
     }
-
-    user.setPasswordHash(password);
 
     // Lưu user trước để có ID
     user = userService.register(user);

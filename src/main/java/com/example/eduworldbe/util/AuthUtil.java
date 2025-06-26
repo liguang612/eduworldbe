@@ -30,6 +30,14 @@ public class AuthUtil {
     return null;
   }
 
+  public String getToken(HttpServletRequest request) {
+    String authHeader = request.getHeader("Authorization");
+    if (authHeader != null && authHeader.startsWith("Bearer ")) {
+      return authHeader.substring(7);
+    }
+    return null;
+  }
+
   public boolean hasAccessToCourse(HttpServletRequest request, String courseId) {
     User currentUser = getCurrentUser(request);
     if (currentUser == null) {
