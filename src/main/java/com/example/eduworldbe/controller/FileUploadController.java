@@ -24,8 +24,8 @@ public class FileUploadController {
       @RequestParam("file") MultipartFile file,
       @RequestParam("type") String type,
       HttpServletRequest request) throws IOException {
-    authUtil.requireActiveUser(request);
-    String url = fileUploadService.uploadFile(file, type);
+    String userId = authUtil.requireActiveUser(request).getId();
+    String url = fileUploadService.uploadFile(file, type, userId);
     return ResponseEntity.ok().body(new FileUploadResponse(url));
   }
 

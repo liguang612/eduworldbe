@@ -15,6 +15,7 @@ public class SharedMedia {
   @GeneratedValue(strategy = GenerationType.UUID)
   private String id;
 
+  @Column(columnDefinition = "TEXT")
   private String mediaUrl;
   private Integer mediaType; // 0: image, 1: audio, 2: video, 3: pdf, 4: text
 

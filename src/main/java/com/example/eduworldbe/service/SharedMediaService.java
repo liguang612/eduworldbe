@@ -24,9 +24,9 @@ public class SharedMediaService {
     return sharedMediaRepository.save(sharedMedia);
   }
 
-  public SharedMedia createWithFile(MultipartFile file, String title, Integer mediaType, String text)
+  public SharedMedia createWithFile(MultipartFile file, String title, Integer mediaType, String text, String userId)
       throws IOException {
-    String mediaUrl = fileUploadService.uploadFile(file, "shared-media");
+    String mediaUrl = fileUploadService.uploadFile(file, "shared-media", userId);
 
     SharedMedia sharedMedia = new SharedMedia();
     sharedMedia.setTitle(title);
@@ -85,7 +85,8 @@ public class SharedMediaService {
     return sharedMediaRepository.save(existing);
   }
 
-  public SharedMedia updateWithFile(String id, MultipartFile file, String title, Integer mediaType, String text)
+  public SharedMedia updateWithFile(String id, MultipartFile file, String title, Integer mediaType, String text,
+      String userId)
       throws IOException {
     SharedMedia existing = sharedMediaRepository.findById(id)
         .orElseThrow(() -> new RuntimeException("SharedMedia not found with id " + id));
@@ -96,7 +97,7 @@ public class SharedMediaService {
         fileUploadService.deleteFile(existing.getMediaUrl());
       }
 
-      String mediaUrl = fileUploadService.uploadFile(file, "shared-media");
+      String mediaUrl = fileUploadService.uploadFile(file, "shared-media", userId);
       existing.setMediaUrl(mediaUrl);
     }
 

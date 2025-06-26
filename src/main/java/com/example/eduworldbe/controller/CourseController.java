@@ -127,7 +127,7 @@ public class CourseController {
       @PathVariable String id,
       @RequestParam("file") MultipartFile file,
       HttpServletRequest request) throws IOException {
-    authUtil.requireActiveUser(request);
+    User currentUser = authUtil.requireActiveUser(request);
 
     Optional<Course> course = courseService.getById(id);
     if (course.isPresent()) {
@@ -136,7 +136,7 @@ public class CourseController {
         fileUploadService.deleteFile(course.get().getAvatar());
       }
 
-      String avatarUrl = fileUploadService.uploadFile(file, "course");
+      String avatarUrl = fileUploadService.uploadFile(file, "course", currentUser.getId());
       Course updatedCourse = course.get();
       updatedCourse.setAvatar(avatarUrl);
 

@@ -20,4 +20,5 @@ public class UserResponse {
   private String createdAt;
   private Boolean isActive;
   private Double searchScore; // Điểm tìm kiếm (cho fuzzy search)
+  private Long storageLimit;
 }

@@ -18,13 +18,15 @@ public interface StorageUsageRepository extends JpaRepository<StorageUsage, Stri
 
   @Query("SELECT su.userId, SUM(su.fileSize) as totalSize, COUNT(su.id) as fileCount " +
       "FROM StorageUsage su " +
-      "GROUP BY su.userId ORDER BY totalSize DESC")
+      "GROUP BY su.userId")
   List<Object[]> getStorageUsageByUser();
 
   @Query("SELECT su.fileType, SUM(su.fileSize) as totalSize, COUNT(su.id) as fileCount " +
       "FROM StorageUsage su " +
-      "GROUP BY su.fileType ORDER BY totalSize DESC")
+      "GROUP BY su.fileType")
   List<Object[]> getStorageUsageByFileType();
 
   StorageUsage findByFileUrl(String fileUrl);
+
+  List<StorageUsage> findByUserId(String userId);
 }

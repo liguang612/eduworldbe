@@ -33,7 +33,7 @@ public class User {
   private String school;
   private Integer grade;
   private String address;
-  private Integer role; // 0: student, 1: teacher, 2: admin
+  private Integer role; // 0: student, 1: teacher, 100: admin
   private String avatar;
 
   @Column(nullable = false)
@@ -41,4 +41,7 @@ public class User {
 
   @Column(nullable = false)
   private Boolean isActive = true;
+
+  @Column(nullable = false)
+  private Long storageLimit = 78643200L; // 75MB
 }

@@ -4,6 +4,10 @@ import com.google.cloud.storage.Blob;
 import com.google.cloud.storage.BlobInfo;
 import com.google.cloud.storage.Storage;
 import com.google.firebase.cloud.StorageClient;
+import com.example.eduworldbe.dto.response.UserStorageInfoResponse;
+import com.example.eduworldbe.exception.StorageLimitExceededException;
+import com.example.eduworldbe.util.StorageUtil;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
@@ -19,32 +23,6 @@ public class FileUploadService {
   @Autowired
   private StorageUsageService storageUsageService;
 
-  public String uploadFile(MultipartFile file, String type) throws IOException {
-    if (file == null || file.isEmpty()) {
-      throw new IllegalArgumentException("File cannot be empty");
-    }
-
-    // Validate file type
-    String contentType = file.getContentType();
-    if (contentType == null) {
-      throw new IllegalArgumentException("File content type cannot be null");
-    }
-
-    // Map type to folder
-    String folder = mapTypeToFolder(type);
-
-    Storage storage = StorageClient.getInstance().bucket().getStorage();
-    String fileName = UUID.randomUUID().toString() + "_" + file.getOriginalFilename();
-    String path = folder + "/" + fileName;
-
-    BlobInfo blobInfo = BlobInfo.newBuilder(StorageClient.getInstance().bucket(), path)
-        .setContentType(contentType)
-        .build();
-
-    Blob blob = storage.create(blobInfo, file.getBytes());
-    return blob.getMediaLink();
-  }
-
   public String uploadFile(MultipartFile file, String type, String userId) throws IOException {
     if (file == null || file.isEmpty()) {
       throw new IllegalArgumentException("File cannot be empty");
@@ -56,10 +34,20 @@ public class FileUploadService {
       throw new IllegalArgumentException("File content type cannot be null");
     }
 
+    // Kiểm tra storage limit trước khi upload
+    if (!storageUsageService.canUserUploadFile(userId, file.getSize())) {
+      UserStorageInfoResponse storageInfo = storageUsageService.getUserStorageInfo(userId);
+      throw new StorageLimitExceededException(String.format(
+          "Giới hạn dung lượng media của bạn đã hết. (Đã sử dụng: %s, Giới hạn: %s). Không thể upload file có kích thước: %s. Hãy liên hệ với quản trị viên để có thể tăng giới hạn dung lượng media của bạn.",
+          storageInfo.getFormattedCurrentUsage(),
+          storageInfo.getFormattedStorageLimit(),
+          StorageUtil.formatFileSize(file.getSize())));
+    }
+
     String folder = mapTypeToFolder(type);
     Storage storage = StorageClient.getInstance().bucket().getStorage();
     String fileName = UUID.randomUUID().toString() + "_" + file.getOriginalFilename();
-    String path = folder + "/" + userId + "/" + fileName;
+    String path = folder + "/" + fileName;
 
     BlobInfo blobInfo = BlobInfo.newBuilder(StorageClient.getInstance().bucket(), path)
         .setContentType(contentType)
@@ -102,6 +90,8 @@ public class FileUploadService {
 
       if (blob != null) {
         blob.delete();
+
+        storageUsageService.deleteFileRecord(fileUrl);
         System.out.println("Successfully deleted file: " + path);
       } else {
         System.out.println("File not found in storage: " + path);
@@ -200,4 +190,5 @@ public class FileUploadService {
         return "other";
     }
   }
+
 }

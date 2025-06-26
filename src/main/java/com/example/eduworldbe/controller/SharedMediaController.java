@@ -34,8 +34,10 @@ public class SharedMediaController {
       @RequestParam("file") MultipartFile file,
       @RequestParam("title") String title,
       @RequestParam("mediaType") Integer mediaType,
-      @RequestParam(value = "text", required = false) String text) throws IOException {
-    return ResponseEntity.ok(sharedMediaService.createWithFile(file, title, mediaType, text));
+      @RequestParam(value = "text", required = false) String text,
+      HttpServletRequest request) throws IOException {
+    String userId = authUtil.requireActiveUser(request).getId();
+    return ResponseEntity.ok(sharedMediaService.createWithFile(file, title, mediaType, text, userId));
   }
 
   @GetMapping("/{id}")
@@ -71,8 +73,10 @@ public class SharedMediaController {
       @RequestParam(value = "file", required = false) MultipartFile file,
       @RequestParam(value = "title", required = false) String title,
       @RequestParam(value = "mediaType", required = false) Integer mediaType,
-      @RequestParam(value = "text", required = false) String text) throws IOException {
-    return ResponseEntity.ok(sharedMediaService.updateWithFile(id, file, title, mediaType, text));
+      @RequestParam(value = "text", required = false) String text,
+      HttpServletRequest request) throws IOException {
+    String userId = authUtil.requireActiveUser(request).getId();
+    return ResponseEntity.ok(sharedMediaService.updateWithFile(id, file, title, mediaType, text, userId));
   }
 
   @PutMapping("/{id}")

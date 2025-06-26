@@ -40,18 +40,26 @@ public class AdminUserService {
         .map(this::convertToUserResponse)
         .collect(Collectors.toList());
 
-    // Áp dụng fuzzy search nếu có tìm kiếm
-    if (request.getName() != null || request.getEmail() != null) {
+    if (request.hasSearchCriteria()) {
       userResponses = applyFuzzySearch(userResponses, request);
-    }
 
-    return UserListResponse.builder()
-        .users(userResponses)
-        .totalPages(userPage.getTotalPages())
-        .totalElements(userPage.getTotalElements())
-        .currentPage(request.getPage())
-        .pageSize(request.getSize())
-        .build();
+      return UserListResponse.builder()
+          .users(userResponses)
+          .totalPages(1)
+          .totalElements((long) userResponses.size())
+          .currentPage(0)
+          .pageSize(userResponses.size())
+          .build();
+    } else {
+      // Khi không tìm kiếm, sử dụng phân trang từ database
+      return UserListResponse.builder()
+          .users(userResponses)
+          .totalPages(userPage.getTotalPages())
+          .totalElements(userPage.getTotalElements())
+          .currentPage(request.getPage())
+          .pageSize(request.getSize())
+          .build();
+    }
   }
 
   public User changeUserRole(String userId, Integer newRole) {
@@ -113,7 +121,8 @@ public class AdminUserService {
         user.getBirthday() != null ? user.getBirthday().toString() : null,
         user.getCreatedAt() != null ? user.getCreatedAt().toString() : null,
         user.getIsActive(),
-        null // searchScore sẽ được set sau
+        null,
+        user.getStorageLimit()
     );
   }
 
@@ -127,7 +136,7 @@ public class AdminUserService {
           user.setSearchScore(score);
           return user;
         })
-        .filter(user -> user.getSearchScore() > 0.3) // Chỉ giữ lại kết quả có điểm > 0.3
+        .filter(user -> user.getSearchScore() > 0.3)
         .sorted((u1, u2) -> Double.compare(u2.getSearchScore(), u1.getSearchScore()))
         .collect(Collectors.toList());
   }
@@ -136,16 +145,13 @@ public class AdminUserService {
     double totalScore = 0.0;
     int criteriaCount = 0;
 
-    if (request.getName() != null && !request.getName().trim().isEmpty()) {
-      int nameDistance = StringUtil.calculateLevenshteinDistance(
-          user.getName().toLowerCase(),
-          request.getName().toLowerCase());
-      double nameScore = 1.0 - (double) nameDistance / Math.max(user.getName().length(), request.getName().length());
+    if (request.getName() != null && !request.getName().trim().isEmpty() && user.getName() != null) {
+      double nameScore = calculateNameScore(user.getName(), request.getName());
       totalScore += nameScore;
       criteriaCount++;
     }
 
-    if (request.getEmail() != null && !request.getEmail().trim().isEmpty()) {
+    if (request.getEmail() != null && !request.getEmail().trim().isEmpty() && user.getEmail() != null) {
       int emailDistance = StringUtil.calculateLevenshteinDistance(
           user.getEmail().toLowerCase(),
           request.getEmail().toLowerCase());
@@ -156,5 +162,75 @@ public class AdminUserService {
     }
 
     return criteriaCount > 0 ? totalScore / criteriaCount : 1.0;
+  }
+
+  private double calculateNameScore(String fullName, String keyword) {
+    String normalizedFullName = fullName.toLowerCase().trim();
+    String normalizedKeyword = keyword.toLowerCase().trim();
+
+    String[] nameWords = normalizedFullName.split("\\s+");
+    String[] keywordWords = normalizedKeyword.split("\\s+");
+
+    if (keywordWords.length == 0)
+      return 1.0;
+
+    double totalScore = 0.0;
+    int matchedWords = 0;
+
+    // Với mỗi từ trong keyword, tìm từ khớp nhất trong tên
+    for (String keywordWord : keywordWords) {
+      if (keywordWord.trim().isEmpty())
+        continue;
+
+      double bestMatchScore = 0.0;
+
+      for (String nameWord : nameWords) {
+        if (nameWord.trim().isEmpty())
+          continue;
+
+        double currentScore = calculateWordMatchScore(nameWord, keywordWord);
+        bestMatchScore = Math.max(bestMatchScore, currentScore);
+      }
+
+      totalScore += bestMatchScore;
+      matchedWords++;
+    }
+
+    if (matchedWords == 0)
+      return 0.0;
+
+    double averageScore = totalScore / matchedWords;
+
+    double coverageBonus = 0.0;
+    if (keywordWords.length > 1) {
+      coverageBonus = (double) matchedWords / keywordWords.length * 0.05;
+    }
+
+    return Math.min(1.0, averageScore + coverageBonus);
+  }
+
+  private double calculateWordMatchScore(String nameWord, String keywordWord) {
+    if (nameWord.equals(keywordWord)) {
+      return 1.0;
+    }
+
+    if (nameWord.contains(keywordWord)) {
+      double ratio = Math.min((double) keywordWord.length() / nameWord.length(), 1.0);
+      return 0.7 + (ratio * 0.2);
+    }
+
+    if (keywordWord.contains(nameWord)) {
+      double ratio = Math.min((double) nameWord.length() / keywordWord.length(), 1.0);
+      return 0.6 + (ratio * 0.2);
+    }
+
+    int distance = StringUtil.calculateLevenshteinDistance(nameWord, keywordWord);
+    int maxLength = Math.max(nameWord.length(), keywordWord.length());
+
+    if (maxLength == 0)
+      return 1.0;
+
+    double similarity = 1.0 - (double) distance / maxLength;
+    return similarity >= 0.6 ? similarity : 0.0;
   }
 }

@@ -116,6 +116,7 @@ public class AdminController {
         user.getBirthday() != null ? user.getBirthday().toString() : null,
         user.getCreatedAt() != null ? user.getCreatedAt().toString() : null,
         user.getIsActive(),
-        null);
+        null,
+        user.getStorageLimit());
   }
 }

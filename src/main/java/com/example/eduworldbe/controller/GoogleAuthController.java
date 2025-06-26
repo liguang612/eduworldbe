@@ -34,7 +34,14 @@ public class GoogleAuthController {
       user.setId(response.getUserInfo().getId());
       user.setEmail(response.getUserInfo().getEmail());
       user.setRole(response.getUserInfo().getRole());
-      loginActivityService.recordLoginActivity(user, "google", request);
+
+      if (!response.isNewUser()) {
+        try {
+          loginActivityService.recordLoginActivity(user, "google", request);
+        } catch (Exception e) {
+          System.out.println("Error recording login activity: " + e.getMessage());
+        }
+      }
 
       return ResponseEntity.ok(response);
     } catch (Exception e) {

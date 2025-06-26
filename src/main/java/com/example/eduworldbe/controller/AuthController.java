@@ -106,8 +106,11 @@ public class AuthController {
     String token = jwtUtil.generateToken(user.getEmail());
     System.out.println("Login successful for user: " + user.getEmail() + " with token: " + token);
 
-    // Ghi lại hoạt động đăng nhập
-    loginActivityService.recordLoginActivity(user, "email", httpRequest);
+    try {
+      loginActivityService.recordLoginActivity(user, "email", httpRequest);
+    } catch (Exception e) {
+      System.out.println("Error recording login activity: " + e.getMessage());
+    }
 
     return new AuthResponse(token, user.getId(), user.getName(), user.getAvatar(), user.getRole());
   }
@@ -130,7 +133,8 @@ public class AuthController {
         user.getBirthday() != null ? user.getBirthday().toString() : null,
         user.getCreatedAt() != null ? user.getCreatedAt().toString() : null,
         user.getIsActive(),
-        null);
+        null,
+        user.getStorageLimit());
   }
 
   @PutMapping("/users")
@@ -164,7 +168,8 @@ public class AuthController {
         savedUser.getBirthday() != null ? savedUser.getBirthday().toString() : null,
         savedUser.getCreatedAt() != null ? savedUser.getCreatedAt().toString() : null,
         savedUser.getIsActive(),
-        null);
+        null,
+        savedUser.getStorageLimit());
   }
 
   @PutMapping("/users/{id}")
@@ -201,7 +206,8 @@ public class AuthController {
         savedUser.getBirthday() != null ? savedUser.getBirthday().toString() : null,
         savedUser.getCreatedAt() != null ? savedUser.getCreatedAt().toString() : null,
         savedUser.getIsActive(),
-        null);
+        null,
+        savedUser.getStorageLimit());
   }
 
   @PutMapping("/users/password")
@@ -247,6 +253,7 @@ public class AuthController {
         savedUser.getBirthday() != null ? savedUser.getBirthday().toString() : null,
         savedUser.getCreatedAt() != null ? savedUser.getCreatedAt().toString() : null,
         savedUser.getIsActive(),
-        null));
+        null,
+        savedUser.getStorageLimit()));
   }
 }
