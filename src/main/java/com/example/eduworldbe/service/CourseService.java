@@ -52,6 +52,9 @@ public class CourseService {
   private NotificationService notificationService;
 
   @Autowired
+  private WebSocketNotificationService webSocketNotificationService;
+
+  @Autowired
   private SubjectService subjectService;
 
   public Course create(Course course) {
@@ -91,11 +94,15 @@ public class CourseService {
       for (String studentId : updated.getStudentIds()) {
         if (!existingCourse.getStudentIds().contains(studentId)) {
           try {
-            notificationService.createNotification(Notification.builder()
+            Notification.NotificationBuilder notification = Notification.builder()
                 .courseId(id)
                 .isRead(false)
                 .userId(studentId)
-                .type(NotificationType.STUDENT_ADDED_TO_COURSE));
+                .type(NotificationType.STUDENT_ADDED_TO_COURSE);
+
+            notificationService.createNotification(notification);
+
+            webSocketNotificationService.sendNotificationToUser(studentId, notification.build());
           } catch (Exception e) {
             System.out.println("Create notification failed for student: " + studentId + " . Class: " + id);
           }
@@ -342,11 +349,15 @@ public class CourseService {
     for (String recipientId : recipients) {
       if (recipientId != null && !recipientId.equals(studentId)) {
         try {
-          notificationService.createNotification(Notification.builder()
+          Notification.NotificationBuilder notification = Notification.builder()
               .userId(recipientId)
               .type(NotificationType.NEW_JOIN_REQUEST_FOR_TEACHER)
               .actorId(studentId)
-              .courseId(courseId));
+              .courseId(courseId);
+
+          notificationService.createNotification(notification);
+
+          webSocketNotificationService.sendNotificationToUser(recipientId, notification.build());
         } catch (Exception e) {
           System.err.println("Failed to create notification for user " + recipientId + ": " + e.getMessage());
         }
@@ -374,11 +385,15 @@ public class CourseService {
     Course savedCourse = courseRepository.save(course);
 
     try {
-      notificationService.createNotification(Notification.builder()
+      Notification.NotificationBuilder notification = Notification.builder()
           .userId(studentId)
           .type(NotificationType.JOIN_REQUEST_ACCEPTED)
           .actorId(actorId)
-          .courseId(courseId));
+          .courseId(courseId);
+
+      notificationService.createNotification(notification);
+
+      webSocketNotificationService.sendNotificationToUser(studentId, notification.build());
     } catch (ExecutionException | InterruptedException e) {
       System.err
           .println("Failed to create JOIN_REQUEST_ACCEPTED notification for user " + studentId + ": " + e.getMessage());
@@ -400,11 +415,15 @@ public class CourseService {
     Course savedCourse = courseRepository.save(course);
 
     try {
-      notificationService.createNotification(Notification.builder()
+      Notification.NotificationBuilder notification = Notification.builder()
           .userId(studentId)
           .type(NotificationType.JOIN_REQUEST_REJECTED)
           .actorId(actorId)
-          .courseId(courseId));
+          .courseId(courseId);
+
+      notificationService.createNotification(notification);
+
+      webSocketNotificationService.sendNotificationToUser(studentId, notification.build());
     } catch (ExecutionException | InterruptedException e) {
       System.err
           .println("Failed to create JOIN_REQUEST_REJECTED notification for user " + studentId + ": " + e.getMessage());

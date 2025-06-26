@@ -50,6 +50,9 @@ public class PostService {
   @Autowired
   private NotificationService notificationService;
 
+  @Autowired
+  private WebSocketNotificationService webSocketNotificationService;
+
   // POST
 
   @Transactional
@@ -93,12 +96,16 @@ public class PostService {
 
       recipients.stream().distinct().filter(id -> !id.equals(userId)).forEach(recipientId -> {
         try {
-          notificationService.createNotification(Notification.builder()
+          Notification.NotificationBuilder notification = Notification.builder()
               .userId(recipientId)
               .type(NotificationType.NEW_POST_FOR_TEACHER_APPROVAL)
               .actorId(userId)
               .postId(savedPost.getId())
-              .courseId(savedPost.getCourseId()));
+              .courseId(savedPost.getCourseId());
+
+          notificationService.createNotification(notification);
+
+          webSocketNotificationService.sendNotificationToUser(recipientId, notification.build());
         } catch (ExecutionException | InterruptedException e) {
           System.err.println("Failed to create NEW_POST_FOR_TEACHER_APPROVAL notification for user " + recipientId
               + ": " + e.getMessage());
@@ -161,12 +168,16 @@ public class PostService {
       Post updatedPost = postRepository.save(post);
 
       try {
-        notificationService.createNotification(Notification.builder()
+        Notification.NotificationBuilder notification = Notification.builder()
             .userId(post.getUserId())
             .type(NotificationType.POST_APPROVED)
             .actorId(userId)
             .postId(postId)
-            .courseId(post.getCourseId()));
+            .courseId(post.getCourseId());
+
+        notificationService.createNotification(notification);
+
+        webSocketNotificationService.sendNotificationToUser(post.getUserId(), notification.build());
       } catch (ExecutionException | InterruptedException e) {
         System.err.println(
             "Failed to create POST_APPROVED notification for user " + post.getUserId() + ": " + e.getMessage());
@@ -176,12 +187,16 @@ public class PostService {
       return convertToDTO(updatedPost);
     } else {
       try {
-        notificationService.createNotification(Notification.builder()
+        Notification.NotificationBuilder notification = Notification.builder()
             .userId(post.getUserId())
             .type(NotificationType.POST_REJECTED)
             .actorId(userId)
             .postId(postId)
-            .courseId(post.getCourseId()));
+            .courseId(post.getCourseId());
+
+        notificationService.createNotification(notification);
+
+        webSocketNotificationService.sendNotificationToUser(post.getUserId(), notification.build());
       } catch (ExecutionException | InterruptedException e) {
         System.err.println(
             "Failed to create POST_REJECTED notification for user " + post.getUserId() + ": " + e.getMessage());
@@ -245,13 +260,17 @@ public class PostService {
     String postOwnerId = post.getUserId();
     if (postOwnerId != null && !postOwnerId.equals(userId)) {
       try {
-        notificationService.createNotification(Notification.builder()
+        Notification.NotificationBuilder notification = Notification.builder()
             .userId(postOwnerId)
             .type(NotificationType.COMMENT_ON_OWN_POST)
             .actorId(userId)
             .postId(post.getId())
             .commentId(savedComment.getId())
-            .courseId(post.getCourseId()));
+            .courseId(post.getCourseId());
+
+        notificationService.createNotification(notification);
+
+        webSocketNotificationService.sendNotificationToUser(postOwnerId, notification.build());
       } catch (ExecutionException | InterruptedException e) {
         System.err.println(
             "Failed to create COMMENT_ON_OWN_POST notification for user " + postOwnerId + ": " + e.getMessage());

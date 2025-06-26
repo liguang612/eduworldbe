@@ -50,7 +50,8 @@ public class SecurityConfig {
         "/api/auth/login",
         "/api/auth/users/search",
         "/api/subjects/**",
-        "/api/auth/google/**"
+        "/api/auth/google/**",
+        "/ws/**"
     };
 
     final String[] STATIC_RESOURCES = {

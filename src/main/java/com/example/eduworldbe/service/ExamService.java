@@ -425,7 +425,6 @@ public class ExamService {
       exams = examRepository.findUpcomingExamsByTeacher(userId, currentTime);
     } else {
       exams = examRepository.findAllUpcomingExams(currentTime);
-      System.out.println("exams: " + exams);
 
       if (userId != null) {
         List<Course> enrolledCourses = courseService.getEnrolledCourses(userId);

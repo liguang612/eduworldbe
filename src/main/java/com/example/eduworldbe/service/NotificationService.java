@@ -139,7 +139,7 @@ public class NotificationService {
         .build();
   }
 
-  private NotificationResponse mapToResponse(Notification notification) {
+  public NotificationResponse mapToResponse(Notification notification) {
     NotificationResponse.NotificationResponseBuilder builder = NotificationResponse.builder()
         .id(notification.getId())
         .type(notification.getType())
@@ -201,34 +201,34 @@ public class NotificationService {
 
     switch (notification.getType()) {
       case STUDENT_ADDED_TO_COURSE:
-        return String.format("You have been added to the course: %s.", courseName);
+        return String.format("Bạn đã được thêm vào khoá học: %s.", courseName);
       case JOIN_REQUEST_ACCEPTED:
-        return String.format("Your request to join course '%s' has been accepted.", courseName);
+        return String.format("Yêu cầu tham gia khoá học '%s' đã được chấp nhận.", courseName);
       case JOIN_REQUEST_REJECTED:
-        return String.format("Your request to join course '%s' has been rejected.", courseName);
+        return String.format("Yêu cầu tham gia khoá học '%s' đã bị từ chối.", courseName);
       case SOLUTION_ACCEPTED:
-        return String.format("Your solution for question '%s' has been accepted.", questionTitle);
+        return String.format("Lời giải của bạn cho câu hỏi '%s' đã được chấp nhận.", questionTitle);
       case SOLUTION_REJECTED:
-        return String.format("Your solution for question '%s' has been rejected.", questionTitle);
+        return String.format("Lời giải của bạn cho câu hỏi '%s' đã bị từ chối.", questionTitle);
       case POST_APPROVED:
-        return String.format("Your post in course '%s' has been approved.", courseName);
+        return String.format("Bài viết của bạn trong khoá học '%s' đã được chấp nhận.", courseName);
       case POST_REJECTED:
-        return String.format("Your post in course '%s' has been rejected.", courseName);
+        return String.format("Bài viết của bạn trong khoá học '%s' đã bị từ chối.", courseName);
       case COMMENT_ON_OWN_POST:
-        return String.format("%s commented on your post in course '%s'.", actorName, courseName);
+        return String.format("%s đã bình luận vào bài viết của bạn trong khoá học '%s'.", actorName, courseName);
       case NEW_LECTURE_IN_COURSE:
-        return String.format("A new lecture '%s' has been added to course '%s'.", lectureTitle, courseName);
+        return String.format("Đã có bài giảng mới '%s' được thêm vào khoá học '%s'.", lectureTitle, courseName);
       case NEW_EXAM_IN_COURSE:
-        return String.format("A new exam '%s' has been created in course '%s'.", examTitle, courseName);
+        return String.format("Đã có bài kiểm tra mới '%s' được thêm vào khoá học '%s'.", examTitle, courseName);
       case NEW_JOIN_REQUEST_FOR_TEACHER:
-        return String.format("%s has requested to join your course '%s'.", actorName, courseName);
+        return String.format("%s đã gửi yêu cầu tham gia khoá học '%s'.", actorName, courseName);
       case NEW_SOLUTION_FOR_TEACHER_APPROVAL:
-        return String.format("%s submitted a new solution for question '%s' in course '%s'.", actorName, questionTitle,
+        return String.format("%s đã gửi lời giải mới cho câu hỏi '%s' trong khoá học '%s'.", actorName, questionTitle,
             courseName);
       case NEW_POST_FOR_TEACHER_APPROVAL:
-        return String.format("%s created a new post in course '%s' awaiting approval.", actorName, courseName);
+        return String.format("%s đã tạo bài viết mới trong khoá học '%s' đang chờ phê duyệt.", actorName, courseName);
       default:
-        return "You have a new notification.";
+        return "Bạn có một thông báo mới.";
     }
   }
 

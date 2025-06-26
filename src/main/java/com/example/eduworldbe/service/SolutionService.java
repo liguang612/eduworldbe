@@ -35,6 +35,9 @@ public class SolutionService {
   private NotificationService notificationService;
 
   @Autowired
+  private WebSocketNotificationService webSocketNotificationService;
+
+  @Autowired
   private QuestionRepository questionRepository;
 
   @Transactional
@@ -50,13 +53,19 @@ public class SolutionService {
       solution.setStatus(0);
 
       try {
-        notificationService.createNotification(Notification.builder()
+        Notification.NotificationBuilder notificationBuilder = Notification.builder()
             .userId(question.getCreatedBy())
             .type(NotificationType.NEW_SOLUTION_FOR_TEACHER_APPROVAL)
             .actorId(savedSolution.getCreatedBy())
             .questionId(savedSolution.getQuestionId())
             .solutionId(savedSolution.getId())
-            .courseId(null));
+            .courseId(null);
+
+        // Lưu vào database
+        notificationService.createNotification(notificationBuilder);
+
+        // Gửi qua WebSocket real-time
+        webSocketNotificationService.sendNotificationToUser(question.getCreatedBy(), notificationBuilder.build());
       } catch (ExecutionException | InterruptedException e) {
         System.err.println("Failed to create NEW_SOLUTION_FOR_TEACHER_APPROVAL notification: " + e.getMessage());
         Thread.currentThread().interrupt();

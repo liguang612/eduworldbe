@@ -2,7 +2,6 @@ package com.example.eduworldbe.controller;
 
 import com.example.eduworldbe.dto.request.AddLectureRequest;
 import com.example.eduworldbe.model.Chapter;
-import com.example.eduworldbe.model.User;
 import com.example.eduworldbe.service.ChapterService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -24,7 +23,7 @@ public class ChapterController {
 
   @PostMapping
   public Chapter create(@RequestBody Chapter chapter, HttpServletRequest request) {
-    User currentUser = authUtil.requireActiveUser(request);
+    authUtil.requireActiveUser(request);
 
     if (!authUtil.hasAccessToCourse(request, chapter.getCourseId())) {
       throw new RuntimeException("Unauthorized");
@@ -34,7 +33,7 @@ public class ChapterController {
 
   @GetMapping("/course/{courseId}")
   public List<Chapter> getByCourseId(@PathVariable String courseId, HttpServletRequest request) {
-    User currentUser = authUtil.requireActiveUser(request);
+    authUtil.requireActiveUser(request);
 
     if (!authUtil.hasAccessToCourse(request, courseId)) {
       throw new RuntimeException("Unauthorized");
@@ -44,7 +43,7 @@ public class ChapterController {
 
   @GetMapping("/{id}")
   public ResponseEntity<Chapter> getById(@PathVariable String id, HttpServletRequest request) {
-    User currentUser = authUtil.requireActiveUser(request);
+    authUtil.requireActiveUser(request);
 
     Optional<Chapter> chapter = chapterService.getById(id);
     if (chapter.isPresent()) {
@@ -59,7 +58,7 @@ public class ChapterController {
   @PutMapping("/{id}")
   public ResponseEntity<Chapter> update(@PathVariable String id, @RequestBody Chapter chapter,
       HttpServletRequest request) {
-    User currentUser = authUtil.requireActiveUser(request);
+    authUtil.requireActiveUser(request);
 
     Optional<Chapter> existingChapter = chapterService.getById(id);
     if (existingChapter.isPresent()) {
@@ -77,7 +76,7 @@ public class ChapterController {
 
   @DeleteMapping("/{id}")
   public ResponseEntity<Void> delete(@PathVariable String id, HttpServletRequest request) {
-    User currentUser = authUtil.requireActiveUser(request);
+    authUtil.requireActiveUser(request);
 
     Optional<Chapter> chapter = chapterService.getById(id);
     if (chapter.isPresent()) {
@@ -95,7 +94,7 @@ public class ChapterController {
       @PathVariable String id,
       @RequestBody AddLectureRequest req,
       HttpServletRequest request) {
-    User currentUser = authUtil.requireActiveUser(request);
+    authUtil.requireActiveUser(request);
 
     Optional<Chapter> chapter = chapterService.getById(id);
     if (chapter.isPresent()) {
@@ -113,7 +112,7 @@ public class ChapterController {
       @PathVariable String id,
       @RequestBody AddLectureRequest req,
       HttpServletRequest request) {
-    User currentUser = authUtil.requireActiveUser(request);
+    authUtil.requireActiveUser(request);
 
     Optional<Chapter> chapter = chapterService.getById(id);
     if (chapter.isPresent()) {

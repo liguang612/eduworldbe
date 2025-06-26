@@ -209,7 +209,7 @@ public class ExamController {
 
   @GetMapping("/{examId}/questions")
   public ResponseEntity<List<Question>> getExamQuestions(@PathVariable String examId, HttpServletRequest request) {
-    User currentUser = authUtil.requireActiveUser(request);
+    authUtil.requireActiveUser(request);
 
     List<Question> questions = examService.getExamQuestions(examId);
     return ResponseEntity.ok(questions);

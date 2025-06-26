@@ -18,7 +18,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import java.util.List;
 import org.springframework.http.HttpStatus;
 import com.example.eduworldbe.util.AuthUtil;
-import com.example.eduworldbe.model.User;
 
 @RestController
 @RequestMapping("/api/questions")

@@ -25,6 +25,9 @@ public class ChapterService {
   @Autowired
   private NotificationService notificationService;
 
+  @Autowired
+  private WebSocketNotificationService webSocketNotificationService;
+
   public Chapter create(Chapter chapter) {
     Chapter createdChapter = chapterRepository.save(chapter);
 
@@ -82,12 +85,16 @@ public class ChapterService {
       if (course != null && course.getStudentIds() != null) {
         for (String studentId : course.getStudentIds()) {
           try {
-            notificationService.createNotification(Notification.builder()
+            Notification.NotificationBuilder notification = Notification.builder()
                 .userId(studentId)
                 .type(NotificationType.NEW_LECTURE_IN_COURSE)
                 .actorId(course.getTeacherId())
                 .lectureId(lectureId)
-                .courseId(course.getId()));
+                .courseId(course.getId());
+
+            notificationService.createNotification(notification);
+
+            webSocketNotificationService.sendNotificationToUser(studentId, notification.build());
           } catch (ExecutionException | InterruptedException e) {
             System.err.println(
                 "Failed to create NEW_LECTURE_IN_COURSE notification for user " + studentId + ": " + e.getMessage());

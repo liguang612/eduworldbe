@@ -13,7 +13,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import jakarta.servlet.http.HttpServletRequest;
-import org.springframework.http.HttpStatus;
 
 import java.util.List;
 
@@ -51,7 +50,7 @@ public class SolutionController {
 
   @GetMapping("/pending")
   public ResponseEntity<Page<SolutionResponse>> getPendingSolutions(Pageable pageable, HttpServletRequest httpRequest) {
-    User currentUser = authUtil.requireActiveUser(httpRequest);
+    authUtil.requireActiveUser(httpRequest);
 
     return ResponseEntity.ok(solutionService.getPendingSolutions(pageable));
   }
@@ -69,7 +68,7 @@ public class SolutionController {
 
   @DeleteMapping("/{id}")
   public ResponseEntity<Void> delete(@PathVariable String id, HttpServletRequest httpRequest) {
-    User currentUser = authUtil.requireActiveUser(httpRequest);
+    authUtil.requireActiveUser(httpRequest);
     solutionService.delete(id);
     return ResponseEntity.noContent().build();
   }
