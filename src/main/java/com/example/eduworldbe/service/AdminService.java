@@ -1,7 +1,10 @@
 package com.example.eduworldbe.service;
 
 import com.example.eduworldbe.dto.response.AdminDashboardResponse;
+import com.example.eduworldbe.dto.response.LoginDetailResponse;
 import com.example.eduworldbe.dto.response.StorageUsageResponse;
+import com.example.eduworldbe.exception.ResourceNotFoundException;
+import com.example.eduworldbe.model.LoginActivity;
 import com.example.eduworldbe.model.StorageUsage;
 import com.example.eduworldbe.model.User;
 import com.example.eduworldbe.repository.LoginActivityRepository;
@@ -272,5 +275,105 @@ public class AdminService {
       return path.substring(lastSlashIndex + 1);
     }
     return null;
+  }
+
+  public List<User> getNewUsersByMonth(Integer month, Integer year) {
+    Calendar calendar = Calendar.getInstance();
+    calendar.set(year, month - 1, 1, 0, 0, 0);
+    calendar.set(Calendar.MILLISECOND, 0);
+    Date startDate = calendar.getTime();
+
+    // Tính ngày cuối cùng của tháng
+    calendar.set(year, month - 1, calendar.getActualMaximum(Calendar.DAY_OF_MONTH), 23, 59, 59);
+    calendar.set(Calendar.MILLISECOND, 999);
+    Date endDate = calendar.getTime();
+
+    List<User> newUsers = userRepository.findAllByCreatedAtBetween(startDate, endDate);
+
+    return newUsers;
+
+    // return newUsers.stream()
+    // .map(user -> new NewUserResponse(
+    // user.getName(),
+    // user.getAvatar(),
+    // user.getEmail(),
+    // user.getSchool(),
+    // user.getRole(),
+    // user.getCreatedAt()))
+    // .collect(Collectors.toList());
+  }
+
+  public List<LoginDetailResponse> getDailyLoginsByDate(Date date) {
+    Date startDate = getStartOfDay(date);
+    Date endDate = getEndOfDay(date);
+
+    List<LoginActivity> loginActivities = loginActivityRepository.findAllByLoginTimeBetween(startDate, endDate);
+
+    // Tối ưu: Lấy tất cả user ID, sau đó truy vấn một lần
+    List<String> userIds = loginActivities.stream()
+        .map(LoginActivity::getUserId)
+        .distinct()
+        .collect(Collectors.toList());
+
+    Map<String, User> userMap = userRepository.findAllById(userIds).stream()
+        .collect(Collectors.toMap(User::getId, user -> user));
+
+    return loginActivities.stream()
+        .map(activity -> {
+          User user = userMap.get(activity.getUserId());
+          if (user == null) {
+            return null;
+          }
+
+          // Xây dựng thông tin người dùng
+          LoginDetailResponse.UserInfo userInfo = LoginDetailResponse.UserInfo.builder()
+              .id(user.getId())
+              .name(user.getName())
+              .avatar(user.getAvatar())
+              .email(user.getEmail())
+              .school(user.getSchool())
+              .grade(user.getGrade())
+              .role(user.getRole())
+              .build();
+
+          // Xây dựng và trả về response chi tiết
+          return LoginDetailResponse.builder()
+              .id(activity.getId())
+              .loginTime(activity.getLoginTime())
+              .loginMethod(activity.getLoginMethod())
+              .ipAddress(activity.getIpAddress())
+              .userAgent(activity.getUserAgent())
+              .user(userInfo)
+              .build();
+        })
+        .filter(Objects::nonNull)
+        .collect(Collectors.toList());
+  }
+
+  public LoginDetailResponse getLoginDetailById(String loginId) {
+    LoginActivity activity = loginActivityRepository.findById(loginId)
+        .orElseThrow(() -> new ResourceNotFoundException("Login activity not found with id: " + loginId));
+
+    User user = userRepository.findById(activity.getUserId())
+        .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + activity.getUserId()));
+
+    LoginDetailResponse.UserInfo userInfo = LoginDetailResponse.UserInfo.builder()
+        .id(user.getId())
+        .name(user.getName())
+        .avatar(user.getAvatar())
+        .email(user.getEmail())
+        .school(user.getSchool())
+        .grade(user.getGrade())
+        .role(user.getRole())
+        .build();
+
+    return LoginDetailResponse.builder()
+        .id(activity.getId())
+        .loginTime(activity.getLoginTime())
+        .loginMethod(activity.getLoginMethod())
+        .ipAddress(activity.getIpAddress())
+        .userAgent(activity.getUserAgent())
+        .user(userInfo)
+        .build();
   }
 }

@@ -36,4 +36,6 @@ public interface LoginActivityRepository extends JpaRepository<LoginActivity, St
   List<Object[]> getMonthlyUserCounts(@Param("startDate") Date startDate, @Param("endDate") Date endDate);
 
   Long countByLoginTimeBetween(Date startDate, Date endDate);
+
+  List<LoginActivity> findAllByLoginTimeBetween(Date startDate, Date endDate);
 }

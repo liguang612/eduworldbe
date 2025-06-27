@@ -8,7 +8,9 @@ import lombok.NoArgsConstructor;
 import java.util.Date;
 
 @Entity
-@Table(name = "login_activity")
+@Table(name = "login_activity", indexes = {
+    @Index(name = "idx_login_activity_logintime", columnList = "loginTime")
+})
 @Data
 @NoArgsConstructor
 @AllArgsConstructor

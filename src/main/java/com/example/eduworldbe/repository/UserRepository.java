@@ -24,11 +24,9 @@ public interface UserRepository extends JpaRepository<User, String> {
       "ORDER BY year, month, role")
   List<Object[]> getMonthlyUserCountsByRole(@Param("startDate") Date startDate, @Param("endDate") Date endDate);
 
-  // Query cho tìm kiếm với nhiều tiêu chí
+  List<User> findAllByCreatedAtBetween(Date startDate, Date endDate);
+
   @Query("SELECT u FROM User u WHERE " +
-  // "(:name IS NULL OR LOWER(u.name) LIKE LOWER(CONCAT('%', :name, '%'))) AND " +
-  // "(:email IS NULL OR LOWER(u.email) LIKE LOWER(CONCAT('%', :email, '%'))) AND
-  // " +
       "(:role IS NULL OR u.role = :role) AND " +
       "(:isActive IS NULL OR u.isActive = :isActive)")
   Page<User> findUsersWithFilters(

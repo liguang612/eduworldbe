@@ -109,11 +109,6 @@ public class QuestionController {
       if (ids == null) {
         return ResponseEntity.badRequest().body("Danh sách ID không được null");
       }
-
-      if (ids.isEmpty()) {
-        return ResponseEntity.badRequest().body("Danh sách ID không được để trống");
-      }
-
       List<QuestionDetailResponse> result = questionService.getQuestionDetailsByIds(ids, request);
 
       return ResponseEntity.ok(result);
