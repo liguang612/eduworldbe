@@ -55,7 +55,8 @@ public class AdminService {
     List<AdminDashboardResponse.MonthlyUserData> monthlyData = getMonthlyUserData();
 
     // Lấy dữ liệu biểu đồ hàng ngày
-    List<AdminDashboardResponse.DailyUserData> dailyData = getDailyUserData(thirtyDaysAgo, today);
+    List<AdminDashboardResponse.DailyUserData> dailyData = getDailyUserData(getStartOfDay(thirtyDaysAgo),
+        getEndOfDay(today));
 
     return AdminDashboardResponse.builder()
         .stats(AdminDashboardResponse.DashboardStats.builder()
@@ -143,7 +144,7 @@ public class AdminService {
       AdminDashboardResponse.DailyUserData data = dailyDataMap.get(dateStr);
       if (role == 1) { // Teacher
         data.setTeacherCount(count);
-      } else { // Student
+      } else if (role == 0) { // Student
         data.setStudentCount(count);
       }
     }
@@ -308,6 +309,10 @@ public class AdminService {
     Date endDate = getEndOfDay(date);
 
     List<LoginActivity> loginActivities = loginActivityRepository.findAllByLoginTimeBetween(startDate, endDate);
+
+    for (LoginActivity loginActivity : loginActivities) {
+      System.out.println(loginActivity.toString());
+    }
 
     // Tối ưu: Lấy tất cả user ID, sau đó truy vấn một lần
     List<String> userIds = loginActivities.stream()
